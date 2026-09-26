@@ -8,8 +8,9 @@ This repository demonstrates one backend and protocol across unrelated partner w
 The versioned protocol and API are implemented. The API serves a seeded
 in-memory room, issues short-lived demo JWTs, returns paginated history, accepts
 idempotent messages, and broadcasts them through authenticated WebSocket
-subscriptions. Persistence, the browser SDK, widget, partner demos, and
-deployment are still in progress.
+subscriptions. The framework-independent browser SDK adds typed REST calls,
+deduplication, cursor resume, and reconnect handling. Persistence, the widget,
+partner demos, and deployment are still in progress.
 
 ## Development
 
@@ -48,9 +49,11 @@ whenever the process restarts.
 
 - `apps/`: reserved for the API, playground, and partner demos.
 - `packages/eslint-config`: shared base and React lint configurations.
+- `packages/protocol`: versioned runtime schemas and public DTOs.
+- `packages/sdk`: browser-safe REST and realtime client.
 - `packages/typescript-config`: shared strict TypeScript configurations.
 - `docs/architecture.md`: planned boundaries and delivery phases.
 - `docs/decisions.md`: implementation decisions and tradeoffs.
 
-Next: the browser SDK, React widget, playground, and plain HTML embed. PostgreSQL
-and Drizzle will replace the in-memory store as a separate persistence feature.
+Next: the React widget, playground, and plain HTML embed. PostgreSQL and Drizzle
+will replace the in-memory store as a separate persistence feature.

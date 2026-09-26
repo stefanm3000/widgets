@@ -1,0 +1,9 @@
+{
+  "extends": "@pulse/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "tsBuildInfoFile": "node_modules/.cache/sdk.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"]
+}
