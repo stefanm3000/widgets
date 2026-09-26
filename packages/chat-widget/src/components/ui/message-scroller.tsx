@@ -2,7 +2,8 @@ import { MessageScroller as MessageScrollerPrimitive } from "@shadcn/react/messa
 import { ArrowDown } from "lucide-react";
 import type { ComponentProps } from "react";
 
-import { cn } from "../lib/cn.js";
+import { cn } from "../../utils/cn.js";
+import { Button } from "./button.js";
 
 export const MessageScrollerProvider = MessageScrollerPrimitive.Provider;
 
@@ -80,6 +81,7 @@ export function MessageScrollerButton({
         className,
       )}
       direction={direction}
+      render={<Button size="icon" variant="outline" />}
       {...props}
     >
       <ArrowDown className="size-4" />

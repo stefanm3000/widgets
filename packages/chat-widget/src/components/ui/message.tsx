@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 
-import { cn } from "../lib/cn.js";
+import { cn } from "../../utils/cn.js";
 
 export function MessageGroup({ className, ...props }: ComponentProps<"div">) {
   return (

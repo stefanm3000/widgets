@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "@radix-ui/react-slot";
 import type { ComponentProps } from "react";
 
-import { cn } from "../lib/cn.js";
+import { cn } from "../../utils/cn.js";
 
 const markerVariants = cva(
   "group/marker relative flex min-h-4 w-full items-center gap-2 text-left text-xs text-muted-foreground",
