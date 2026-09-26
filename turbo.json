@@ -1,6 +1,13 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "HOST",
+    "PORT",
+    "NODE_ENV",
+    "PULSE_TOKEN_SECRET",
+    "PULSE_ALLOWED_ORIGINS"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

@@ -5,7 +5,10 @@ This repository demonstrates one backend and protocol across unrelated partner w
 
 ## Status
 
-Workspace scaffold only. The API, SDK, widget, partner demos, and deployment are not implemented yet.
+The versioned protocol and HTTP API are implemented. The API serves a seeded
+in-memory room, issues short-lived demo JWTs, returns paginated history, and
+accepts idempotent messages. Persistence, realtime delivery, the browser SDK,
+widget, partner demos, and deployment are still in progress.
 
 ## Development
 
@@ -28,7 +31,17 @@ Initialized with `pnpm dlx create-turbo@latest`. The default Next.js apps and ge
 | `pnpm format`    | Format source and documentation                     |
 | `pnpm check`     | Check formatting, lint, types, tests, and builds    |
 
-Only formatting and shared ESLint configuration have executable checks today. Build, typecheck, and test tasks are wired up but have no application targets yet.
+### Run the API
+
+```sh
+cp apps/api/.env.example apps/api/.env
+pnpm --filter @pulse/api dev
+```
+
+The local API listens on `http://127.0.0.1:4000`. Start with
+`POST /auth/demo-token`, passing `{ "displayName": "Your name" }`, then use the
+returned bearer token with the room and message endpoints. Local storage resets
+whenever the process restarts.
 
 ## Workspace
 
@@ -38,4 +51,6 @@ Only formatting and shared ESLint configuration have executable checks today. Bu
 - `docs/architecture.md`: planned boundaries and delivery phases.
 - `docs/decisions.md`: implementation decisions and tradeoffs.
 
-Next: a runnable slice with Fastify, PostgreSQL/Drizzle, the protocol, browser SDK, React widget, playground, and plain HTML embed.
+Next: realtime WebSocket subscriptions, the browser SDK, React widget,
+playground, and plain HTML embed. PostgreSQL and Drizzle will replace the
+in-memory store as a separate persistence feature.

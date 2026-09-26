@@ -1,28 +1,30 @@
 {
-  "name": "@pulse/protocol",
+  "name": "@pulse/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "import": "./dist/index.js"
-    }
-  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "check-types": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx watch src/server.ts",
     "lint": "eslint . --max-warnings 0",
+    "start": "node dist/server.js",
     "test": "vitest run"
   },
   "dependencies": {
+    "@fastify/cors": "11.3.0",
+    "@fastify/rate-limit": "11.2.0",
+    "@pulse/protocol": "workspace:*",
+    "fastify": "5.12.5",
+    "jose": "6.2.12",
     "zod": "4.6.5"
   },
   "devDependencies": {
     "@pulse/eslint-config": "workspace:*",
     "@pulse/typescript-config": "workspace:*",
+    "@types/node": "24.19.0",
     "eslint": "10.9.1",
+    "tsx": "4.23.15",
     "typescript": "7.0.2",
     "vitest": "5.0.2"
   }

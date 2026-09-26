@@ -49,6 +49,17 @@ export const sendMessageResponseSchema = z.object({
   message: messageSchema,
 });
 
+export const demoTokenRequestSchema = z.object({
+  displayName: z.string().trim().min(1).max(80),
+});
+
+export const demoTokenResponseSchema = z.object({
+  accessToken: z.string().min(1),
+  expiresAt: z.iso.datetime(),
+  user: participantSchema,
+  rooms: z.array(roomIdSchema),
+});
+
 export const apiErrorCodeSchema = z.enum([
   "invalid_request",
   "unauthorized",
@@ -144,6 +155,8 @@ export type HistoryQuery = z.infer<typeof historyQuerySchema>;
 export type MessagePage = z.infer<typeof messagePageSchema>;
 export type SendMessageRequest = z.infer<typeof sendMessageRequestSchema>;
 export type SendMessageResponse = z.infer<typeof sendMessageResponseSchema>;
+export type DemoTokenRequest = z.infer<typeof demoTokenRequestSchema>;
+export type DemoTokenResponse = z.infer<typeof demoTokenResponseSchema>;
 export type ApiError = z.infer<typeof apiErrorSchema>;
 export type ClientFrame = z.infer<typeof clientFrameSchema>;
 export type RealtimeEvent = z.infer<typeof realtimeEventSchema>;
