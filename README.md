@@ -5,10 +5,11 @@ This repository demonstrates one backend and protocol across unrelated partner w
 
 ## Status
 
-The versioned protocol and HTTP API are implemented. The API serves a seeded
-in-memory room, issues short-lived demo JWTs, returns paginated history, and
-accepts idempotent messages. Persistence, realtime delivery, the browser SDK,
-widget, partner demos, and deployment are still in progress.
+The versioned protocol and API are implemented. The API serves a seeded
+in-memory room, issues short-lived demo JWTs, returns paginated history, accepts
+idempotent messages, and broadcasts them through authenticated WebSocket
+subscriptions. Persistence, the browser SDK, widget, partner demos, and
+deployment are still in progress.
 
 ## Development
 
@@ -51,6 +52,5 @@ whenever the process restarts.
 - `docs/architecture.md`: planned boundaries and delivery phases.
 - `docs/decisions.md`: implementation decisions and tradeoffs.
 
-Next: realtime WebSocket subscriptions, the browser SDK, React widget,
-playground, and plain HTML embed. PostgreSQL and Drizzle will replace the
-in-memory store as a separate persistence feature.
+Next: the browser SDK, React widget, playground, and plain HTML embed. PostgreSQL
+and Drizzle will replace the in-memory store as a separate persistence feature.

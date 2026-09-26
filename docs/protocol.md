@@ -35,6 +35,12 @@ last event cursor while subscribing. The server replays retained events after
 that cursor. If the cursor has expired, the server sends `refetch_required` and
 the client reloads room history before continuing.
 
+Browser clients authenticate the `/realtime` upgrade with two WebSocket
+subprotocol values: `pulse.v1` and `pulse-auth.<short-lived-jwt>`. This keeps the
+credential out of the URL and its logs while working with the browser WebSocket
+API, which cannot set an Authorization header. The server negotiates only
+`pulse.v1`; it validates the JWT and allowed Origin before accepting the upgrade.
+
 Malformed JSON and schema-invalid frames produce `malformed_frame`. Permission
 and authentication failures are explicit and may be fatal. The transport will
 bound frame size and use ping/pong timeouts when the realtime server is added.

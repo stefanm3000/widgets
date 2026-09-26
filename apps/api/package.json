@@ -17,12 +17,14 @@
     "@pulse/protocol": "workspace:*",
     "fastify": "5.12.5",
     "jose": "6.2.12",
+    "ws": "8.22.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
     "@pulse/eslint-config": "workspace:*",
     "@pulse/typescript-config": "workspace:*",
     "@types/node": "24.19.0",
+    "@types/ws": "8.18.1",
     "eslint": "10.9.1",
     "tsx": "4.23.15",
     "typescript": "7.0.2",

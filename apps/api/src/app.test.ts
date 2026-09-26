@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { once } from "node:events";
 
 import {
   apiErrorSchema,
@@ -6,12 +7,28 @@ import {
   messagePageSchema,
   roomSchema,
   sendMessageResponseSchema,
+  serverFrameSchema,
+  type ServerFrame,
 } from "@pulse/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { WebSocket } from "ws";
 
 import { buildApp } from "./app.js";
 
 const tokenSecret = "test-token-secret-with-at-least-32-characters";
+
+function nextFrame(socket: WebSocket): Promise<ServerFrame> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(
+      () => reject(new Error("Timed out waiting for frame")),
+      2_000,
+    );
+    socket.once("message", (data) => {
+      clearTimeout(timeout);
+      resolve(serverFrameSchema.parse(JSON.parse(data.toString())));
+    });
+  });
+}
 
 describe("HTTP chat API", () => {
   let app: Awaited<ReturnType<typeof buildApp>>;
@@ -90,7 +107,7 @@ describe("HTTP chat API", () => {
     ).message;
 
     expect(first.statusCode).toBe(201);
-    expect(second.statusCode).toBe(201);
+    expect(second.statusCode).toBe(200);
     expect(firstMessage.id).toBe(secondMessage.id);
     expect(firstMessage.body).toBe("Hello from the API");
   });
@@ -108,5 +125,50 @@ describe("HTTP chat API", () => {
     expect(apiErrorSchema.parse(response.json()).error.code).toBe(
       "invalid_request",
     );
+  });
+
+  it("broadcasts a committed message to a subscribed client", async () => {
+    const receiverToken = await issueToken("Receiver");
+    const senderToken = await issueToken("Sender");
+    await app.listen({ host: "127.0.0.1", port: 0 });
+    const address = app.server.address();
+    if (!address || typeof address === "string") {
+      throw new Error("Expected a TCP address");
+    }
+
+    const socket = new WebSocket(`ws://127.0.0.1:${address.port}/realtime`, [
+      "pulse.v1",
+      `pulse-auth.${receiverToken}`,
+    ]);
+    const ready = nextFrame(socket);
+    await once(socket, "open");
+    expect((await ready).type).toBe("ready");
+
+    const subscribed = nextFrame(socket);
+    socket.send(
+      JSON.stringify({ version: "1", type: "subscribe", roomId: "demo-room" }),
+    );
+    expect((await subscribed).type).toBe("subscribed");
+
+    const eventFrame = nextFrame(socket);
+    const response = await app.inject({
+      method: "POST",
+      url: "/rooms/demo-room/messages",
+      headers: { authorization: `Bearer ${senderToken}` },
+      payload: { clientMessageId: randomUUID(), body: "Delivered live" },
+    });
+    const sentMessage = sendMessageResponseSchema.parse(
+      response.json(),
+    ).message;
+    const received = await eventFrame;
+
+    expect(received.type).toBe("event");
+    if (received.type === "event") {
+      expect(received.event.payload.id).toBe(sentMessage.id);
+      expect(received.event.payload.body).toBe("Delivered live");
+    }
+
+    socket.close();
+    await once(socket, "close");
   });
 });

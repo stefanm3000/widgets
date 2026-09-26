@@ -30,3 +30,10 @@ short lived and scoped to user identity and allowed rooms. The local server may
 use a documented development secret; production startup requires an explicit
 secret of at least 32 characters. A partner credential exchange and durable
 identity model remain future work.
+
+## Authenticate WebSockets with subprotocols
+
+Send the short-lived JWT as a `pulse-auth.<token>` WebSocket subprotocol alongside
+`pulse.v1`. Browser WebSockets cannot attach an Authorization header. A
+subprotocol keeps credentials out of URLs and common access logs; the server
+negotiates only the version protocol after validating the token and Origin.

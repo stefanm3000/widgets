@@ -16,6 +16,7 @@ import { z } from "zod";
 
 import { MemoryChatStore } from "./store.js";
 import { type DemoIdentity, TokenService } from "./token.js";
+import { registerRealtime } from "./realtime.js";
 
 const roomParamsSchema = z.object({ id: roomIdSchema });
 
@@ -174,9 +175,17 @@ export async function buildApp(options: BuildAppOptions) {
     }
     if (!authorizeRoom(identity, params.data.id, reply)) return;
 
-    const message = store.addMessage(params.data.id, identity.user, body.data);
-    if (!message) return apiError(reply, 404, "not_found", "Room not found");
-    return reply.code(201).send(sendMessageResponseSchema.parse({ message }));
+    const result = store.addMessage(params.data.id, identity.user, body.data);
+    if (!result) return apiError(reply, 404, "not_found", "Room not found");
+    return reply
+      .code(result.created ? 201 : 200)
+      .send(sendMessageResponseSchema.parse({ message: result.message }));
+  });
+
+  registerRealtime(app, {
+    allowedOrigins: options.allowedOrigins ?? [],
+    store,
+    tokenService,
   });
 
   return app;
