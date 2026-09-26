@@ -1,6 +1,6 @@
 import type {
   ConnectionState,
-  Message,
+  Message as ChatMessage,
   PulseClient,
   RealtimeEvent,
   Room,
@@ -8,13 +8,28 @@ import type {
 import {
   type CSSProperties,
   type FormEvent,
-  useCallback,
-  useEffect,
   useMemo,
-  useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 
+import { cn } from "./lib/cn.js";
+import { Bubble, BubbleContent } from "./ui/bubble.js";
+import { Marker, MarkerContent, MarkerIcon } from "./ui/marker.js";
+import {
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageHeader,
+} from "./ui/message.js";
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "./ui/message-scroller.js";
 import "./styles.css";
 
 export interface ChatWidgetTheme {
@@ -62,8 +77,16 @@ export interface ChatWidgetProps {
   theme?: ChatWidgetTheme;
 }
 
-type ThemeStyle = CSSProperties &
-  Record<`--pulse-${string}`, string | undefined>;
+interface ChatWidgetSnapshot {
+  connectionState: ConnectionState;
+  error: string | null;
+  loading: boolean;
+  messages: ChatMessage[];
+  room: Room | null;
+  sending: boolean;
+}
+
+type ThemeStyle = CSSProperties & Record<`--pulse-${string}`, string>;
 
 const stateLabels: Record<ConnectionState, string> = {
   connected: "Connected",
@@ -72,11 +95,32 @@ const stateLabels: Record<ConnectionState, string> = {
   reconnecting: "Reconnecting",
 };
 
-function classes(...values: Array<string | undefined | false>): string {
-  return values.filter(Boolean).join(" ");
-}
+const lightTheme = {
+  background: "#f5f7fb",
+  border: "#dce1ea",
+  danger: "#b42318",
+  muted: "#687386",
+  primary: "#5b5bd6",
+  primaryForeground: "#ffffff",
+  surface: "#ffffff",
+  text: "#172033",
+};
 
-function mergeMessages(current: Message[], incoming: Message[]): Message[] {
+const darkTheme = {
+  background: "#11131a",
+  border: "#303544",
+  danger: "#ff8a80",
+  muted: "#a4abba",
+  primary: "#9292ff",
+  primaryForeground: "#11131a",
+  surface: "#191c25",
+  text: "#f4f5f8",
+};
+
+function mergeMessages(
+  current: ChatMessage[],
+  incoming: ChatMessage[],
+): ChatMessage[] {
   const messages = new Map(current.map((message) => [message.id, message]));
   for (const message of incoming) messages.set(message.id, message);
   return [...messages.values()].sort(
@@ -86,6 +130,143 @@ function mergeMessages(current: Message[], incoming: Message[]): Message[] {
   );
 }
 
+function messageFor(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+class ChatWidgetStore {
+  private generation = 0;
+  private listeners = new Set<() => void>();
+  private snapshot: ChatWidgetSnapshot = {
+    connectionState: "offline",
+    error: null,
+    loading: true,
+    messages: [],
+    room: null,
+    sending: false,
+  };
+  private started = false;
+  private stopCallbacks: Array<() => void> = [];
+
+  constructor(
+    private readonly client: ChatWidgetClient,
+    private readonly roomId: string,
+  ) {}
+
+  getSnapshot = () => this.snapshot;
+
+  getServerSnapshot = () => this.snapshot;
+
+  subscribe = (listener: () => void) => {
+    this.listeners.add(listener);
+    if (!this.started) this.start();
+
+    return () => {
+      this.listeners.delete(listener);
+      if (this.listeners.size === 0) this.stop();
+    };
+  };
+
+  send = async (body: string): Promise<boolean> => {
+    if (this.snapshot.sending || this.snapshot.connectionState !== "connected")
+      return false;
+
+    this.update({ error: null, sending: true });
+    try {
+      await this.client.sendMessage(this.roomId, body);
+      return true;
+    } catch (error) {
+      this.update({ error: messageFor(error, "Could not send message") });
+      return false;
+    } finally {
+      this.update({ sending: false });
+    }
+  };
+
+  private start() {
+    this.started = true;
+    const generation = ++this.generation;
+    this.update({ error: null, loading: true });
+
+    this.stopCallbacks = [
+      this.client.onConnectionState((connectionState) => {
+        if (this.isActive(generation)) this.update({ connectionState });
+      }),
+      this.client.onError((error) => {
+        if (this.isActive(generation)) this.update({ error: error.message });
+      }),
+      this.client.onRefetchRequired((requestedRoomId) => {
+        if (this.isActive(generation) && requestedRoomId === this.roomId) {
+          void this.load(generation, "Could not reload chat");
+        }
+      }),
+      this.client.subscribe(this.roomId, (event: RealtimeEvent) => {
+        if (this.isActive(generation)) {
+          this.update({
+            messages: mergeMessages(this.snapshot.messages, [event.payload]),
+          });
+        }
+      }),
+    ];
+
+    void this.load(generation, "Could not load chat", true);
+  }
+
+  private stop() {
+    this.started = false;
+    this.generation += 1;
+    for (const stop of this.stopCallbacks.splice(0)) stop();
+  }
+
+  private isActive(generation: number): boolean {
+    return this.started && this.generation === generation;
+  }
+
+  private async load(
+    generation: number,
+    fallback: string,
+    finishLoading = false,
+  ) {
+    try {
+      const [room, history] = await Promise.all([
+        this.client.getRoom(this.roomId),
+        this.client.getMessages(this.roomId, { limit: 50 }),
+      ]);
+      if (!this.isActive(generation)) return;
+      this.update({
+        messages: mergeMessages(this.snapshot.messages, history.items),
+        room,
+      });
+    } catch (error) {
+      if (this.isActive(generation)) {
+        this.update({ error: messageFor(error, fallback) });
+      }
+    } finally {
+      if (finishLoading && this.isActive(generation)) {
+        this.update({ loading: false });
+      }
+    }
+  }
+
+  private update(next: Partial<ChatWidgetSnapshot>) {
+    this.snapshot = { ...this.snapshot, ...next };
+    for (const listener of this.listeners) listener();
+  }
+}
+
+function subscribeToSystemTheme(listener: () => void): () => void {
+  const query = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
+  if (!query) return () => undefined;
+  query.addEventListener("change", listener);
+  return () => query.removeEventListener("change", listener);
+}
+
+function getSystemTheme(): "light" | "dark" {
+  return globalThis.matchMedia?.("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+}
+
 function formatTime(value: string): string {
   return new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
@@ -93,28 +274,13 @@ function formatTime(value: string): string {
   }).format(new Date(value));
 }
 
-function useResolvedTheme(preset: ChatWidgetTheme["preset"]): "light" | "dark" {
-  const getSystemTheme = () =>
-    globalThis.matchMedia?.("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
-  const [systemTheme, setSystemTheme] = useState<"light" | "dark">(
-    getSystemTheme,
-  );
-
-  useEffect(() => {
-    if (preset !== "system") return;
-    const query = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
-    if (!query) return;
-    const update = () => setSystemTheme(query.matches ? "dark" : "light");
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, [preset]);
-
-  if (preset === "dark") return "dark";
-  if (preset === "light") return "light";
-  return systemTheme;
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 }
 
 export function ChatWidget({
@@ -124,214 +290,201 @@ export function ChatWidget({
   roomId,
   theme = {},
 }: ChatWidgetProps) {
-  const [room, setRoom] = useState<Room | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [connectionState, setConnectionState] =
-    useState<ConnectionState>("offline");
+  const store = useMemo(
+    () => new ChatWidgetStore(client, roomId),
+    [client, roomId],
+  );
+  const snapshot = useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getServerSnapshot,
+  );
+  const systemTheme = useSyncExternalStore(
+    subscribeToSystemTheme,
+    getSystemTheme,
+    () => "light",
+  );
   const [draft, setDraft] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const messageListRef = useRef<HTMLDivElement>(null);
-  const resolvedTheme = useResolvedTheme(theme.preset ?? "system");
-
-  const loadRoom = useCallback(async () => {
-    const [nextRoom, history] = await Promise.all([
-      client.getRoom(roomId),
-      client.getMessages(roomId, { limit: 50 }),
-    ]);
-    setRoom(nextRoom);
-    setMessages((current) => mergeMessages(current, history.items));
-  }, [client, roomId]);
-
-  useEffect(() => {
-    let active = true;
-    setRoom(null);
-    setMessages([]);
-    setLoading(true);
-    setError(null);
-
-    const stopState = client.onConnectionState(setConnectionState);
-    const stopErrors = client.onError((nextError) => {
-      if (active) setError(nextError.message);
-    });
-    const stopRefetch = client.onRefetchRequired((requestedRoomId) => {
-      if (active && requestedRoomId === roomId) {
-        void loadRoom().catch((nextError: unknown) => {
-          if (active)
-            setError(
-              nextError instanceof Error
-                ? nextError.message
-                : "Could not reload chat",
-            );
-        });
-      }
-    });
-    const stopSubscription = client.subscribe(
-      roomId,
-      (event: RealtimeEvent) => {
-        if (active)
-          setMessages((current) => mergeMessages(current, [event.payload]));
-      },
-    );
-
-    void loadRoom()
-      .catch((nextError: unknown) => {
-        if (active)
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : "Could not load chat",
-          );
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-      stopSubscription();
-      stopRefetch();
-      stopErrors();
-      stopState();
-    };
-  }, [client, loadRoom, roomId]);
-
-  useEffect(() => {
-    const list = messageListRef.current;
-    if (list) list.scrollTop = list.scrollHeight;
-  }, [messages]);
-
+  const resolvedTheme =
+    theme.preset === "dark"
+      ? "dark"
+      : theme.preset === "light"
+        ? "light"
+        : systemTheme;
+  const defaults = resolvedTheme === "dark" ? darkTheme : lightTheme;
+  const colors = theme.colors;
   const style = useMemo<ThemeStyle>(
     () => ({
-      "--pulse-background": theme.colors?.background,
-      "--pulse-border": theme.colors?.border,
-      "--pulse-danger": theme.colors?.danger,
-      "--pulse-font": theme.fontFamily,
-      "--pulse-muted": theme.colors?.muted,
-      "--pulse-primary": theme.colors?.primary,
-      "--pulse-radius": theme.radius,
-      "--pulse-surface": theme.colors?.surface,
-      "--pulse-text": theme.colors?.text,
+      "--pulse-background": colors?.background ?? defaults.background,
+      "--pulse-border": colors?.border ?? defaults.border,
+      "--pulse-danger": colors?.danger ?? defaults.danger,
+      "--pulse-font":
+        theme.fontFamily ??
+        'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      "--pulse-muted": colors?.muted ?? defaults.muted,
+      "--pulse-primary": colors?.primary ?? defaults.primary,
+      "--pulse-primary-foreground": defaults.primaryForeground,
+      "--pulse-radius": theme.radius ?? "18px",
+      "--pulse-surface": colors?.surface ?? defaults.surface,
+      "--pulse-text": colors?.text ?? defaults.text,
+      colorScheme: resolvedTheme,
     }),
-    [theme],
+    [colors, defaults, resolvedTheme, theme.fontFamily, theme.radius],
   );
 
-  const submit = async (event: FormEvent) => {
+  const submit = (event: FormEvent) => {
     event.preventDefault();
     const body = draft.trim();
-    if (!body || sending || connectionState !== "connected") return;
-
-    setSending(true);
-    setError(null);
-    try {
-      await client.sendMessage(roomId, body);
-      setDraft("");
-    } catch (nextError) {
-      setError(
-        nextError instanceof Error
-          ? nextError.message
-          : "Could not send message",
-      );
-    } finally {
-      setSending(false);
-    }
+    if (!body) return;
+    void store.send(body).then((sent) => {
+      if (sent) setDraft("");
+    });
   };
 
   const canSend =
-    connectionState === "connected" && draft.trim().length > 0 && !sending;
+    snapshot.connectionState === "connected" &&
+    draft.trim().length > 0 &&
+    !snapshot.sending;
+  const statusIsPending =
+    snapshot.connectionState === "connecting" ||
+    snapshot.connectionState === "reconnecting";
 
   return (
     <section
-      className={classes(
-        "pulse-widget",
-        `pulse-theme-${resolvedTheme}`,
+      className={cn(
+        "grid h-[min(680px,80vh)] w-full min-w-[260px] max-w-[440px] grid-rows-[auto_minmax(260px,1fr)_auto_auto] overflow-hidden border border-border bg-background text-foreground shadow-[0_22px_60px_rgb(26_35_52/14%)] [border-radius:var(--pulse-radius)] [font-family:var(--pulse-font)]",
         classNames.root,
         className,
       )}
+      data-theme={resolvedTheme}
       part="root"
       style={style}
     >
       <header
-        className={classes("pulse-header", classNames.header)}
+        className={cn(
+          "flex items-center justify-between gap-4 border-b border-border bg-card px-5 py-4",
+          classNames.header,
+        )}
         part="header"
       >
-        <div>
-          <p className="pulse-eyebrow">Live chat</p>
-          <h2>{room?.name ?? "Chat"}</h2>
+        <div className="min-w-0">
+          <p className="m-0 text-[10px] font-bold tracking-[0.13em] text-muted-foreground uppercase">
+            Live chat
+          </p>
+          <h2 className="m-0 truncate text-[17px] font-semibold tracking-[-0.02em]">
+            {snapshot.room?.name ?? "Chat"}
+          </h2>
         </div>
-        <div
+        <Marker
           aria-live="polite"
-          className={classes(
-            "pulse-status",
-            `pulse-status-${connectionState}`,
+          className={cn(
+            "w-auto shrink-0 rounded-full border border-border bg-muted px-2.5 py-1.5 font-semibold",
+            snapshot.connectionState === "connected" && "text-emerald-600",
             classNames.connectionStatus,
           )}
           part="connection-status"
           role="status"
         >
-          <span aria-hidden="true" className="pulse-status-dot" />
-          {stateLabels[connectionState]}
-        </div>
+          <MarkerIcon
+            className={cn(
+              "size-1.5 rounded-full bg-current",
+              statusIsPending && "animate-pulse motion-reduce:animate-none",
+            )}
+          />
+          <MarkerContent>{stateLabels[snapshot.connectionState]}</MarkerContent>
+        </Marker>
       </header>
 
-      <div
-        aria-busy={loading}
-        aria-label="Chat messages"
-        className={classes("pulse-messages", classNames.messageList)}
-        part="message-list"
-        ref={messageListRef}
-        role="log"
-      >
-        {loading && messages.length === 0 ? (
-          <p className="pulse-empty">Loading conversation…</p>
-        ) : messages.length === 0 ? (
-          <p className="pulse-empty">
-            No messages yet. Start the conversation.
-          </p>
-        ) : (
-          messages.map((message) => (
-            <article
-              className={classes("pulse-message", classNames.message)}
-              key={message.id}
-              part="message"
+      <MessageScrollerProvider defaultScrollPosition="end">
+        <MessageScroller
+          className={cn("bg-background", classNames.messageList)}
+          part="message-list"
+        >
+          <MessageScrollerViewport aria-label="Chat messages">
+            <MessageScrollerContent
+              aria-busy={snapshot.loading}
+              className="p-4"
+              role="log"
             >
-              <div className="pulse-message-meta">
-                <strong>{message.sender.displayName}</strong>
-                <time dateTime={message.createdAt}>
-                  {formatTime(message.createdAt)}
-                </time>
-              </div>
-              <p>{message.body}</p>
-            </article>
-          ))
-        )}
-      </div>
+              {snapshot.loading && snapshot.messages.length === 0 ? (
+                <Marker className="my-auto justify-center" variant="separator">
+                  <MarkerContent>Loading conversation…</MarkerContent>
+                </Marker>
+              ) : snapshot.messages.length === 0 ? (
+                <Marker className="my-auto justify-center" variant="separator">
+                  <MarkerContent>
+                    No messages yet. Start the conversation.
+                  </MarkerContent>
+                </Marker>
+              ) : (
+                snapshot.messages.map((message) => (
+                  <MessageScrollerItem key={message.id} messageId={message.id}>
+                    <Message className={classNames.message} part="message">
+                      <MessageAvatar>
+                        {initials(message.sender.displayName)}
+                      </MessageAvatar>
+                      <MessageContent>
+                        <MessageHeader>
+                          <strong className="min-w-0 truncate font-semibold text-foreground">
+                            {message.sender.displayName}
+                          </strong>
+                          <time
+                            className="shrink-0"
+                            dateTime={message.createdAt}
+                          >
+                            {formatTime(message.createdAt)}
+                          </time>
+                        </MessageHeader>
+                        <Bubble variant="secondary">
+                          <BubbleContent>{message.body}</BubbleContent>
+                        </Bubble>
+                      </MessageContent>
+                    </Message>
+                  </MessageScrollerItem>
+                ))
+              )}
+            </MessageScrollerContent>
+          </MessageScrollerViewport>
+          <MessageScrollerButton />
+        </MessageScroller>
+      </MessageScrollerProvider>
 
-      {error ? (
-        <p className="pulse-error" part="error" role="alert">
-          {error}
-        </p>
+      {snapshot.error ? (
+        <Marker
+          className="border-t border-destructive/25 bg-destructive/10 px-4 py-2 text-destructive"
+          part="error"
+          role="alert"
+        >
+          <MarkerContent>{snapshot.error}</MarkerContent>
+        </Marker>
       ) : null}
 
       <form
-        className={classes("pulse-composer", classNames.composer)}
+        className={cn(
+          "grid grid-cols-[minmax(0,1fr)_auto] gap-2 border-t border-border bg-card p-3.5",
+          classNames.composer,
+        )}
         onSubmit={submit}
         part="composer"
       >
-        <label className="pulse-sr-only" htmlFor={`pulse-message-${roomId}`}>
+        <label className="sr-only" htmlFor={`pulse-message-${roomId}`}>
           Message
         </label>
         <input
           autoComplete="off"
-          className={classes("pulse-input", classNames.input)}
-          disabled={connectionState !== "connected" || sending}
+          className={cn(
+            "min-h-10 min-w-0 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-55",
+            classNames.input,
+          )}
+          disabled={
+            snapshot.connectionState !== "connected" || snapshot.sending
+          }
           id={`pulse-message-${roomId}`}
           maxLength={500}
           onChange={(event) => setDraft(event.target.value)}
           part="input"
           placeholder={
-            connectionState === "connected"
+            snapshot.connectionState === "connected"
               ? "Write a message…"
               : "Waiting for connection…"
           }
@@ -339,12 +492,15 @@ export function ChatWidget({
           value={draft}
         />
         <button
-          className={classes("pulse-send", classNames.sendButton)}
+          className={cn(
+            "min-h-10 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground outline-none hover:brightness-95 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55",
+            classNames.sendButton,
+          )}
           disabled={!canSend}
           part="send-button"
           type="submit"
         >
-          {sending ? "Sending…" : "Send"}
+          {snapshot.sending ? "Sending…" : "Send"}
         </button>
       </form>
     </section>
