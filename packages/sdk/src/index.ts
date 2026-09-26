@@ -10,6 +10,8 @@ import {
   type Room,
 } from "@pulse/protocol";
 
+export type { Message, RealtimeEvent, Room } from "@pulse/protocol";
+
 export type ConnectionState =
   "connecting" | "connected" | "reconnecting" | "offline";
 

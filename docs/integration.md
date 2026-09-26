@@ -56,3 +56,32 @@ history for that room when it occurs.
 Unsubscribe when a view unmounts. Call `dispose` when the integration owns the
 client and is finished with it. Disposal closes the socket and removes reconnect,
 online, and visibility listeners. Multiple room subscriptions share one socket.
+
+## React widget
+
+Import the widget and its compiled styles in a React application:
+
+```tsx
+import { ChatWidget } from "@pulse/chat-widget";
+import "@pulse/chat-widget/styles.css";
+
+<ChatWidget
+  client={client}
+  roomId="demo-room"
+  theme={{
+    preset: "system",
+    colors: { primary: "#5b5bd6" },
+    radius: "18px",
+  }}
+/>;
+```
+
+The widget accepts `light`, `dark`, and `system` presets. System mode listens to
+`prefers-color-scheme` and removes the listener on unmount. Semantic color,
+radius, and font values become CSS custom properties scoped to the widget root.
+
+`classNames` exposes `root`, `header`, `messageList`, `message`, `composer`,
+`input`, `sendButton`, and `connectionStatus` slots for inline React consumers.
+The same elements expose stable `part` names for the upcoming Shadow DOM embed.
+Host classes do not cross a shadow boundary; use theme tokens or `::part(...)`
+when integrating the isolated script embed.
