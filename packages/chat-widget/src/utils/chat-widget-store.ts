@@ -1,7 +1,7 @@
 import type { RealtimeEvent } from "@pulse/sdk";
 
-import type { ChatWidgetClient, ChatWidgetSnapshot } from "../types.js";
-import { mergeMessages } from "./messages.js";
+import type { ChatWidgetClient, ChatWidgetSnapshot } from "../types";
+import { mergeMessages } from "./messages";
 
 function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;

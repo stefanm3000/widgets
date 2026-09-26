@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import type { ChatWidgetTheme } from "../types.js";
+import type { ChatWidgetTheme } from "../types";
 
 export type ResolvedTheme = "light" | "dark";
 

@@ -1,7 +1,7 @@
 import type { ConnectionState } from "@pulse/sdk";
 
-import { cn } from "../utils/cn.js";
-import { Marker, MarkerContent, MarkerIcon } from "./ui/marker.js";
+import { cn } from "../utils/cn";
+import { Marker, MarkerContent, MarkerIcon } from "./ui/marker";
 
 const stateLabels: Record<ConnectionState, string> = {
   connected: "Connected",

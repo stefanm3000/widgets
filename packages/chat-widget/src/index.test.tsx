@@ -9,7 +9,7 @@ import {
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ChatWidget, type ChatWidgetClient } from "./index.js";
+import { ChatWidget, type ChatWidgetClient } from "./index";
 
 const room: Room = {
   id: "demo-room",

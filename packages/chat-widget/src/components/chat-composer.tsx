@@ -1,10 +1,10 @@
 import type { ConnectionState } from "@pulse/sdk";
 import { type FormEvent, useState } from "react";
 
-import { cn } from "../utils/cn.js";
-import { Button } from "./ui/button.js";
-import { Input } from "./ui/input.js";
-import { Label } from "./ui/label.js";
+import { cn } from "../utils/cn";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 interface ChatComposerProps {
   buttonClassName?: string;

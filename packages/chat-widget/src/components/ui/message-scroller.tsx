@@ -2,8 +2,8 @@ import { MessageScroller as MessageScrollerPrimitive } from "@shadcn/react/messa
 import { ArrowDown } from "lucide-react";
 import type { ComponentProps } from "react";
 
-import { cn } from "../../utils/cn.js";
-import { Button } from "./button.js";
+import { cn } from "../../utils/cn";
+import { Button } from "./button";
 
 export const MessageScrollerProvider = MessageScrollerPrimitive.Provider;
 

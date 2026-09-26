@@ -1,15 +1,15 @@
 import type { Message as ChatMessage } from "@pulse/sdk";
 
-import { cn } from "../utils/cn.js";
-import { formatTime, initials } from "../utils/messages.js";
-import { Bubble, BubbleContent } from "./ui/bubble.js";
-import { Marker, MarkerContent } from "./ui/marker.js";
+import { cn } from "../utils/cn";
+import { formatTime, initials } from "../utils/messages";
+import { Bubble, BubbleContent } from "./ui/bubble";
+import { Marker, MarkerContent } from "./ui/marker";
 import {
   Message,
   MessageAvatar,
   MessageContent,
   MessageHeader,
-} from "./ui/message.js";
+} from "./ui/message";
 import {
   MessageScroller,
   MessageScrollerButton,
@@ -17,7 +17,7 @@ import {
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
-} from "./ui/message-scroller.js";
+} from "./ui/message-scroller";
 
 interface ChatTranscriptProps {
   className?: string;

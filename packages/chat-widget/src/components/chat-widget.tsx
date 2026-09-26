@@ -1,19 +1,19 @@
 import { useMemo, useSyncExternalStore } from "react";
 
-import type { ChatWidgetProps } from "../types.js";
-import { ChatWidgetStore } from "../utils/chat-widget-store.js";
-import { cn } from "../utils/cn.js";
+import type { ChatWidgetProps } from "../types";
+import { ChatWidgetStore } from "../utils/chat-widget-store";
+import { cn } from "../utils/cn";
 import {
   createThemeStyle,
   getSystemTheme,
   type ResolvedTheme,
   resolveTheme,
   subscribeToSystemTheme,
-} from "../utils/theme.js";
-import { ChatComposer } from "./chat-composer.js";
-import { ChatError } from "./chat-error.js";
-import { ChatHeader } from "./chat-header.js";
-import { ChatTranscript } from "./chat-transcript.js";
+} from "../utils/theme";
+import { ChatComposer } from "./chat-composer";
+import { ChatError } from "./chat-error";
+import { ChatHeader } from "./chat-header";
+import { ChatTranscript } from "./chat-transcript";
 
 export function ChatWidget({
   className,

@@ -1,4 +1,4 @@
-import { Marker, MarkerContent } from "./ui/marker.js";
+import { Marker, MarkerContent } from "./ui/marker";
 
 export function ChatError({ message }: { message: string | null }) {
   if (!message) return null;
