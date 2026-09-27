@@ -35,7 +35,7 @@ export function ChatTranscript({
   messages,
 }: ChatTranscriptProps) {
   return (
-    <MessageScrollerProvider defaultScrollPosition="end">
+    <MessageScrollerProvider autoScroll defaultScrollPosition="end">
       <MessageScroller
         className={cn("bg-background", className)}
         part="message-list"
