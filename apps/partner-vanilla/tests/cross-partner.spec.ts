@@ -1,8 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("delivers a vanilla message live to the Vue partner", async ({
-  context,
-}) => {
+test("delivers a Vanilla message live to Vue", async ({ context }) => {
   const vanillaPage = await context.newPage();
   const vuePage = await context.newPage();
 
@@ -10,6 +8,13 @@ test("delivers a vanilla message live to the Vue partner", async ({
     vanillaPage.goto("http://localhost:5174"),
     vuePage.goto("http://localhost:5175"),
   ]);
+
+  await expect(
+    vanillaPage.getByRole("heading", { name: "Vanilla", exact: true }),
+  ).toBeVisible();
+  await expect(
+    vuePage.getByRole("heading", { name: "Vue", exact: true }),
+  ).toBeVisible();
 
   const vanillaWidget = vanillaPage.locator("pulse-chat");
   const vueWidget = vuePage.locator("pulse-chat");

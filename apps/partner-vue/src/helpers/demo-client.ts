@@ -28,13 +28,13 @@ function createTokenProvider(baseUrl: string) {
     }
 
     const response = await fetch(new URL("auth/demo-token", baseUrl), {
-      body: JSON.stringify({ displayName: "Morrow researcher" }),
+      body: JSON.stringify({ displayName: "Vue visitor" }),
       headers: { "content-type": "application/json" },
       method: "POST",
     });
     const data: unknown = await response.json();
     if (!response.ok || !isDemoToken(data)) {
-      throw new Error("Could not create a Morrow support session");
+      throw new Error("Could not create a Vue session");
     }
 
     cachedToken = data;

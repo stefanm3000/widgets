@@ -1,46 +1,56 @@
-import { renderPartnerPage } from "./components/partner-page";
+import { mountPulseChat, type ChatWidgetTheme } from "@pulse/embed";
+
 import { getApiUrl } from "./helpers/config";
 import { createPartnerClient } from "./helpers/demo-client";
-import { createWidgetController } from "./helpers/widget-controller";
+import { requireElement } from "./helpers/dom";
+
+const theme = {
+  colors: {
+    background: "#f4f4f0",
+    border: "#111111",
+    muted: "#666666",
+    primary: "#111111",
+    surface: "#ffffff",
+    text: "#111111",
+  },
+  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+  preset: "light",
+  radius: "0px",
+} as const satisfies ChatWidgetTheme;
 
 export function startPartnerApp(root: HTMLElement): void {
-  const elements = renderPartnerPage(root);
+  root.innerHTML = `
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="app-kicker">Pulse partner example</p>
+          <h1>Vanilla</h1>
+        </div>
+        <dl class="app-details">
+          <div><dt>Stack</dt><dd>TypeScript</dd></div>
+          <div><dt>Integration</dt><dd>Mount API</dd></div>
+        </dl>
+      </header>
+
+      <main class="chat-stage" aria-label="Vanilla chat widget example">
+        <div class="widget-host" data-widget-host></div>
+      </main>
+    </div>
+  `;
+
   const client = createPartnerClient(getApiUrl());
-  const widget = createWidgetController(elements.widgetHost, client);
-
-  const syncControls = () => {
-    elements.mountButton.disabled = widget.mounted;
-    elements.unmountButton.disabled = !widget.mounted;
-    elements.status.textContent = widget.mounted
-      ? `Chat mounted · ${widget.theme} theme`
-      : "Chat unmounted";
-    elements.widgetHost.toggleAttribute("data-empty", !widget.mounted);
-    elements.themeButton.textContent =
-      widget.theme === "light" ? "Use dark theme" : "Use light theme";
-  };
-
-  elements.mountButton.addEventListener("click", () => {
-    widget.mount();
-    syncControls();
-  });
-  elements.unmountButton.addEventListener("click", () => {
-    widget.unmount();
-    syncControls();
-  });
-  elements.themeButton.addEventListener("click", () => {
-    widget.setTheme(widget.theme === "light" ? "dark" : "light");
-    syncControls();
+  const widget = mountPulseChat(requireElement(root, "[data-widget-host]"), {
+    client,
+    roomId: "demo-room",
+    theme,
   });
 
   globalThis.addEventListener(
     "pagehide",
     () => {
-      widget.unmount();
-      widget.client.dispose();
+      widget.destroy();
+      client.dispose();
     },
     { once: true },
   );
-
-  widget.mount();
-  syncControls();
 }

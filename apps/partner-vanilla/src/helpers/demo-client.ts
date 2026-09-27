@@ -34,7 +34,7 @@ function createTokenProvider(baseUrl: string, displayName: string) {
     });
     const data: unknown = await response.json();
     if (!response.ok || !isDemoToken(data)) {
-      throw new Error("Could not create a Northstar support session");
+      throw new Error("Could not create a Vanilla session");
     }
 
     cachedToken = data;
@@ -45,6 +45,6 @@ function createTokenProvider(baseUrl: string, displayName: string) {
 export function createPartnerClient(baseUrl: string): PulseClient {
   return createPulseClient({
     baseUrl,
-    getToken: createTokenProvider(baseUrl, "Northstar visitor"),
+    getToken: createTokenProvider(baseUrl, "Vanilla visitor"),
   });
 }

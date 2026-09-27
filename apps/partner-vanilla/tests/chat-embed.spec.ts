@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-test("sends a message and survives an embed remount", async ({ page }) => {
+test("sends a message in Vanilla", async ({ page }) => {
   await page.goto("/");
 
   await expect(
-    page.getByRole("heading", { name: "Answers that keep you moving." }),
+    page.getByRole("heading", { name: "Vanilla", exact: true }),
   ).toBeVisible();
 
   const widget = page.locator("pulse-chat");
@@ -22,11 +22,13 @@ test("sends a message and survives an embed remount", async ({ page }) => {
   await sendButton.click();
   await expect(widget.getByText(message)).toBeVisible();
 
-  await page.getByRole("button", { name: "Unmount" }).click();
-  await expect(widget).toHaveCount(0);
-  await expect(page.getByText("Chat unmounted", { exact: true })).toBeVisible();
+  const widgetBounds = await widget.locator('[part="root"]').boundingBox();
+  const viewportHeight = await page.evaluate(() => globalThis.innerHeight);
+  expect(widgetBounds).not.toBeNull();
+  expect(
+    Math.abs((widgetBounds?.height ?? 0) - viewportHeight * 0.8),
+  ).toBeLessThan(2);
 
-  await page.getByRole("button", { name: "Remount" }).click();
-  await expect(page.locator("pulse-chat")).toHaveCount(1);
+  await page.reload();
   await expect(page.locator("pulse-chat").getByText(message)).toBeVisible();
 });
