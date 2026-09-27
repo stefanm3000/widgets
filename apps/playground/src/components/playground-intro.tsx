@@ -1,5 +1,6 @@
 import { FeatureCard } from "./feature-card";
 import { IntegrationExample } from "./integration-example";
+import { Badge } from "./ui/badge";
 
 const features = [
   { number: "01", title: "Short-lived tokens" },
@@ -10,10 +11,10 @@ const features = [
 export function PlaygroundIntro() {
   return (
     <div className="max-w-2xl">
-      <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/55 px-3 py-1.5 text-[11px] font-semibold tracking-[0.06em] text-[#55594f] uppercase backdrop-blur">
+      <Badge className="mb-6">
         <span className="size-1.5 rounded-full bg-[#78951e]" />
         Reference integration
-      </div>
+      </Badge>
       <h1 className="max-w-xl text-5xl leading-[0.97] font-semibold tracking-[-0.055em] sm:text-6xl lg:text-7xl">
         Live chat,
         <br />

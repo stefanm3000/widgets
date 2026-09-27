@@ -1,5 +1,7 @@
 import type { ChatWidgetTheme } from "@pulse/chat-widget";
 
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+
 export type ThemePreset = NonNullable<ChatWidgetTheme["preset"]>;
 
 const themeOptions = ["system", "light", "dark"] as const;
@@ -11,22 +13,24 @@ interface ThemeSelectorProps {
 
 export function ThemeSelector({ onChange, value }: ThemeSelectorProps) {
   return (
-    <div
+    <ToggleGroup
       aria-label="Widget theme"
-      className="grid grid-cols-3 rounded-xl bg-black/5 p-1"
-      role="group"
+      className="grid grid-cols-3"
+      onValueChange={(theme) => {
+        if (theme) onChange(theme as ThemePreset);
+      }}
+      type="single"
+      value={value}
     >
       {themeOptions.map((option) => (
-        <button
-          aria-pressed={value === option}
-          className="rounded-lg px-2.5 py-1.5 text-[11px] font-semibold capitalize text-[#6c7067] transition aria-pressed:bg-white aria-pressed:text-black aria-pressed:shadow-sm"
+        <ToggleGroupItem
+          aria-label={`${option} theme`}
           key={option}
-          onClick={() => onChange(option)}
-          type="button"
+          value={option}
         >
           {option}
-        </button>
+        </ToggleGroupItem>
       ))}
-    </div>
+    </ToggleGroup>
   );
 }

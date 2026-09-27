@@ -1,3 +1,5 @@
+import { Card, CardContent } from "./ui/card";
+
 interface FeatureCardProps {
   number: string;
   title: string;
@@ -5,9 +7,11 @@ interface FeatureCardProps {
 
 export function FeatureCard({ number, title }: FeatureCardProps) {
   return (
-    <div className="rounded-2xl border border-black/10 bg-white/45 p-4 backdrop-blur-sm">
-      <span className="text-[10px] font-bold text-[#8a8e84]">{number}</span>
-      <p className="mt-4 text-sm font-semibold tracking-[-0.01em]">{title}</p>
-    </div>
+    <Card className="rounded-2xl bg-white/45 shadow-none backdrop-blur-sm">
+      <CardContent className="p-4">
+        <span className="text-[10px] font-bold text-[#8a8e84]">{number}</span>
+        <p className="mt-4 text-sm font-semibold tracking-[-0.01em]">{title}</p>
+      </CardContent>
+    </Card>
   );
 }
