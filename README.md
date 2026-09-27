@@ -12,8 +12,13 @@ subscriptions. The framework-independent browser SDK adds typed REST calls,
 deduplication, cursor resume, and reconnect handling. The accessible React widget
 adds connection states, history, live messages, sending, and scoped theme tokens.
 The browser embed exposes the same UI as a Shadow DOM custom element for Vue,
-Svelte, and plain JavaScript. More partner demos and deployment are still in
-progress.
+Svelte, and plain JavaScript. More partner demos are still in progress.
+
+## Partner app deployments
+
+- [Playground](https://widgets-playground-two.vercel.app)
+- [Vue partner app](https://widgets-partner-vue.vercel.app)
+- [Vanilla JavaScript partner app](https://widgets-partner-vanilla.vercel.app)
 
 ## Development
 
