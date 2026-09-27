@@ -1,0 +1,31 @@
+{
+  "name": "@pulse/partner-vue",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "check-types": "vue-tsc --noEmit -p tsconfig.json",
+    "dev": "vite",
+    "lint": "eslint . --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@pulse/embed": "workspace:*",
+    "@pulse/sdk": "workspace:*",
+    "vue": "3.5.43"
+  },
+  "devDependencies": {
+    "@babel/core": "8.0.1",
+    "@babel/eslint-parser": "8.0.1",
+    "@babel/preset-typescript": "8.0.1",
+    "@pulse/eslint-config": "workspace:*",
+    "@pulse/typescript-config": "workspace:*",
+    "@vitejs/plugin-vue": "6.0.9",
+    "eslint": "10.9.1",
+    "eslint-plugin-vue": "10.11.1",
+    "typescript": "6.0.3",
+    "vite": "8.3.1",
+    "vue-tsc": "3.3.11"
+  }
+}

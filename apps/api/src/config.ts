@@ -11,7 +11,9 @@ const configSchema = z.object({
   PULSE_TOKEN_SECRET: z.string().min(32).optional(),
   PULSE_ALLOWED_ORIGINS: z
     .string()
-    .default("http://localhost:5173,http://localhost:5174"),
+    .default(
+      "http://localhost:5173,http://localhost:5174,http://localhost:5175",
+    ),
 });
 
 export interface ApiConfig {

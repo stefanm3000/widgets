@@ -31,5 +31,11 @@ export default defineConfig({
       timeout: 30_000,
       url: "http://127.0.0.1:5174",
     },
+    {
+      command: "pnpm --dir ../partner-vue exec vite --host 127.0.0.1",
+      reuseExistingServer: true,
+      timeout: 30_000,
+      url: "http://127.0.0.1:5175",
+    },
   ],
 });
