@@ -1,25 +1,25 @@
 import { ChatWidget } from "@pulse/chat-widget";
-import { useState } from "react";
 
 import { useDemoSession } from "../hooks/use-demo-session";
+import { usePlaygroundStore } from "../stores/playground-store";
 import { IdentityForm } from "./identity-form";
-import { ThemeSelector, type ThemePreset } from "./theme-selector";
+import { ThemeSelector } from "./theme-selector";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 
 const roomId = "demo-room";
 
 export function WidgetDemo() {
-  const { applyIdentity, displayName, session, setDisplayName } =
-    useDemoSession();
-  const [theme, setTheme] = useState<ThemePreset>("system");
+  const { applyIdentity, session } = useDemoSession();
+  const setTheme = usePlaygroundStore((state) => state.setTheme);
+  const theme = usePlaygroundStore((state) => state.theme);
 
   const openSecondTab = () => {
     globalThis.open(globalThis.location.href, "_blank", "noopener,noreferrer");
   };
 
   return (
-    <div className="mx-auto w-full max-w-[480px]">
+    <div className="mx-auto w-full max-w-120">
       <div className="mb-3 flex items-center justify-between px-1">
         <div>
           <p className="text-[10px] font-bold tracking-[0.11em] text-[#777b72] uppercase">
@@ -38,7 +38,7 @@ export function WidgetDemo() {
         </Button>
       </div>
 
-      <Card className="rounded-[32px] bg-white/50 p-2.5 shadow-[0_32px_90px_rgba(35,39,29,0.16)] backdrop-blur-xl">
+      <Card className="rounded-4xl bg-white/50 p-2.5 shadow-[0_32px_90px_rgba(35,39,29,0.16)] backdrop-blur-xl">
         <ChatWidget
           client={session.client}
           key={session.id}
@@ -49,8 +49,8 @@ export function WidgetDemo() {
 
       <Card className="mt-4 grid gap-3 p-4 sm:grid-cols-[1fr_auto]">
         <IdentityForm
-          displayName={displayName}
-          onDisplayNameChange={setDisplayName}
+          defaultDisplayName={session.displayName}
+          key={session.id}
           onSubmit={applyIdentity}
         />
         <ThemeSelector onChange={setTheme} value={theme} />

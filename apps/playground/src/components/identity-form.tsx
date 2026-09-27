@@ -1,33 +1,42 @@
-import type { FormEvent } from "react";
+import { useForm } from "react-hook-form";
 
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
 interface IdentityFormProps {
-  displayName: string;
-  onDisplayNameChange: (displayName: string) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  defaultDisplayName: string;
+  onSubmit: (displayName: string) => void;
 }
 
 export function IdentityForm({
-  displayName,
-  onDisplayNameChange,
+  defaultDisplayName,
   onSubmit,
 }: IdentityFormProps) {
+  const {
+    formState: { errors },
+    handleSubmit,
+    register,
+  } = useForm<{ displayName: string }>({
+    defaultValues: { displayName: defaultDisplayName },
+  });
+
   return (
     <form
       className="grid grid-cols-[minmax(0,1fr)_auto] gap-2"
-      onSubmit={onSubmit}
+      onSubmit={handleSubmit(({ displayName }) => onSubmit(displayName.trim()))}
     >
       <label className="sr-only" htmlFor="display-name">
         Demo display name
       </label>
       <Input
+        aria-invalid={Boolean(errors.displayName)}
         id="display-name"
         maxLength={80}
-        onChange={(event) => onDisplayNameChange(event.target.value)}
         placeholder="Display name"
-        value={displayName}
+        {...register("displayName", {
+          maxLength: 80,
+          validate: (value) => Boolean(value.trim()),
+        })}
       />
       <Button size="sm" type="submit">
         Apply

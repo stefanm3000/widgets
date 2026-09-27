@@ -1,5 +1,7 @@
 import { createPulseClient, type PulseClient } from "@pulse/sdk";
 
+import { demoQueryClient } from "./query-client";
+
 interface DemoToken {
   accessToken: string;
   expiresAt: string;
@@ -17,9 +19,6 @@ function isDemoToken(value: unknown): value is DemoToken {
 }
 
 function createDemoTokenProvider(baseUrl: string, displayName: string) {
-  let cachedToken: DemoToken | null = null;
-  let pendingToken: Promise<DemoToken> | null = null;
-
   const requestToken = async (): Promise<DemoToken> => {
     const response = await fetch(new URL("auth/demo-token", baseUrl), {
       body: JSON.stringify({ displayName }),
@@ -35,19 +34,23 @@ function createDemoTokenProvider(baseUrl: string, displayName: string) {
     return data;
   };
 
-  return async () => {
-    const refreshAt = cachedToken
-      ? Date.parse(cachedToken.expiresAt) - 30_000
-      : 0;
-    if (cachedToken && Date.now() < refreshAt) return cachedToken.accessToken;
+  return async (): Promise<string> => {
+    const token = await demoQueryClient.query({
+      queryFn: requestToken,
+      queryKey: ["demo-token", baseUrl, displayName],
+      staleTime: (query) => {
+        const cachedToken = query.state.data;
+        if (!isDemoToken(cachedToken)) return 0;
+        return Math.max(
+          0,
+          Date.parse(cachedToken.expiresAt) -
+            query.state.dataUpdatedAt -
+            30_000,
+        );
+      },
+    });
 
-    pendingToken ??= requestToken();
-    try {
-      cachedToken = await pendingToken;
-      return cachedToken.accessToken;
-    } finally {
-      pendingToken = null;
-    }
+    return token.accessToken;
   };
 }
 

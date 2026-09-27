@@ -1,10 +1,5 @@
-import type { ChatWidgetTheme } from "@pulse/chat-widget";
-
+import { themeOptions, type ThemePreset } from "../helpers/theme";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
-
-export type ThemePreset = NonNullable<ChatWidgetTheme["preset"]>;
-
-const themeOptions = ["system", "light", "dark"] as const;
 
 interface ThemeSelectorProps {
   onChange: (theme: ThemePreset) => void;

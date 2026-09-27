@@ -1,33 +1,11 @@
-import { type FormEvent, useState } from "react";
-
-import {
-  createDemoSession,
-  getApiUrl,
-  getDefaultDisplayName,
-  saveDisplayName,
-} from "../helpers/demo-session";
+import { usePlaygroundStore } from "../stores/playground-store";
 
 export function useDemoSession() {
-  const [apiUrl] = useState(getApiUrl);
-  const [session, setSession] = useState(() =>
-    createDemoSession(apiUrl, getDefaultDisplayName()),
-  );
-  const [displayName, setDisplayName] = useState(session.displayName);
-
-  const applyIdentity = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const nextName = displayName.trim();
-    if (!nextName) return;
-
-    session.client.dispose();
-    saveDisplayName(nextName);
-    setSession(createDemoSession(apiUrl, nextName));
-  };
+  const applyIdentity = usePlaygroundStore((state) => state.applyIdentity);
+  const session = usePlaygroundStore((state) => state.session);
 
   return {
     applyIdentity,
-    displayName,
     session,
-    setDisplayName,
   };
 }
