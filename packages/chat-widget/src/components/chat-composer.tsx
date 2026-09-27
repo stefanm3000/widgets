@@ -5,6 +5,7 @@ import { cn } from "../utils/cn";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Spinner } from "./ui/spinner";
 
 interface ChatComposerProps {
   buttonClassName?: string;
@@ -65,12 +66,19 @@ export function ChatComposer({
         value={draft}
       />
       <Button
-        className={cn("h-10 rounded-xl", buttonClassName)}
+        className={cn("h-10 w-20 rounded-xl", buttonClassName)}
         disabled={!canSend}
         part="send-button"
         type="submit"
       >
-        {sending ? "Sending…" : "Send"}
+        {sending ? (
+          <>
+            <Spinner aria-hidden="true" />
+            <span className="sr-only">Sending</span>
+          </>
+        ) : (
+          "Send"
+        )}
       </Button>
     </form>
   );
