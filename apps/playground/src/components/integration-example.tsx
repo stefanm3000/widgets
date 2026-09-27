@@ -17,7 +17,7 @@ export function IntegrationExample() {
   const snippet = integrationSnippets[framework];
 
   return (
-    <Card className="mt-10 gap-0 bg-[#191b17] p-1.5 shadow-[0_22px_70px_rgba(22,24,19,0.16)] backdrop-blur-none">
+    <Card className="gap-0 bg-[#191b17] p-1.5 shadow-[0_22px_70px_rgba(22,24,19,0.16)] backdrop-blur-none">
       <CardHeader className="flex-col items-stretch gap-2 text-[10px] font-semibold tracking-[0.08em] text-white/45 uppercase">
         <div className="flex items-center justify-between">
           <span>Partner integration</span>

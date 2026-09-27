@@ -4,7 +4,6 @@ import { useDemoSession } from "../hooks/use-demo-session";
 import { usePlaygroundStore } from "../stores/playground-store";
 import { IdentityForm } from "./identity-form";
 import { ThemeSelector } from "./theme-selector";
-import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 
 const roomId = "demo-room";
@@ -15,35 +14,16 @@ export function WidgetDemo() {
   const theme = usePlaygroundStore((state) => state.theme);
 
   return (
-    <div className="mx-auto w-full max-w-120">
-      <div className="mb-3 flex items-center justify-between px-1">
-        <div>
-          <p className="text-[10px] font-bold tracking-[0.11em] text-[#777b72] uppercase">
-            Signed in as
-          </p>
-          <p className="mt-0.5 text-sm font-semibold">{session.displayName}</p>
-        </div>
-        <Button asChild className="rounded-full" size="sm" variant="outline">
-          <a
-            href={globalThis.location.href}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Open second tab
-          </a>
-        </Button>
-      </div>
+    <div className="mx-auto w-full max-w-110">
+      <ChatWidget
+        className="max-w-none rounded-b-none shadow-[0_24px_70px_rgba(35,39,29,0.14)]"
+        client={session.client}
+        key={session.id}
+        roomId={roomId}
+        theme={{ preset: theme, radius: "22px" }}
+      />
 
-      <Card className="rounded-4xl bg-white/50 p-2.5 shadow-[0_32px_90px_rgba(35,39,29,0.16)] backdrop-blur-xl">
-        <ChatWidget
-          client={session.client}
-          key={session.id}
-          roomId={roomId}
-          theme={{ preset: theme, radius: "22px" }}
-        />
-      </Card>
-
-      <Card className="mt-4 grid gap-3 p-4 sm:grid-cols-[1fr_auto]">
+      <Card className="-mt-px grid gap-2 rounded-t-none rounded-b-2xl border-t-0 bg-white/70 p-2.5 sm:grid-cols-[1fr_auto]">
         <IdentityForm
           defaultDisplayName={session.displayName}
           key={session.id}
@@ -51,11 +31,6 @@ export function WidgetDemo() {
         />
         <ThemeSelector onChange={setTheme} value={theme} />
       </Card>
-
-      <p className="mt-3 px-2 text-center text-[11px] leading-5 text-[#777b72]">
-        Messages are shared across sessions. Open another tab with a different
-        identity to test realtime delivery.
-      </p>
     </div>
   );
 }

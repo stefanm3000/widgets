@@ -1,3 +1,4 @@
+import { IntegrationExample } from "./components/integration-example";
 import { PlaygroundHeader } from "./components/playground-header";
 import { PlaygroundIntro } from "./components/playground-intro";
 import { WidgetDemo } from "./components/widget-demo";
@@ -9,9 +10,13 @@ export function App() {
 
       <PlaygroundHeader />
 
-      <section className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-5 pt-10 pb-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,480px)] lg:gap-20 lg:px-10 lg:pt-16">
+      <section className="relative z-10 mx-auto max-w-6xl px-5 pt-4 pb-10 sm:px-8">
         <PlaygroundIntro />
-        <WidgetDemo />
+
+        <div className="mt-6 grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_minmax(360px,440px)] lg:gap-10">
+          <IntegrationExample />
+          <WidgetDemo />
+        </div>
       </section>
     </main>
   );
