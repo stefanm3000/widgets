@@ -1,10 +1,22 @@
-import { integrationCode } from "../helpers/integration-code";
-import { highlightTsx } from "../helpers/syntax-highlighter";
+import { use } from "react";
 
-const highlightedIntegrationCode = highlightTsx(integrationCode);
+import type { IntegrationLanguage } from "../helpers/integration-code";
+import { loadSyntaxHighlighter } from "../helpers/syntax-highlighter";
 
-export default function HighlightedIntegrationCode() {
-  return (
-    <div dangerouslySetInnerHTML={{ __html: highlightedIntegrationCode }} />
-  );
+interface HighlightedIntegrationCodeProps {
+  code: string;
+  language: IntegrationLanguage;
+}
+
+export default function HighlightedIntegrationCode({
+  code,
+  language,
+}: HighlightedIntegrationCodeProps) {
+  const highlighter = use(loadSyntaxHighlighter(language));
+  const highlightedCode = highlighter.codeToHtml(code, {
+    lang: language,
+    theme: "github-dark-high-contrast",
+  });
+
+  return <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />;
 }
