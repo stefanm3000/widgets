@@ -24,3 +24,83 @@
   --color-destructive: var(--pulse-danger);
   --color-ring: var(--pulse-primary);
 }
+
+@layer utilities {
+  .scroll-fade-y {
+    --scroll-fade-size: min(12%, 40px);
+
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black var(--scroll-fade-size),
+      black calc(100% - var(--scroll-fade-size)),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black var(--scroll-fade-size),
+      black calc(100% - var(--scroll-fade-size)),
+      transparent
+    );
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .scroll-fade-y {
+      -webkit-mask-image: none;
+      mask-image: none;
+      animation: pulse-scroll-fade-y 1s linear both;
+      animation-timeline: scroll(self y);
+    }
+  }
+}
+
+@keyframes pulse-scroll-fade-y {
+  0% {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      black 0,
+      black calc(100% - var(--scroll-fade-size)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      black 0,
+      black calc(100% - var(--scroll-fade-size)),
+      transparent 100%
+    );
+  }
+
+  10%,
+  90% {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      black var(--scroll-fade-size),
+      black calc(100% - var(--scroll-fade-size)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      black var(--scroll-fade-size),
+      black calc(100% - var(--scroll-fade-size)),
+      transparent 100%
+    );
+  }
+
+  100% {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      black var(--scroll-fade-size),
+      black 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      black var(--scroll-fade-size),
+      black 100%
+    );
+  }
+}

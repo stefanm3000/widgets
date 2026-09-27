@@ -92,6 +92,11 @@ describe("ChatWidget", () => {
     );
 
     expect(await screen.findByText(message.body)).toBeDefined();
+    expect(
+      document
+        .querySelector('[data-slot="message-scroller-viewport"]')
+        ?.classList.contains("scroll-fade-y"),
+    ).toBe(true);
     const input = screen.getByLabelText("Message") as HTMLInputElement;
     const button = screen.getByRole("button", {
       name: "Send",
