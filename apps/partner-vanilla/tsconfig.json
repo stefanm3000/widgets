@@ -1,0 +1,17 @@
+{
+  "extends": "@pulse/typescript-config/base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "types": ["vite/client"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "playwright.config.ts",
+    "vite.config.ts"
+  ]
+}

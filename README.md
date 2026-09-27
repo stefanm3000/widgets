@@ -51,6 +51,7 @@ whenever the process restarts.
 ## Workspace
 
 - `apps/`: reserved for the API, playground, and partner demos.
+- `apps/partner-vanilla`: independently runnable plain TypeScript integration using the embed.
 - `packages/eslint-config`: shared base and React lint configurations.
 - `packages/chat-widget`: accessible, themeable React chat UI.
 - `packages/embed`: framework-neutral `<pulse-chat>` custom element and mount API.
