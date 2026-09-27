@@ -26,11 +26,13 @@ export function ChatWidget({
     () => new ChatWidgetStore(client, roomId),
     [client, roomId],
   );
+
   const snapshot = useSyncExternalStore(
     store.subscribe,
     store.getSnapshot,
     store.getServerSnapshot,
   );
+
   const systemTheme = useSyncExternalStore<ResolvedTheme>(
     subscribeToSystemTheme,
     getSystemTheme,
@@ -45,7 +47,7 @@ export function ChatWidget({
   return (
     <section
       className={cn(
-        "grid h-[min(680px,80vh)] w-full min-w-[260px] max-w-[440px] grid-rows-[auto_minmax(260px,1fr)_auto_auto] overflow-hidden border border-border bg-background text-foreground shadow-[0_22px_60px_rgb(26_35_52/14%)] [border-radius:var(--pulse-radius)] [font-family:var(--pulse-font)]",
+        "grid h-[min(680px,80vh)] w-full min-w-65 max-w-110 grid-rows-[auto_minmax(260px,1fr)_auto_auto] overflow-hidden border border-border bg-background text-foreground shadow-[0_22px_60px_rgb(26_35_52/14%)] rounded-(--pulse-radius) [font-family:var(--pulse-font)]",
         classNames.root,
         className,
       )}
@@ -59,13 +61,16 @@ export function ChatWidget({
         roomName={snapshot.room?.name}
         statusClassName={classNames.connectionStatus}
       />
+
       <ChatTranscript
         className={classNames.messageList}
         loading={snapshot.loading}
         messageClassName={classNames.message}
         messages={snapshot.messages}
       />
+
       <ChatError message={snapshot.error} />
+
       <ChatComposer
         buttonClassName={classNames.sendButton}
         className={classNames.composer}
