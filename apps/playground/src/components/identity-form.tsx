@@ -38,7 +38,7 @@ export function IdentityForm({
           validate: (value) => Boolean(value.trim()),
         })}
       />
-      <Button size="sm" type="submit">
+      <Button className="h-9" size="sm" type="submit">
         Apply
       </Button>
     </form>

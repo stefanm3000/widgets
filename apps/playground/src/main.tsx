@@ -1,6 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
+import "@pulse/chat-widget/styles.css";
+
 import { App } from "./app";
 import "./styles.css";
 

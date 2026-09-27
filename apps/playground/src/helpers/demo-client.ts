@@ -20,15 +20,31 @@ function isDemoToken(value: unknown): value is DemoToken {
 
 function createDemoTokenProvider(baseUrl: string, displayName: string) {
   const requestToken = async (): Promise<DemoToken> => {
-    const response = await fetch(new URL("auth/demo-token", baseUrl), {
-      body: JSON.stringify({ displayName }),
-      headers: { "content-type": "application/json" },
-      method: "POST",
-    });
-    const data: unknown = await response.json();
+    let response: Response;
+    try {
+      response = await fetch(new URL("auth/demo-token", baseUrl), {
+        body: JSON.stringify({ displayName }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      });
+    } catch {
+      throw new Error("Could not connect to the chat service");
+    }
 
-    if (!response.ok || !isDemoToken(data)) {
+    if (!response.ok) {
       throw new Error("Could not create a demo chat session");
+    }
+
+    const text = await response.text();
+    let data: unknown;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error("The chat service returned an invalid response");
+    }
+
+    if (!isDemoToken(data)) {
+      throw new Error("The chat service returned an invalid response");
     }
 
     return data;

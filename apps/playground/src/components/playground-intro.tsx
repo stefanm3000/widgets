@@ -1,11 +1,4 @@
-import { FeatureCard } from "./feature-card";
 import { IntegrationExample } from "./integration-example";
-
-const features = [
-  { number: "01", title: "Short-lived tokens" },
-  { number: "02", title: "Cursor replay" },
-  { number: "03", title: "Themeable UI" },
-];
 
 export function PlaygroundIntro() {
   return (
@@ -19,12 +12,6 @@ export function PlaygroundIntro() {
         A browser SDK and composable React widget with authenticated history,
         resumable WebSockets, and reconnect handling built in.
       </p>
-
-      <div className="mt-9 grid gap-3 sm:grid-cols-3">
-        {features.map((feature) => (
-          <FeatureCard key={feature.number} {...feature} />
-        ))}
-      </div>
 
       <IntegrationExample />
     </div>
