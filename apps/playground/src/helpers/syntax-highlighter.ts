@@ -1,17 +1,17 @@
 import tsx from "@shikijs/langs/tsx";
-import vitesseDark from "@shikijs/themes/vitesse-dark";
+import githubDarkHighContrast from "@shikijs/themes/github-dark-high-contrast";
 import { createHighlighterCoreSync } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
 const highlighter = createHighlighterCoreSync({
   engine: createJavaScriptRegexEngine(),
   langs: [tsx],
-  themes: [vitesseDark],
+  themes: [githubDarkHighContrast],
 });
 
 export function highlightTsx(code: string): string {
   return highlighter.codeToHtml(code, {
     lang: "tsx",
-    theme: "vitesse-dark",
+    theme: "github-dark-high-contrast",
   });
 }
