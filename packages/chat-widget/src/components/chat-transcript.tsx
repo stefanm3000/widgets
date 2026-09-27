@@ -21,6 +21,7 @@ import {
 
 interface ChatTranscriptProps {
   className?: string;
+  currentUserId: string | null;
   loading: boolean;
   messageClassName?: string;
   messages: ChatMessage[];
@@ -28,6 +29,7 @@ interface ChatTranscriptProps {
 
 export function ChatTranscript({
   className,
+  currentUserId,
   loading,
   messageClassName,
   messages,
@@ -51,28 +53,41 @@ export function ChatTranscript({
                 No messages yet. Start the conversation.
               </TranscriptStatus>
             ) : (
-              messages.map((message) => (
-                <MessageScrollerItem key={message.id} messageId={message.id}>
-                  <Message className={messageClassName} part="message">
-                    <MessageAvatar>
-                      {initials(message.sender.displayName)}
-                    </MessageAvatar>
-                    <MessageContent>
-                      <MessageHeader>
-                        <strong className="min-w-0 truncate font-semibold text-foreground">
-                          {message.sender.displayName}
-                        </strong>
-                        <time className="shrink-0" dateTime={message.createdAt}>
-                          {formatTime(message.createdAt)}
-                        </time>
-                      </MessageHeader>
-                      <Bubble variant="secondary">
-                        <BubbleContent>{message.body}</BubbleContent>
-                      </Bubble>
-                    </MessageContent>
-                  </Message>
-                </MessageScrollerItem>
-              ))
+              messages.map((message) => {
+                const isOwnMessage = message.sender.id === currentUserId;
+
+                return (
+                  <MessageScrollerItem key={message.id} messageId={message.id}>
+                    <Message
+                      align={isOwnMessage ? "end" : "start"}
+                      className={messageClassName}
+                      part="message"
+                    >
+                      <MessageAvatar>
+                        {initials(message.sender.displayName)}
+                      </MessageAvatar>
+                      <MessageContent>
+                        <MessageHeader>
+                          <strong className="min-w-0 truncate font-semibold text-foreground">
+                            {isOwnMessage ? "You" : message.sender.displayName}
+                          </strong>
+                          <time
+                            className="shrink-0"
+                            dateTime={message.createdAt}
+                          >
+                            {formatTime(message.createdAt)}
+                          </time>
+                        </MessageHeader>
+                        <Bubble
+                          variant={isOwnMessage ? "default" : "secondary"}
+                        >
+                          <BubbleContent>{message.body}</BubbleContent>
+                        </Bubble>
+                      </MessageContent>
+                    </Message>
+                  </MessageScrollerItem>
+                );
+              })
             )}
           </MessageScrollerContent>
         </MessageScrollerViewport>

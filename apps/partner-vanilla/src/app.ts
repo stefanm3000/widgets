@@ -22,14 +22,7 @@ export function startPartnerApp(root: HTMLElement): void {
   root.innerHTML = `
     <div class="app-shell">
       <header class="app-header">
-        <div>
-          <p class="app-kicker">Pulse partner example</p>
-          <h1>Vanilla</h1>
-        </div>
-        <dl class="app-details">
-          <div><dt>Stack</dt><dd>TypeScript</dd></div>
-          <div><dt>Integration</dt><dd>Mount API</dd></div>
-        </dl>
+        <h1>Vanilla</h1>
       </header>
 
       <main class="chat-stage" aria-label="Vanilla chat widget example">

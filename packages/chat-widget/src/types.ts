@@ -47,6 +47,7 @@ export interface ChatWidgetProps {
 
 export interface ChatWidgetSnapshot {
   connectionState: ConnectionState;
+  currentUserId: string | null;
   error: string | null;
   loading: boolean;
   messages: Message[];

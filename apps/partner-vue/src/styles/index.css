@@ -18,85 +18,50 @@
 }
 
 body {
+  display: grid;
+  height: 100vh;
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  overflow: hidden;
+  place-items: center;
   background:
     radial-gradient(circle at 15% 5%, #ffffff 0, transparent 28rem),
     radial-gradient(circle at 90% 28%, #b8e8c7 0, transparent 32rem), #dff3e5;
 }
 
 .app-shell {
-  width: min(900px, calc(100% - 40px));
-  margin: 0 auto;
-  padding: 28px 0 52px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  width: calc(100vw - 40px);
+  max-width: 900px;
+  height: 80vh;
 }
 
 .app-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 32px;
-  align-items: center;
-  margin-bottom: 22px;
-  padding: 22px 28px;
-  border: 1px solid rgb(20 56 32 / 12%);
-  border-radius: 32px;
-  background: rgb(255 255 255 / 72%);
-  box-shadow: 0 16px 50px rgb(36 105 58 / 10%);
-  backdrop-filter: blur(20px);
-  corner-shape: squircle;
-}
-
-.app-kicker {
-  margin: 0 0 6px;
-  color: #248d4e;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
+  text-align: center;
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 3.25rem);
+  color: #19713b;
+  font-size: 1.2rem;
   font-weight: 750;
-  letter-spacing: -0.06em;
-  line-height: 0.95;
-}
-
-.app-details {
-  display: flex;
-  gap: 30px;
-  margin: 0;
-}
-
-.app-details div {
-  min-width: 104px;
-}
-
-.app-details dt {
-  margin-bottom: 4px;
-  color: #61806a;
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.app-details dd {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 750;
+  letter-spacing: -0.025em;
+  line-height: 1;
 }
 
 .chat-stage,
 pulse-chat {
   width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 pulse-chat::part(root) {
   box-sizing: border-box;
-  height: 80vh;
+  height: 100%;
+  min-height: 0;
   max-width: none;
   border: 1px solid #a9d5b6;
   border-radius: 40px;
@@ -106,22 +71,7 @@ pulse-chat::part(root) {
 
 @media (max-width: 640px) {
   .app-shell {
-    width: min(100% - 24px, 900px);
-    padding-top: 12px;
-  }
-
-  .app-header {
-    align-items: start;
-    flex-direction: column;
-    gap: 20px;
-    padding: 22px;
-    border-radius: 26px;
-  }
-
-  .app-details {
-    width: 100%;
-    justify-content: space-between;
-    gap: 16px;
+    width: calc(100vw - 24px);
   }
 
   pulse-chat::part(root) {

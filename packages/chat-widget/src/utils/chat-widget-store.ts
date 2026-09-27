@@ -12,6 +12,7 @@ export class ChatWidgetStore {
   private listeners = new Set<() => void>();
   private snapshot: ChatWidgetSnapshot = {
     connectionState: "offline",
+    currentUserId: null,
     error: null,
     loading: true,
     messages: [],
@@ -46,7 +47,11 @@ export class ChatWidgetStore {
 
     this.update({ error: null, sending: true });
     try {
-      await this.client.sendMessage(this.roomId, body);
+      const message = await this.client.sendMessage(this.roomId, body);
+      this.update({
+        currentUserId: message.sender.id,
+        messages: mergeMessages(this.snapshot.messages, [message]),
+      });
       return true;
     } catch (error) {
       this.update({ error: errorMessage(error, "Could not send message") });

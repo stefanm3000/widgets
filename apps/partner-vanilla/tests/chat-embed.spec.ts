@@ -22,12 +22,24 @@ test("sends a message in Vanilla", async ({ page }) => {
   await sendButton.click();
   await expect(widget.getByText(message)).toBeVisible();
 
-  const widgetBounds = await widget.locator('[part="root"]').boundingBox();
+  const shellBounds = await page.locator(".app-shell").boundingBox();
+  const inputBounds = await input.boundingBox();
+  const sendButtonBounds = await sendButton.boundingBox();
   const viewportHeight = await page.evaluate(() => globalThis.innerHeight);
-  expect(widgetBounds).not.toBeNull();
+  expect(shellBounds).not.toBeNull();
   expect(
-    Math.abs((widgetBounds?.height ?? 0) - viewportHeight * 0.8),
+    Math.abs((shellBounds?.height ?? 0) - viewportHeight * 0.8),
   ).toBeLessThan(2);
+  expect(inputBounds).not.toBeNull();
+  expect(sendButtonBounds).not.toBeNull();
+  expect((inputBounds?.x ?? 0) + (inputBounds?.width ?? 0)).toBeLessThanOrEqual(
+    sendButtonBounds?.x ?? 0,
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollHeight <= globalThis.innerHeight,
+    ),
+  ).toBe(true);
 
   await page.reload();
   await expect(page.locator("pulse-chat").getByText(message)).toBeVisible();

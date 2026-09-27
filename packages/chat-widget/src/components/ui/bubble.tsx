@@ -5,7 +5,7 @@ import type { ComponentProps } from "react";
 import { cn } from "../../utils/cn";
 
 const bubbleVariants = cva(
-  "group/bubble relative flex w-fit max-w-[88%] min-w-0 flex-col gap-1 group-data-[align=end]/message:self-end data-[align=end]:self-end data-[variant=ghost]:max-w-full",
+  "group/bubble relative flex w-fit max-w-[80%] min-w-0 flex-col gap-1 group-data-[align=end]/message:self-end data-[align=end]:self-end data-[variant=ghost]:max-w-full",
   {
     variants: {
       variant: {

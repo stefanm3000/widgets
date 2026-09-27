@@ -30,12 +30,24 @@ const message: Message = {
   createdAt: "2026-01-01T00:00:01.000Z",
 };
 
+const sentMessage: Message = {
+  ...message,
+  id: "1b20342a-c712-4e07-9dc2-e9bb56199ad3",
+  clientMessageId: "c95edff5-5ec0-453f-a871-495414adb80e",
+  sender: {
+    id: "da09b773-5ad2-4d24-8fb5-0dbeb67f5b29",
+    displayName: "Widget visitor",
+  },
+  body: "Hello from the widget",
+  createdAt: "2026-01-01T00:00:02.000Z",
+};
+
 function createClient() {
   let eventListener: ((event: RealtimeEvent) => void) | undefined;
   let stateListener: ((state: ConnectionState) => void) | undefined;
   const unsubscribe = vi.fn();
   const stopState = vi.fn();
-  const sendMessage = vi.fn(async () => message);
+  const sendMessage = vi.fn(async () => sentMessage);
 
   const client: ChatWidgetClient = {
     getMessages: vi.fn(async () => ({ items: [message], nextCursor: null })),
@@ -98,6 +110,20 @@ describe("ChatWidget", () => {
         "Hello from the widget",
       );
     });
+
+    const ownMessage = await screen.findByText(sentMessage.body);
+    const ownMessageRow = ownMessage.closest('[data-slot="message"]');
+    const ownBubble = ownMessage.closest('[data-slot="bubble"]');
+    expect(ownMessageRow?.getAttribute("data-align")).toBe("end");
+    expect(ownBubble?.getAttribute("data-variant")).toBe("default");
+    expect(screen.getByText("You")).toBeDefined();
+
+    const receivedMessage = screen.getByText(message.body);
+    expect(
+      receivedMessage
+        .closest('[data-slot="message"]')
+        ?.getAttribute("data-align"),
+    ).toBe("start");
 
     const liveMessage = {
       ...message,

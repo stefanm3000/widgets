@@ -47,7 +47,7 @@ export function ChatWidget({
   return (
     <section
       className={cn(
-        "grid h-[min(680px,80vh)] w-full min-w-65 max-w-110 grid-rows-[auto_minmax(260px,1fr)_auto_auto] overflow-hidden border border-border bg-background text-foreground shadow-[0_22px_60px_rgb(26_35_52/14%)] rounded-(--pulse-radius) [font-family:var(--pulse-font)]",
+        "grid h-[min(680px,80vh)] w-full min-w-65 max-w-110 grid-rows-[auto_minmax(0,1fr)_auto_auto] overflow-hidden border border-border bg-background text-foreground shadow-[0_22px_60px_rgb(26_35_52/14%)] rounded-(--pulse-radius) [font-family:var(--pulse-font)]",
         classNames.root,
         className,
       )}
@@ -64,6 +64,7 @@ export function ChatWidget({
 
       <ChatTranscript
         className={classNames.messageList}
+        currentUserId={snapshot.currentUserId}
         loading={snapshot.loading}
         messageClassName={classNames.message}
         messages={snapshot.messages}

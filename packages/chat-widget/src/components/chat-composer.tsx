@@ -44,7 +44,7 @@ export function ChatComposer({
   return (
     <form
       className={cn(
-        "grid grid-cols-[minmax(0,1fr)_auto] gap-2 border-t border-border bg-card p-3.5",
+        "flex items-center gap-2 border-t border-border bg-card p-3.5",
         className,
       )}
       onSubmit={submit}
@@ -55,7 +55,10 @@ export function ChatComposer({
       </Label>
       <Input
         autoComplete="off"
-        className={cn("h-10 rounded-xl bg-background", inputClassName)}
+        className={cn(
+          "box-border h-10 w-auto flex-1 rounded-xl bg-background",
+          inputClassName,
+        )}
         disabled={!connected || sending}
         id={inputId}
         maxLength={500}
@@ -66,7 +69,7 @@ export function ChatComposer({
         value={draft}
       />
       <Button
-        className={cn("h-10 w-20 rounded-xl", buttonClassName)}
+        className={cn("box-border h-10 w-20 rounded-xl", buttonClassName)}
         disabled={!canSend}
         part="send-button"
         type="submit"
