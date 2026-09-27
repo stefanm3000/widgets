@@ -18,6 +18,7 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "./ui/message-scroller";
+import { TranscriptOutline } from "./transcript-outline";
 
 interface ChatTranscriptProps {
   className?: string;
@@ -25,6 +26,7 @@ interface ChatTranscriptProps {
   loading: boolean;
   messageClassName?: string;
   messages: ChatMessage[];
+  outlineClassName?: string;
 }
 
 export function ChatTranscript({
@@ -33,6 +35,7 @@ export function ChatTranscript({
   loading,
   messageClassName,
   messages,
+  outlineClassName,
 }: ChatTranscriptProps) {
   return (
     <MessageScrollerProvider autoScroll defaultScrollPosition="end">
@@ -91,6 +94,7 @@ export function ChatTranscript({
             )}
           </MessageScrollerContent>
         </MessageScrollerViewport>
+        <TranscriptOutline className={outlineClassName} messages={messages} />
         <MessageScrollerButton />
       </MessageScroller>
     </MessageScrollerProvider>

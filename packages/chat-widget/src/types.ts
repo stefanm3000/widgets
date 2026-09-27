@@ -22,6 +22,7 @@ export interface ChatWidgetClassNames {
   input?: string;
   message?: string;
   messageList?: string;
+  messageOutline?: string;
   root?: string;
   sendButton?: string;
 }

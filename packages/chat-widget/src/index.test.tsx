@@ -42,6 +42,15 @@ const sentMessage: Message = {
   createdAt: "2026-01-01T00:00:02.000Z",
 };
 
+function getMessageBody(body: string): HTMLElement {
+  const element = screen
+    .getAllByText(body)
+    .find((match) => match.getAttribute("data-slot") === "bubble-content");
+
+  if (!element) throw new Error(`Could not find message body: ${body}`);
+  return element;
+}
+
 function createClient() {
   let eventListener: ((event: RealtimeEvent) => void) | undefined;
   let stateListener: ((state: ConnectionState) => void) | undefined;
@@ -85,6 +94,7 @@ describe("ChatWidget", () => {
     const fixture = createClient();
     const view = render(
       createElement(ChatWidget, {
+        classNames: { messageOutline: "custom-outline" },
         client: fixture.client,
         roomId: room.id,
         theme: { preset: "light" },
@@ -116,14 +126,24 @@ describe("ChatWidget", () => {
       );
     });
 
-    const ownMessage = await screen.findByText(sentMessage.body);
+    await screen.findAllByText(sentMessage.body);
+    const ownMessage = getMessageBody(sentMessage.body);
     const ownMessageRow = ownMessage.closest('[data-slot="message"]');
     const ownBubble = ownMessage.closest('[data-slot="bubble"]');
     expect(ownMessageRow?.getAttribute("data-align")).toBe("end");
     expect(ownBubble?.getAttribute("data-variant")).toBe("default");
     expect(screen.getByText("You")).toBeDefined();
 
-    const receivedMessage = screen.getByText(message.body);
+    const outline = document.querySelector('[part="message-outline"]');
+    expect(outline?.classList.contains("custom-outline")).toBe(true);
+    expect(outline?.querySelectorAll("button")).toHaveLength(2);
+    expect(
+      outline
+        ?.querySelector("button[aria-current='location']")
+        ?.textContent?.includes(sentMessage.body),
+    ).toBe(true);
+
+    const receivedMessage = getMessageBody(message.body);
     expect(
       receivedMessage
         .closest('[data-slot="message"]')
@@ -143,7 +163,7 @@ describe("ChatWidget", () => {
         payload: liveMessage,
       }),
     );
-    expect(screen.getByText("Live")).toBeDefined();
+    expect(getMessageBody("Live")).toBeDefined();
 
     view.unmount();
     expect(fixture.unsubscribe).toHaveBeenCalledOnce();

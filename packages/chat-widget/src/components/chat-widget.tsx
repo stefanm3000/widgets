@@ -68,6 +68,7 @@ export function ChatWidget({
         loading={snapshot.loading}
         messageClassName={classNames.message}
         messages={snapshot.messages}
+        outlineClassName={classNames.messageOutline}
       />
 
       <ChatError message={snapshot.error} />

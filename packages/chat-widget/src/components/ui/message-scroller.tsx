@@ -1,4 +1,8 @@
 import { MessageScroller as MessageScrollerPrimitive } from "@shadcn/react/message-scroller";
+export {
+  useMessageScroller,
+  useMessageScrollerVisibility,
+} from "@shadcn/react/message-scroller";
 import { ArrowDown } from "lucide-react";
 import type { ComponentProps } from "react";
 
