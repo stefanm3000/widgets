@@ -6,7 +6,9 @@
     "PORT",
     "NODE_ENV",
     "PULSE_TOKEN_SECRET",
-    "PULSE_ALLOWED_ORIGINS"
+    "PULSE_ALLOWED_ORIGINS",
+    "VITE_PULSE_API_URL",
+    "VITE_PULSE_PROXY_TARGET"
   ],
   "tasks": {
     "build": {
@@ -21,6 +23,7 @@
       "dependsOn": ["^check-types"]
     },
     "dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },
