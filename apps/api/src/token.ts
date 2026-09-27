@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 
-import type { Participant } from "@pulse/protocol";
 import { jwtVerify, SignJWT } from "jose";
 import { z } from "zod";
+
+import type { DemoIdentity } from "./types.js";
 
 const tokenPayloadSchema = z.object({
   sub: z.uuid(),
@@ -12,12 +13,6 @@ const tokenPayloadSchema = z.object({
 });
 
 type TokenPayload = z.infer<typeof tokenPayloadSchema>;
-
-export interface DemoIdentity {
-  user: Participant;
-  rooms: string[];
-  expiresAt: string;
-}
 
 export class TokenService {
   private readonly key: Uint8Array;
