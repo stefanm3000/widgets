@@ -32,29 +32,22 @@ const client = createPulseClient({
     label: "Vue",
     language: "vue",
     code: `<script setup>
-import { onUnmounted, ref } from "vue"
+import { onMounted, onUnmounted, ref } from "vue"
+import "@pulse/embed"
 import { createPulseClient } from "@pulse/sdk"
 
-const roomId = "support-room"
+const chat = ref(null)
 const client = createPulseClient({
   baseUrl: "https://chat.example.com/",
   getToken: () => fetchChatToken(),
 })
-const messages = ref((await client.getMessages(roomId)).items)
-const unsubscribe = client.subscribe(roomId, ({ payload }) => {
-  messages.value.push(payload)
-})
 
-onUnmounted(() => {
-  unsubscribe()
-  client.dispose()
-})
+onMounted(() => (chat.value.client = client))
+onUnmounted(() => client.dispose())
 </script>
 
 <template>
-  <p v-for="message in messages" :key="message.id">
-    {{ message.body }}
-  </p>
+  <pulse-chat ref="chat" room-id="support-room" />
 </template>`,
   },
   svelte: {
@@ -62,49 +55,36 @@ onUnmounted(() => {
     language: "svelte",
     code: `<script>
   import { onDestroy } from "svelte"
+  import "@pulse/embed"
   import { createPulseClient } from "@pulse/sdk"
 
-  const roomId = "support-room"
   const client = createPulseClient({
     baseUrl: "https://chat.example.com/",
     getToken: () => fetchChatToken(),
   })
-  let messages = []
+  let chat
 
-  client.getMessages(roomId).then((page) => (messages = page.items))
-  const unsubscribe = client.subscribe(roomId, ({ payload }) => {
-    messages = [...messages, payload]
-  })
-
-  onDestroy(() => {
-    unsubscribe()
-    client.dispose()
-  })
+  $: if (chat) chat.client = client
+  onDestroy(() => client.dispose())
 </script>
 
-{#each messages as message (message.id)}
-  <p>{message.body}</p>
-{/each}`,
+<pulse-chat bind:this={chat} room-id="support-room" />`,
   },
   javascript: {
     label: "JS",
     language: "javascript",
-    code: `import { createPulseClient } from "@pulse/sdk"
+    code: `import "@pulse/embed"
+import { createPulseClient } from "@pulse/sdk"
 
-const roomId = "support-room"
 const client = createPulseClient({
   baseUrl: "https://chat.example.com/",
   getToken: () => fetchChatToken(),
 })
-const list = document.querySelector("[data-chat]")
-const render = ({ body }) => list.append(new Option(body))
-
-const page = await client.getMessages(roomId)
-page.items.forEach(render)
-const unsubscribe = client.subscribe(roomId, ({ payload }) => render(payload))
+const chat = document.querySelector("pulse-chat")
+chat.client = client
+chat.theme = { preset: "system", radius: "20px" }
 
 window.addEventListener("pagehide", () => {
-  unsubscribe()
   client.dispose()
 }, { once: true })`,
   },

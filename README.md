@@ -11,7 +11,9 @@ idempotent messages, and broadcasts them through authenticated WebSocket
 subscriptions. The framework-independent browser SDK adds typed REST calls,
 deduplication, cursor resume, and reconnect handling. The accessible React widget
 adds connection states, history, live messages, sending, and scoped theme tokens.
-Persistence, partner demos, and deployment are still in progress.
+The browser embed exposes the same UI as a Shadow DOM custom element for Vue,
+Svelte, and plain JavaScript. Persistence, partner demos, and deployment are
+still in progress.
 
 ## Development
 
@@ -51,11 +53,12 @@ whenever the process restarts.
 - `apps/`: reserved for the API, playground, and partner demos.
 - `packages/eslint-config`: shared base and React lint configurations.
 - `packages/chat-widget`: accessible, themeable React chat UI.
+- `packages/embed`: framework-neutral `<pulse-chat>` custom element and mount API.
 - `packages/protocol`: versioned runtime schemas and public DTOs.
 - `packages/sdk`: browser-safe REST and realtime client.
 - `packages/typescript-config`: shared strict TypeScript configurations.
 - `docs/architecture.md`: planned boundaries and delivery phases.
 - `docs/decisions.md`: implementation decisions and tradeoffs.
 
-Next: the React playground and plain HTML embed. PostgreSQL and Drizzle will
-replace the in-memory store as a separate persistence feature.
+Next: independently deployable partner demos. PostgreSQL and Drizzle will replace
+the in-memory store as a separate persistence feature.

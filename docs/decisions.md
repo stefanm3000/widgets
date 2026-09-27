@@ -37,3 +37,18 @@ Send the short-lived JWT as a `pulse-auth.<token>` WebSocket subprotocol alongsi
 `pulse.v1`. Browser WebSockets cannot attach an Authorization header. A
 subprotocol keeps credentials out of URLs and common access logs; the server
 negotiates only the version protocol after validating the token and Origin.
+
+## Wrap the React widget for framework-neutral embeds
+
+Keep the React `ChatWidget` as the single implementation of the conversation UI.
+The separate `@pulse/embed` browser bundle includes its React runtime, registers
+the `<pulse-chat>` custom element, and mounts the widget inside Shadow DOM with
+bundled CSS. Vue, Svelte, and plain JavaScript integrations therefore render the
+same behavior and styling without translating the component into each framework.
+
+Pass the SDK client and theme as element properties because they are structured
+runtime values; reflect the room ID through the `room-id` attribute for ordinary
+HTML composition. Disconnecting the element unmounts React and releases widget
+subscriptions, while the caller retains ownership of the SDK client so multiple
+elements may share it. The tradeoff is a larger standalone bundle for non-React
+consumers in exchange for one tested UI implementation.

@@ -9,6 +9,10 @@
       "types": "./src/index.ts",
       "import": "./dist/index.js"
     },
+    "./unstyled": {
+      "types": "./src/unstyled.ts",
+      "import": "./dist/unstyled.js"
+    },
     "./styles.css": "./dist/styles/chat-widget.css"
   },
   "sideEffects": [
