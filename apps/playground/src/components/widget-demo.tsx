@@ -14,10 +14,6 @@ export function WidgetDemo() {
   const setTheme = usePlaygroundStore((state) => state.setTheme);
   const theme = usePlaygroundStore((state) => state.theme);
 
-  const openSecondTab = () => {
-    globalThis.open(globalThis.location.href, "_blank", "noopener,noreferrer");
-  };
-
   return (
     <div className="mx-auto w-full max-w-120">
       <div className="mb-3 flex items-center justify-between px-1">
@@ -27,14 +23,14 @@ export function WidgetDemo() {
           </p>
           <p className="mt-0.5 text-sm font-semibold">{session.displayName}</p>
         </div>
-        <Button
-          className="rounded-full"
-          onClick={openSecondTab}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          Open second tab
+        <Button asChild className="rounded-full" size="sm" variant="outline">
+          <a
+            href={globalThis.location.href}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Open second tab
+          </a>
         </Button>
       </div>
 
