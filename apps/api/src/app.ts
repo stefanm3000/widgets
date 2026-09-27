@@ -5,7 +5,7 @@ import Fastify from "fastify";
 import { registerRealtime } from "./realtime.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerRoomRoutes } from "./routes/rooms.js";
-import { MemoryChatStore } from "./store.js";
+import { MemoryChatStore, type ChatStore } from "./store.js";
 import { TokenService } from "./token.js";
 import type { BuildAppOptions } from "./types.js";
 
@@ -16,7 +16,7 @@ export async function buildApp(options: BuildAppOptions) {
     logger: options.logger ?? false,
     bodyLimit: 16 * 1024,
   });
-  const store = options.store ?? new MemoryChatStore();
+  const store: ChatStore = options.store ?? new MemoryChatStore();
   const tokenService = new TokenService(options.tokenSecret);
 
   await app.register(cors, {
@@ -35,6 +35,7 @@ export async function buildApp(options: BuildAppOptions) {
     store,
     tokenService,
   });
+  app.addHook("onClose", async () => store.close?.());
 
   return app;
 }

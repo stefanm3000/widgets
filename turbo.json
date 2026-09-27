@@ -5,6 +5,7 @@
     "HOST",
     "PORT",
     "NODE_ENV",
+    "DATABASE_URL",
     "PULSE_TOKEN_SECRET",
     "PULSE_ALLOWED_ORIGINS",
     "VITE_PULSE_API_URL",

@@ -1,6 +1,6 @@
 # Planned architecture
 
-This describes the intended Pulse project. Only the workspace tooling exists today.
+This describes the intended Pulse project and the boundaries implemented so far.
 
 ## Stack and boundaries
 

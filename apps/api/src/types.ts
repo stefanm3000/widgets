@@ -1,11 +1,11 @@
 import type { Participant } from "@pulse/protocol";
 
-import type { MemoryChatStore } from "./store.js";
+import type { ChatStore } from "./store.js";
 
 export interface BuildAppOptions {
   allowedOrigins?: string[];
   logger?: boolean;
-  store?: MemoryChatStore;
+  store?: ChatStore;
   tokenSecret: string;
 }
 

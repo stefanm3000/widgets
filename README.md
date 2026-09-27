@@ -5,15 +5,15 @@ This repository demonstrates one backend and protocol across unrelated partner w
 
 ## Status
 
-The versioned protocol and API are implemented. The API serves a seeded
-in-memory room, issues short-lived demo JWTs, returns paginated history, accepts
-idempotent messages, and broadcasts them through authenticated WebSocket
+The versioned protocol and API are implemented. The API serves a seeded room
+backed by PostgreSQL, issues short-lived demo JWTs, returns paginated history,
+accepts idempotent messages, and broadcasts them through authenticated WebSocket
 subscriptions. The framework-independent browser SDK adds typed REST calls,
 deduplication, cursor resume, and reconnect handling. The accessible React widget
 adds connection states, history, live messages, sending, and scoped theme tokens.
 The browser embed exposes the same UI as a Shadow DOM custom element for Vue,
-Svelte, and plain JavaScript. Persistence, partner demos, and deployment are
-still in progress.
+Svelte, and plain JavaScript. More partner demos and deployment are still in
+progress.
 
 ## Development
 
@@ -39,14 +39,20 @@ Initialized with `pnpm dlx create-turbo@latest`. The default Next.js apps and ge
 ### Run the API
 
 ```sh
+docker compose up -d postgres
 cp apps/api/.env.example apps/api/.env
+pnpm --filter @pulse/api db:setup
 pnpm --filter @pulse/api dev
 ```
 
 The local API listens on `http://127.0.0.1:4000`. Start with
 `POST /auth/demo-token`, passing `{ "displayName": "Your name" }`, then use the
-returned bearer token with the room and message endpoints. Local storage resets
-whenever the process restarts.
+returned bearer token with the room and message endpoints. Messages and replay
+cursors persist across API restarts in the local PostgreSQL volume.
+
+The API uses the in-memory store when `DATABASE_URL` is absent, which keeps unit
+tests and quick local experiments self-contained. Production startup requires
+both `DATABASE_URL` and `PULSE_TOKEN_SECRET`.
 
 ## Workspace
 
@@ -62,5 +68,5 @@ whenever the process restarts.
 - `docs/architecture.md`: planned boundaries and delivery phases.
 - `docs/decisions.md`: implementation decisions and tradeoffs.
 
-Next: independently deployable partner demos. PostgreSQL and Drizzle will replace
-the in-memory store as a separate persistence feature.
+Next: independently deployable Svelte and React partner demos, followed by
+deployment and portfolio documentation.

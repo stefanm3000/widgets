@@ -6,17 +6,24 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "check-types": "tsc -p tsconfig.json --noEmit",
-    "dev": "tsx watch src/server.ts",
+    "db:check": "drizzle-kit check",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file-if-exists=.env src/database/migrate.ts",
+    "db:seed": "tsx --env-file-if-exists=.env src/database/seed.ts",
+    "db:setup": "pnpm db:migrate && pnpm db:seed",
+    "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
     "lint": "eslint . --max-warnings 0",
-    "start": "node dist/server.js",
+    "start": "node --env-file-if-exists=.env dist/server.js",
     "test": "vitest run"
   },
   "dependencies": {
     "@fastify/cors": "11.3.0",
     "@fastify/rate-limit": "11.2.0",
     "@pulse/protocol": "workspace:*",
+    "drizzle-orm": "0.45.3",
     "fastify": "5.12.5",
     "jose": "6.2.12",
+    "pg": "8.23.0",
     "ws": "8.22.0",
     "zod": "4.6.5"
   },
@@ -24,8 +31,11 @@
     "@pulse/eslint-config": "workspace:*",
     "@pulse/typescript-config": "workspace:*",
     "@types/node": "24.19.0",
+    "@types/pg": "8.23.1",
     "@types/ws": "8.18.1",
+    "drizzle-kit": "0.31.11",
     "eslint": "10.9.1",
+    "pg-mem": "3.0.14",
     "tsx": "4.23.15",
     "typescript": "7.0.2",
     "vitest": "5.0.2"

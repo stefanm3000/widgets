@@ -52,3 +52,22 @@ HTML composition. Disconnecting the element unmounts React and releases widget
 subscriptions, while the caller retains ownership of the SDK client so multiple
 elements may share it. The tradeoff is a larger standalone bundle for non-React
 consumers in exchange for one tested UI implementation.
+
+## Persist messages and replay events together
+
+Use PostgreSQL through Drizzle for rooms, participants, messages, and realtime
+events. A message and its monotonic replay event are inserted in one transaction;
+the in-process listener runs only after that transaction commits. The sender,
+room, and client message ID form the idempotency key, while each message stores a
+display-name snapshot so old chat history does not change when a participant's
+current name changes.
+
+Keep the memory store behind the same asynchronous interface for focused unit
+tests and local experiments without `DATABASE_URL`. Production requires the
+database configuration. SQL-store tests run the generated migrations through
+the `pg` driver against `pg-mem`, then close and reopen the store to verify
+persistence and cursor replay without requiring Docker in the test runner.
+
+Subscriptions remain process-local. The committed event log supports reconnect
+and replay on one API instance; horizontal deployments still require a shared
+fanout system such as PostgreSQL notifications or a message broker.

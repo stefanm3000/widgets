@@ -10,14 +10,14 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
 import { authenticate, authorizeRoom, sendApiError } from "../helpers/http.js";
-import type { MemoryChatStore } from "../store.js";
+import type { ChatStore } from "../store.js";
 import type { TokenService } from "../token.js";
 
 const roomParamsSchema = z.object({ id: roomIdSchema });
 
 export function registerRoomRoutes(
   app: FastifyInstance,
-  store: MemoryChatStore,
+  store: ChatStore,
   tokenService: TokenService,
 ): void {
   app.get("/rooms/:id", async (request, reply) => {
@@ -30,7 +30,7 @@ export function registerRoomRoutes(
     }
     if (!authorizeRoom(identity, params.data.id, reply)) return;
 
-    const room = store.getRoom(params.data.id);
+    const room = await store.getRoom(params.data.id);
     if (!room) return sendApiError(reply, 404, "not_found", "Room not found");
     return reply.send(roomSchema.parse(room));
   });
@@ -51,7 +51,7 @@ export function registerRoomRoutes(
     }
     if (!authorizeRoom(identity, params.data.id, reply)) return;
 
-    const page = store.getMessages(params.data.id, query.data);
+    const page = await store.getMessages(params.data.id, query.data);
     if (!page) {
       return sendApiError(
         reply,
@@ -79,7 +79,11 @@ export function registerRoomRoutes(
     }
     if (!authorizeRoom(identity, params.data.id, reply)) return;
 
-    const result = store.addMessage(params.data.id, identity.user, body.data);
+    const result = await store.addMessage(
+      params.data.id,
+      identity.user,
+      body.data,
+    );
     if (!result) {
       return sendApiError(reply, 404, "not_found", "Room not found");
     }

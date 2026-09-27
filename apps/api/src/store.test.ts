@@ -10,21 +10,21 @@ const sender = {
 };
 
 describe("memory chat store events", () => {
-  it("emits new messages once and replays events after a cursor", () => {
+  it("emits new messages once and replays events after a cursor", async () => {
     const store = new MemoryChatStore();
     const listener = vi.fn();
     const stop = store.subscribe("demo-room", listener);
     const clientMessageId = randomUUID();
 
-    const first = store.addMessage("demo-room", sender, {
+    const first = await store.addMessage("demo-room", sender, {
       clientMessageId,
       body: "First event",
     });
-    const duplicate = store.addMessage("demo-room", sender, {
+    const duplicate = await store.addMessage("demo-room", sender, {
       clientMessageId,
       body: "First event",
     });
-    const second = store.addMessage("demo-room", sender, {
+    const second = await store.addMessage("demo-room", sender, {
       clientMessageId: randomUUID(),
       body: "Second event",
     });
@@ -35,12 +35,12 @@ describe("memory chat store events", () => {
     expect(second?.created).toBe(true);
     expect(listener).toHaveBeenCalledTimes(2);
 
-    const replay = store.getEventsAfter("demo-room", "3");
+    const replay = await store.getEventsAfter("demo-room", "3");
     expect(replay.expired).toBe(false);
     expect(replay.events.map((event) => event.payload.body)).toEqual([
       "Second event",
     ]);
-    expect(store.getEventsAfter("demo-room", "999").expired).toBe(true);
+    expect((await store.getEventsAfter("demo-room", "999")).expired).toBe(true);
 
     stop();
   });

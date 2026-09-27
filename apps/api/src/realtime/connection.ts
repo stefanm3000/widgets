@@ -1,16 +1,16 @@
 import { randomUUID } from "node:crypto";
 
 import { clientFrameSchema, PROTOCOL_VERSION } from "@pulse/protocol";
-import { WebSocket } from "ws";
+import { WebSocket, type RawData } from "ws";
 
-import type { MemoryChatStore } from "../store.js";
+import type { ChatStore } from "../store.js";
 import type { DemoIdentity } from "../types.js";
 import { sendFrame, sendRealtimeError } from "./helpers.js";
 
 export function handleConnection(
   socket: WebSocket,
   identity: DemoIdentity,
-  store: MemoryChatStore,
+  store: ChatStore,
 ): void {
   const subscriptions = new Map<string, () => void>();
   let alive = true;
@@ -25,7 +25,7 @@ export function handleConnection(
     alive = true;
   });
 
-  socket.on("message", (data, isBinary) => {
+  const handleMessage = async (data: RawData, isBinary: boolean) => {
     if (isBinary) {
       sendRealtimeError(
         socket,
@@ -86,7 +86,7 @@ export function handleConnection(
       );
       return;
     }
-    if (!store.getRoom(frame.roomId)) {
+    if (!(await store.getRoom(frame.roomId))) {
       sendRealtimeError(socket, "room_not_found", "Room not found", false);
       return;
     }
@@ -101,11 +101,11 @@ export function handleConnection(
       version: PROTOCOL_VERSION,
       type: "subscribed",
       roomId: frame.roomId,
-      cursor: store.getCurrentCursor(frame.roomId),
+      cursor: await store.getCurrentCursor(frame.roomId),
     });
 
     if (frame.cursor) {
-      const replay = store.getEventsAfter(frame.roomId, frame.cursor);
+      const replay = await store.getEventsAfter(frame.roomId, frame.cursor);
       if (replay.expired) {
         sendFrame(socket, {
           version: PROTOCOL_VERSION,
@@ -123,6 +123,12 @@ export function handleConnection(
         });
       }
     }
+  };
+
+  socket.on("message", (data, isBinary) => {
+    void handleMessage(data, isBinary).catch(() => {
+      socket.close(1011, "Unable to process frame");
+    });
   });
 
   const heartbeat = setInterval(() => {
