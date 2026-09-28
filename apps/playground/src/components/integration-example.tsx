@@ -1,4 +1,5 @@
 import { Code, FileTree, type Theme } from "@sugar-high/react";
+import { ExternalLink } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -9,6 +10,17 @@ import {
 } from "../helpers/integration-code";
 import { CopyCodeButton } from "./copy-code-button";
 import { Card, CardContent, CardHeader } from "./ui/card";
+
+const partnerDeployments = [
+  {
+    href: "https://widgets-partner-vue.vercel.app",
+    label: "Vue app",
+  },
+  {
+    href: "https://widgets-partner-vanilla.vercel.app",
+    label: "Vanilla app",
+  },
+] as const;
 
 const codeTheme = {
   background: "#10120f",
@@ -32,8 +44,21 @@ export function IntegrationExample() {
 
   return (
     <Card className="gap-0 bg-[#191b17] p-1.5 shadow-[0_22px_70px_rgba(22,24,19,0.16)] backdrop-blur-none">
-      <CardHeader className="text-[10px] font-semibold tracking-[0.08em] text-white/45 uppercase">
-        <span>Partner implementations</span>
+      <CardHeader className="justify-end gap-1.5">
+        <nav aria-label="Partner app deployments" className="flex gap-1.5">
+          {partnerDeployments.map(({ href, label }) => (
+            <a
+              className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 text-[10px] font-semibold text-white/70 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              href={href}
+              key={href}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {label}
+              <ExternalLink aria-hidden="true" className="size-3" />
+            </a>
+          ))}
+        </nav>
         <CopyCodeButton code={snippet.code} key={activeFile} />
       </CardHeader>
       <CardContent className="p-0">
