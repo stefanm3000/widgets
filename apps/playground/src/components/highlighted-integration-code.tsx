@@ -18,5 +18,10 @@ export default function HighlightedIntegrationCode({
     theme: "github-dark-high-contrast",
   });
 
-  return <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />;
+  return (
+    <div
+      className="syntax-highlight"
+      dangerouslySetInnerHTML={{ __html: highlightedCode }}
+    />
+  );
 }

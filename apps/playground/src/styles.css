@@ -1,5 +1,85 @@
 @import "tailwindcss";
 
+@keyframes syntax-color-in {
+  from {
+    color: #d5d9cc;
+  }
+}
+
+.syntax-highlight .shiki span[style*="color"] {
+  animation: syntax-color-in 240ms ease-out both;
+}
+
+@property --pulse-background {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f5f7fb;
+}
+
+@property --pulse-border {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #dce1ea;
+}
+
+@property --pulse-danger {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #b42318;
+}
+
+@property --pulse-muted {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #687386;
+}
+
+@property --pulse-primary {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #5b5bd6;
+}
+
+@property --pulse-primary-foreground {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+@property --pulse-surface {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+@property --pulse-text {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #172033;
+}
+
+.playground-chat-widget {
+  transition:
+    --pulse-background 240ms ease-out,
+    --pulse-border 240ms ease-out,
+    --pulse-danger 240ms ease-out,
+    --pulse-muted 240ms ease-out,
+    --pulse-primary 240ms ease-out,
+    --pulse-primary-foreground 240ms ease-out,
+    --pulse-surface 240ms ease-out,
+    --pulse-text 240ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .syntax-highlight .shiki span[style*="color"] {
+    animation: none;
+  }
+
+  .playground-chat-widget {
+    transition: none;
+  }
+}
+
 @layer base {
   * {
     box-sizing: border-box;

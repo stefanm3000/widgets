@@ -15,7 +15,7 @@ export function WidgetDemo() {
   return (
     <div className="mx-auto w-full max-w-110">
       <ChatWidget
-        className="max-w-none rounded-b-none shadow-[0_24px_70px_rgba(35,39,29,0.14)]"
+        className="playground-chat-widget max-w-none rounded-b-none shadow-[0_24px_70px_rgba(35,39,29,0.14)]"
         client={session.client}
         key={session.id}
         roomId={roomId}
