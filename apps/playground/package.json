@@ -14,7 +14,6 @@
     "@pulse/chat-widget": "workspace:*",
     "@pulse/sdk": "workspace:*",
     "@radix-ui/react-slot": "1.3.3",
-    "@radix-ui/react-toggle-group": "1.1.19",
     "@sugar-high/react": "2.4.1",
     "@tanstack/react-query": "5.104.0",
     "class-variance-authority": "0.7.1",
