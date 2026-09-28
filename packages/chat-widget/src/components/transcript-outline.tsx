@@ -13,6 +13,8 @@ interface TranscriptOutlineProps {
   messages: OptimisticMessage[];
 }
 
+const MAX_OUTLINE_MARKERS = 40;
+
 export function TranscriptOutline({
   className,
   messages,
@@ -29,13 +31,36 @@ export function TranscriptOutline({
   const currentMessageIndex = messages.findIndex(
     (message) => message.id === currentMessageId,
   );
+  const outlineMarkers = useMemo(() => {
+    const markerCount = Math.min(messages.length, MAX_OUTLINE_MARKERS);
+
+    return Array.from({ length: markerCount }, (_, markerIndex) => {
+      const startIndex = Math.floor(
+        (markerIndex * messages.length) / markerCount,
+      );
+      const endIndex = Math.floor(
+        ((markerIndex + 1) * messages.length) / markerCount,
+      );
+      const firstMessage = messages[startIndex];
+      const lastMessage = messages[endIndex - 1];
+
+      return {
+        current:
+          currentMessageIndex >= startIndex && currentMessageIndex < endIndex,
+        key: `${firstMessage?.id}:${lastMessage?.id}`,
+        visible: messages
+          .slice(startIndex, endIndex)
+          .some((message) => visibleIds.has(message.id)),
+      };
+    });
+  }, [currentMessageIndex, messages, visibleIds]);
 
   if (messages.length < 2) return null;
 
   return (
     <details
       className={cn(
-        "group/outline absolute top-[calc(50%-0.5rem)] right-2 z-20 -translate-y-1/2",
+        "group/outline invisible absolute top-[calc(50%-0.5rem)] right-2 z-20 -translate-y-1/2 opacity-0 transition-opacity group-hover/message-scroller:visible group-hover/message-scroller:opacity-100",
         className,
       )}
       part="message-outline"
@@ -46,13 +71,14 @@ export function TranscriptOutline({
           Open conversation outline. Message {currentMessageIndex + 1} of{" "}
           {messages.length}.
         </span>
-        {messages.map((message) => (
+        {outlineMarkers.map((marker) => (
           <span
             aria-hidden="true"
             className="h-0.5 w-3 shrink-0 rounded-full bg-muted-foreground/25 data-[current=true]:w-4 data-[current=true]:bg-foreground data-[visible=true]:bg-muted-foreground/60"
-            data-current={message.id === currentMessageId}
-            data-visible={visibleIds.has(message.id)}
-            key={message.id}
+            data-current={marker.current}
+            data-slot="message-outline-marker"
+            data-visible={marker.visible}
+            key={marker.key}
           />
         ))}
       </summary>

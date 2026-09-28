@@ -201,6 +201,10 @@ describe("ChatWidget", () => {
     const outline = document.querySelector('[part="message-outline"]');
     expect(outline?.classList.contains("custom-outline")).toBe(true);
     expect(outline?.classList.contains("top-[calc(50%-0.5rem)]")).toBe(true);
+    expect(outline?.classList.contains("invisible")).toBe(true);
+    expect(
+      outline?.classList.contains("group-hover/message-scroller:visible"),
+    ).toBe(true);
     expect(outline?.querySelectorAll("button")).toHaveLength(2);
     expect(
       outline
@@ -246,6 +250,56 @@ describe("ChatWidget", () => {
     view.unmount();
     expect(fixture.unsubscribe).toHaveBeenCalledOnce();
     expect(fixture.stopState).toHaveBeenCalledOnce();
+  });
+
+  it("keeps a growing conversation outline within its marker limit", async () => {
+    const fixture = createClient();
+    const initialMessages = Array.from({ length: 50 }, (_, index) => ({
+      ...message,
+      body: `History message ${index + 1}`,
+      clientMessageId: `history-client-${index + 1}`,
+      id: `history-${index + 1}`,
+    }));
+    vi.mocked(fixture.client.getMessages).mockResolvedValueOnce({
+      items: initialMessages,
+      nextCursor: null,
+    });
+
+    render(
+      createElement(ChatWidget, {
+        client: fixture.client,
+        roomId: room.id,
+      }),
+    );
+
+    await waitFor(() =>
+      expect(getMessageBody("History message 50")).toBeDefined(),
+    );
+    const outline = document.querySelector('[part="message-outline"]');
+    expect(
+      outline?.querySelectorAll('[data-slot="message-outline-marker"]'),
+    ).toHaveLength(40);
+    expect(outline?.querySelectorAll("button")).toHaveLength(50);
+
+    act(() =>
+      fixture.emitEvent({
+        eventId: "51",
+        roomId: room.id,
+        type: "message.created",
+        payload: {
+          ...message,
+          body: "Newest live message",
+          clientMessageId: "newest-live-client",
+          id: "newest-live",
+        },
+      }),
+    );
+
+    expect(getMessageBody("Newest live message")).toBeDefined();
+    expect(
+      outline?.querySelectorAll('[data-slot="message-outline-marker"]'),
+    ).toHaveLength(40);
+    expect(outline?.querySelectorAll("button")).toHaveLength(51);
   });
 
   it("keeps the composer focused and scrolls to an optimistic message", async () => {
