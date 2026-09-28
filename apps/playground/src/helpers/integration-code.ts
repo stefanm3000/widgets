@@ -19,15 +19,25 @@ export type IntegrationFilePath = (typeof integrationFilePaths)[number];
 export const integrationFiles = {
   "README.md": {
     language: "markdown",
-    code: `## What is Pulse?
+    code: `# Pulse
 
-Pulse is a framework-agnostic TypeScript SDK and 
-embeddable live chat widget. 
+Pulse is a framework-agnostic live chat
+toolkit for modern web apps.
 
-This repository demonstrates one backend and 
-protocol across unrelated partner websites.
+One backend and versioned protocol power
+the same conversation across React, Vue 
+and vanilla JavaScript.
 
-  `,
+## Included
+
+- Browser-safe TypeScript SDK
+- Accessible React chat widget
+- Shadow DOM embed
+- Realtime history and messaging
+
+Each partner keeps its own framework and
+visual identity while Pulse handles the
+shared chat experience.`,
   },
   "react/App.tsx": {
     language: "typescript",
