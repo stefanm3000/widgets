@@ -44,7 +44,7 @@ export function IntegrationExample() {
 
   return (
     <Card className="h-full gap-0 bg-[#191b17] p-1.5 shadow-[0_22px_70px_rgba(22,24,19,0.16)] backdrop-blur-none">
-      <CardHeader className="justify-end gap-1.5">
+      <CardHeader className="justify-between gap-1.5">
         <nav aria-label="Partner app deployments" className="flex gap-1.5">
           {partnerDeployments.map(({ href, label }) => (
             <a
@@ -66,7 +66,7 @@ export function IntegrationExample() {
           <FileTree
             activeFile={activeFile}
             aria-label="Partner implementation files"
-            className="border-r border-white/10 text-[11px] text-white/65"
+            className="border-r border-white/10 text-white/65 [--sh-font-size:12px]"
             onActiveFileChange={(path) => {
               if (isIntegrationFilePath(path)) setActiveFile(path);
             }}
@@ -75,6 +75,7 @@ export function IntegrationExample() {
           />
           <Code
             className="syntax-highlight h-full min-w-0 overflow-auto"
+            fontSize={13}
             lang={snippet.language}
             padding="1.25rem"
             theme={codeTheme}
