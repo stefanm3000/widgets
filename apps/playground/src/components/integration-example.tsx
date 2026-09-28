@@ -39,7 +39,7 @@ const codeTheme = {
 
 export function IntegrationExample() {
   const [activeFile, setActiveFile] =
-    useState<IntegrationFilePath>("README.md");
+    useState<IntegrationFilePath>("react/App.tsx");
   const snippet = integrationFiles[activeFile];
 
   return (
