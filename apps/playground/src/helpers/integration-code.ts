@@ -1,5 +1,5 @@
 export type IntegrationLanguage =
-  "javascript" | "svelte" | "typescript" | "vue";
+  "javascript" | "markdown" | "svelte" | "typescript" | "vue";
 
 interface IntegrationSnippet {
   code: string;
@@ -11,11 +11,24 @@ export const integrationFilePaths = [
   "vue/App.vue",
   "svelte/App.svelte",
   "vanilla/main.js",
+  "README.md",
 ] as const;
 
 export type IntegrationFilePath = (typeof integrationFilePaths)[number];
 
 export const integrationFiles = {
+  "README.md": {
+    language: "markdown",
+    code: `## What is Pulse?
+
+Pulse is a framework-agnostic TypeScript SDK and 
+embeddable live chat widget. 
+
+This repository demonstrates one backend and 
+protocol across unrelated partner websites.
+
+  `,
+  },
   "react/App.tsx": {
     language: "typescript",
     code: `import { ChatWidget } from "@pulse/chat-widget"
@@ -26,7 +39,11 @@ const client = createPulseClient({
   getToken: () => fetchChatCredentials(),
 })
 
-<ChatWidget client={client} roomId="support-room" />`,
+const App = () => (
+  <ChatWidget client={client} roomId="support-room" />
+);
+
+export default App;`,
   },
   "vue/App.vue": {
     language: "vue",
