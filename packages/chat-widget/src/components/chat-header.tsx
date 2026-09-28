@@ -45,7 +45,7 @@ export function ChatHeader({
       <Marker
         aria-live="polite"
         className={cn(
-          "w-auto shrink-0 rounded-full border border-border bg-muted px-2.5 py-1.5 font-semibold",
+          "w-auto shrink-0 rounded-[calc(var(--pulse-radius)*0.7)] border border-border bg-muted px-2.5 py-1.5 font-semibold",
           connectionState === "connected" && "text-emerald-600",
           statusClassName,
         )}

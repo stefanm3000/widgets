@@ -34,7 +34,7 @@ export function MessageScrollerViewport({
   return (
     <MessageScrollerPrimitive.Viewport
       className={cn(
-        "scroll-fade-y size-full min-h-0 min-w-0 overflow-y-auto overscroll-contain scroll-smooth outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        "scrollbar-none scroll-fade-y size-full min-h-0 min-w-0 overflow-y-auto overscroll-contain scroll-smooth outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
         className,
       )}
       data-slot="message-scroller-viewport"

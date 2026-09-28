@@ -53,7 +53,7 @@ export function BubbleContent({
   return (
     <Comp
       className={cn(
-        "w-fit max-w-full min-w-0 overflow-hidden rounded-2xl border border-transparent px-3.5 py-2.5 text-sm leading-relaxed wrap-break-word group-data-[align=end]/bubble:self-end",
+        "w-fit max-w-full min-w-0 overflow-hidden rounded-[calc(var(--pulse-radius)*0.8)] border border-transparent px-3.5 py-2.5 text-sm leading-relaxed wrap-break-word group-data-[align=end]/bubble:self-end",
         className,
       )}
       data-slot="bubble-content"

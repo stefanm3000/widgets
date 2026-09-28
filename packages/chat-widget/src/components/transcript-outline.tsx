@@ -41,7 +41,7 @@ export function TranscriptOutline({
       part="message-outline"
       ref={detailsRef}
     >
-      <summary className="flex max-h-52 w-7 cursor-pointer list-none flex-col items-center gap-0.5 overflow-hidden rounded-full border border-border bg-card/95 px-1.5 py-2 shadow-md backdrop-blur-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+      <summary className="flex max-h-52 w-7 cursor-pointer list-none flex-col items-center gap-0.5 overflow-hidden rounded-[calc(var(--pulse-radius)*0.7)] border border-border bg-card/95 px-1.5 py-2 shadow-md backdrop-blur-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
         <span className="sr-only">
           Open conversation outline. Message {currentMessageIndex + 1} of{" "}
           {messages.length}.
@@ -57,7 +57,7 @@ export function TranscriptOutline({
         ))}
       </summary>
 
-      <div className="absolute top-1/2 right-full mr-2 hidden max-h-72 w-64 -translate-y-1/2 flex-col gap-1 overflow-y-auto rounded-2xl border border-border bg-card p-1 text-card-foreground shadow-xl group-open/outline:flex">
+      <div className="scrollbar-none absolute top-1/2 right-full mr-2 hidden max-h-72 w-64 -translate-y-1/2 flex-col gap-1 overflow-y-auto rounded-[var(--pulse-radius)] border border-border bg-card p-1 text-card-foreground shadow-xl group-open/outline:flex">
         <p className="px-2 pt-1 pb-0.5 text-xs font-semibold text-muted-foreground">
           Conversation outline
         </p>
@@ -67,7 +67,7 @@ export function TranscriptOutline({
           return (
             <button
               aria-current={isCurrent ? "location" : undefined}
-              className="flex min-h-11 w-full flex-col rounded-xl px-2 py-1.5 text-left transition-colors outline-none hover:bg-muted focus-visible:bg-muted aria-current:bg-muted"
+              className="flex min-h-11 w-full flex-col rounded-[calc(var(--pulse-radius)*0.7)] px-2 py-1.5 text-left transition-colors outline-none hover:bg-muted focus-visible:bg-muted aria-current:bg-muted"
               key={message.id}
               onClick={() => {
                 scrollToMessage(message.id, {

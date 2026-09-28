@@ -56,7 +56,7 @@ export function ChatComposer({
       <Input
         autoComplete="off"
         className={cn(
-          "box-border h-10 w-auto flex-1 rounded-xl bg-background",
+          "box-border h-10 w-auto flex-1 rounded-[calc(var(--pulse-radius)*0.7)] bg-background",
           inputClassName,
         )}
         disabled={!connected || sending}
@@ -69,7 +69,10 @@ export function ChatComposer({
         value={draft}
       />
       <Button
-        className={cn("box-border h-10 w-20 rounded-xl", buttonClassName)}
+        className={cn(
+          "box-border h-10 w-20 rounded-[calc(var(--pulse-radius)*0.7)]",
+          buttonClassName,
+        )}
         disabled={!canSend}
         part="send-button"
         type="submit"

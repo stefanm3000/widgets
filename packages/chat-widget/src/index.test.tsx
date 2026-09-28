@@ -107,6 +107,11 @@ describe("ChatWidget", () => {
         .querySelector('[data-slot="message-scroller-viewport"]')
         ?.classList.contains("scroll-fade-y"),
     ).toBe(true);
+    expect(
+      document
+        .querySelector('[data-slot="message-scroller-viewport"]')
+        ?.classList.contains("scrollbar-none"),
+    ).toBe(true);
     const input = screen.getByLabelText("Message") as HTMLInputElement;
     const button = screen.getByRole("button", {
       name: "Send",
