@@ -6,17 +6,16 @@ import { requireElement } from "./helpers/dom";
 
 const theme = {
   colors: {
-    background: "#f4f4f0",
-    border: "#111111",
-    muted: "#666666",
+    background: "#f7f7f7",
+    border: "#dedede",
+    muted: "#737373",
     primary: "#111111",
     surface: "#ffffff",
     text: "#111111",
   },
-  fontFamily:
-    'ui-monospace, "SFMono-Regular", "Cascadia Code", "Liberation Mono", Menlo, monospace',
+  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
   preset: "light",
-  radius: "0px",
+  radius: "16px",
 } as const satisfies ChatWidgetTheme;
 
 export function startPartnerApp(root: HTMLElement): void {
