@@ -1,5 +1,15 @@
+import type { Participant } from "@pulse/protocol";
+
 export type ConnectionState =
   "connecting" | "connected" | "reconnecting" | "offline";
+
+export interface PulseCredentials {
+  accessToken: string;
+  user: Participant;
+}
+
+export type PulseToken = string | PulseCredentials;
+export type PulseTokenProvider = () => PulseToken | Promise<PulseToken>;
 
 export interface PulseWebSocket {
   readonly readyState: number;
@@ -20,7 +30,7 @@ export interface ReconnectOptions {
 export interface PulseClientOptions {
   baseUrl: string;
   fetch?: typeof globalThis.fetch;
-  getToken: () => string | Promise<string>;
+  getToken: PulseTokenProvider;
   reconnect?: ReconnectOptions;
   webSocketFactory?: (url: string, protocols: string[]) => PulseWebSocket;
 }

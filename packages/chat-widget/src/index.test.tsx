@@ -70,6 +70,7 @@ function createClient() {
   );
 
   const client: ChatWidgetClient = {
+    getCurrentUser: vi.fn(async () => sentMessage.sender),
     getMessages: vi.fn(async () => ({ items: [message], nextCursor: null })),
     getRoom: vi.fn(async () => room),
     onConnectionState(listener) {
@@ -108,6 +109,35 @@ beforeEach(() => {
 });
 
 describe("ChatWidget", () => {
+  it("marks messages from the current user on the first load", async () => {
+    const fixture = createClient();
+    vi.mocked(fixture.client.getMessages).mockResolvedValueOnce({
+      items: [sentMessage],
+      nextCursor: null,
+    });
+
+    const view = render(
+      createElement(ChatWidget, {
+        client: fixture.client,
+        roomId: room.id,
+      }),
+    );
+
+    await screen.findByText(sentMessage.body);
+    const ownMessage = getMessageBody(sentMessage.body);
+    await waitFor(() => {
+      expect(
+        ownMessage.closest('[data-slot="message"]')?.getAttribute("data-align"),
+      ).toBe("end");
+    });
+    expect(
+      ownMessage.closest('[data-slot="bubble"]')?.getAttribute("data-variant"),
+    ).toBe("default");
+    expect(screen.getByText("Charismatic Lizard (you)")).toBeDefined();
+    expect(fixture.sendMessage).not.toHaveBeenCalled();
+    view.unmount();
+  });
+
   it("loads history, sends only while connected, and cleans up", async () => {
     const fixture = createClient();
     const view = render(

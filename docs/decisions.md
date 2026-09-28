@@ -97,3 +97,12 @@ optimistic entry even when manual scrolling has stopped automatic following.
 Because `useOptimistic` is a React 19 API, the React widget now declares React
 19 and React DOM 19 as its peer range. The framework-neutral embed already
 bundles React 19, so non-React partner integrations keep the same public API.
+
+## Preserve authenticated identity in SDK credentials
+
+Allow token providers to return the authenticated participant with the access
+token, while continuing to accept a plain token string for SDK-only consumers.
+The SDK coalesces simultaneous startup credential requests and exposes the
+participant to the widget, so history can identify the current user's messages
+before the first send. This avoids decoding or trusting unverified JWT claims in
+the browser and keeps identity acquisition inside the browser-safe SDK boundary.

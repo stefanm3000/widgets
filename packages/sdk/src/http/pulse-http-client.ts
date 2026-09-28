@@ -15,7 +15,7 @@ import type { GetMessagesOptions } from "../types.js";
 interface PulseHttpClientOptions {
   baseUrl: URL;
   fetchImplementation: typeof globalThis.fetch;
-  getToken: () => string | Promise<string>;
+  getToken: () => Promise<string>;
 }
 
 export class PulseHttpClient {

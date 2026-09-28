@@ -29,6 +29,7 @@ export interface ChatWidgetClassNames {
 
 export type ChatWidgetClient = Pick<
   PulseClient,
+  | "getCurrentUser"
   | "getMessages"
   | "getRoom"
   | "onConnectionState"

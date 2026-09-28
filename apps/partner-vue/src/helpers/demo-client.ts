@@ -1,8 +1,13 @@
-import { createPulseClient, type PulseClient } from "@pulse/sdk";
+import {
+  createPulseClient,
+  type Participant,
+  type PulseClient,
+} from "@pulse/sdk";
 
 interface DemoToken {
   accessToken: string;
   expiresAt: string;
+  user: Participant;
 }
 
 const sessionIdStorageKey = "pulse-vue-session-id";
@@ -21,11 +26,15 @@ function getSessionId(): string {
 function isDemoToken(value: unknown): value is DemoToken {
   if (!value || typeof value !== "object") return false;
   const token = value as Record<string, unknown>;
+  const user = token.user as Record<string, unknown> | undefined;
   return (
     typeof token.accessToken === "string" &&
     token.accessToken.length > 0 &&
     typeof token.expiresAt === "string" &&
-    Number.isFinite(Date.parse(token.expiresAt))
+    Number.isFinite(Date.parse(token.expiresAt)) &&
+    typeof user?.id === "string" &&
+    typeof user.displayName === "string" &&
+    user.source === "vue"
   );
 }
 
@@ -33,12 +42,12 @@ function createTokenProvider(baseUrl: string) {
   let cachedToken: DemoToken | null = null;
   const sessionId = getSessionId();
 
-  return async (): Promise<string> => {
+  return async (): Promise<DemoToken> => {
     if (
       cachedToken &&
       Date.parse(cachedToken.expiresAt) - Date.now() > 30_000
     ) {
-      return cachedToken.accessToken;
+      return cachedToken;
     }
 
     const response = await fetch(new URL("auth/demo-token", baseUrl), {
@@ -52,7 +61,7 @@ function createTokenProvider(baseUrl: string) {
     }
 
     cachedToken = data;
-    return data.accessToken;
+    return data;
   };
 }
 

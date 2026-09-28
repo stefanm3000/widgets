@@ -1,10 +1,12 @@
 import type {
   Message,
   MessagePage,
+  Participant,
   RealtimeEvent,
   Room,
 } from "@pulse/protocol";
 
+import { PulseCredentialsProvider } from "./auth/pulse-credentials-provider.js";
 import { normalizeBaseUrl } from "./helpers/urls.js";
 import { PulseHttpClient } from "./http/pulse-http-client.js";
 import { PulseRealtimeClient } from "./realtime/pulse-realtime-client.js";
@@ -15,19 +17,21 @@ import type {
 } from "./types.js";
 
 export class PulseClient {
+  readonly #credentials: PulseCredentialsProvider;
   readonly #http: PulseHttpClient;
   readonly #realtime: PulseRealtimeClient;
 
   constructor(options: PulseClientOptions) {
     const baseUrl = normalizeBaseUrl(options.baseUrl);
+    this.#credentials = new PulseCredentialsProvider(options.getToken);
     this.#http = new PulseHttpClient({
       baseUrl,
       fetchImplementation: options.fetch ?? globalThis.fetch.bind(globalThis),
-      getToken: options.getToken,
+      getToken: this.#credentials.getAccessToken,
     });
     this.#realtime = new PulseRealtimeClient({
       baseUrl,
-      getToken: options.getToken,
+      getToken: this.#credentials.getAccessToken,
       reconnect: options.reconnect,
       webSocketFactory: options.webSocketFactory,
     });
@@ -35,6 +39,10 @@ export class PulseClient {
 
   getRoom(roomId: string): Promise<Room> {
     return this.#http.getRoom(roomId);
+  }
+
+  getCurrentUser(): Promise<Participant | null> {
+    return this.#credentials.getCurrentUser();
   }
 
   getMessages(

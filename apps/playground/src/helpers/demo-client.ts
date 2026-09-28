@@ -1,20 +1,29 @@
-import { createPulseClient, type PulseClient } from "@pulse/sdk";
+import {
+  createPulseClient,
+  type Participant,
+  type PulseClient,
+} from "@pulse/sdk";
 
 import { demoQueryClient } from "./query-client";
 
 interface DemoToken {
   accessToken: string;
   expiresAt: string;
+  user: Participant;
 }
 
 function isDemoToken(value: unknown): value is DemoToken {
   if (!value || typeof value !== "object") return false;
   const token = value as Record<string, unknown>;
+  const user = token.user as Record<string, unknown> | undefined;
   return (
     typeof token.accessToken === "string" &&
     token.accessToken.length > 0 &&
     typeof token.expiresAt === "string" &&
-    Number.isFinite(Date.parse(token.expiresAt))
+    Number.isFinite(Date.parse(token.expiresAt)) &&
+    typeof user?.id === "string" &&
+    typeof user.displayName === "string" &&
+    user.source === "playground"
   );
 }
 
@@ -50,7 +59,7 @@ function createDemoTokenProvider(baseUrl: string, sessionId: string) {
     return data;
   };
 
-  return async (): Promise<string> => {
+  return async (): Promise<DemoToken> => {
     const token = await demoQueryClient.query({
       queryFn: requestToken,
       queryKey: ["demo-token", baseUrl, "playground", sessionId],
@@ -66,7 +75,7 @@ function createDemoTokenProvider(baseUrl: string, sessionId: string) {
       },
     });
 
-    return token.accessToken;
+    return token;
   };
 }
 

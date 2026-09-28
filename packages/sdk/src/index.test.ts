@@ -62,6 +62,22 @@ afterEach(() => {
 });
 
 describe("PulseClient HTTP", () => {
+  it("exposes the authenticated user from structured credentials", async () => {
+    const getToken = vi.fn(async () => ({
+      accessToken: "demo-token",
+      user: demoMessage.sender,
+    }));
+    const client = createPulseClient({
+      baseUrl: "https://api.example.com",
+      fetch: async () => new Response("{}"),
+      getToken,
+    });
+
+    await expect(client.getCurrentUser()).resolves.toEqual(demoMessage.sender);
+    expect(getToken).toHaveBeenCalledOnce();
+    client.dispose();
+  });
+
   it("authenticates and validates room responses", async () => {
     const fetchMock = vi.fn<typeof globalThis.fetch>(
       async (_input, _init) =>

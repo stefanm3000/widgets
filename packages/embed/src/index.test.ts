@@ -34,6 +34,7 @@ function createClient() {
   const stopRefetch = vi.fn();
 
   const client = {
+    getCurrentUser: vi.fn(async () => null),
     getMessages: vi.fn(async () => ({ items: [message], nextCursor: null })),
     getRoom: vi.fn(async () => room),
     onConnectionState(listener) {

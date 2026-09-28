@@ -23,7 +23,7 @@ import { createPulseClient } from "@pulse/sdk"
 
 const client = createPulseClient({
   baseUrl: "https://chat.example.com/",
-  getToken: () => fetchChatToken(),
+  getToken: () => fetchChatCredentials(),
 })
 
 <ChatWidget client={client} roomId="support-room" />`,
@@ -39,7 +39,7 @@ import { createPulseClient } from "@pulse/sdk"
 const chat = ref(null)
 const client = createPulseClient({
   baseUrl: "https://chat.example.com/",
-  getToken: () => fetchChatToken(),
+  getToken: () => fetchChatCredentials(),
 })
 
 onMounted(() => (chat.value.client = client))
@@ -60,7 +60,7 @@ onUnmounted(() => client.dispose())
 
   const client = createPulseClient({
     baseUrl: "https://chat.example.com/",
-    getToken: () => fetchChatToken(),
+    getToken: () => fetchChatCredentials(),
   })
   let chat
 
@@ -78,7 +78,7 @@ import { createPulseClient } from "@pulse/sdk"
 
 const client = createPulseClient({
   baseUrl: "https://chat.example.com/",
-  getToken: () => fetchChatToken(),
+  getToken: () => fetchChatCredentials(),
 })
 const chat = document.querySelector("pulse-chat")
 chat.client = client

@@ -18,7 +18,7 @@ const client = createPulseClient({
     const response = await fetch("/api/pulse-token", { method: "POST" });
     if (!response.ok) throw new Error("Could not create a chat session");
     const session = await response.json();
-    return session.accessToken;
+    return { accessToken: session.accessToken, user: session.user };
   },
 });
 ```
@@ -26,7 +26,10 @@ const client = createPulseClient({
 `getToken` is asynchronous so an integration can refresh a short-lived token
 without recreating the client. A real partner should call its own backend, which
 keeps partner credentials server-side. The browser must never contain a partner
-secret or long-lived API key.
+secret or long-lived API key. Return both `accessToken` and the authenticated
+`user` when rendering the chat widget so existing messages from that user are
+identified on the first load. Plain token strings remain supported for SDK-only
+integrations where the current participant is not needed.
 
 ## Read, send, and subscribe
 

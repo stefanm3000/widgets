@@ -18,7 +18,7 @@ type ErrorListener = (error: Error) => void;
 
 interface PulseRealtimeClientOptions {
   baseUrl: URL;
-  getToken: () => string | Promise<string>;
+  getToken: () => Promise<string>;
   reconnect?: ReconnectOptions;
   webSocketFactory?: (url: string, protocols: string[]) => PulseWebSocket;
 }

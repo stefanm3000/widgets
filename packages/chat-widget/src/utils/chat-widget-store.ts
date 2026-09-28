@@ -113,12 +113,14 @@ export class ChatWidgetStore {
     finishLoading = false,
   ) {
     try {
-      const [room, history] = await Promise.all([
+      const [currentUser, room, history] = await Promise.all([
+        this.client.getCurrentUser(),
         this.client.getRoom(this.roomId),
         this.client.getMessages(this.roomId, { limit: 50 }),
       ]);
       if (!this.isActive(generation)) return;
       this.update({
+        ...(currentUser ? { currentUserId: currentUser.id } : {}),
         messages: mergeMessages(this.snapshot.messages, history.items),
         room,
       });
