@@ -160,6 +160,11 @@ describe("ChatWidget", () => {
         .querySelector('[data-slot="message-scroller-viewport"]')
         ?.classList.contains("scrollbar-none"),
     ).toBe(true);
+    expect(
+      document
+        .querySelector('[data-slot="message-scroller-viewport"]')
+        ?.classList.contains(["scroll", "smooth"].join("-")),
+    ).toBe(false);
     const input = screen.getByLabelText("Message") as HTMLInputElement;
     const button = screen.getByRole("button", {
       name: "Send",
@@ -193,6 +198,7 @@ describe("ChatWidget", () => {
 
     const outline = document.querySelector('[part="message-outline"]');
     expect(outline?.classList.contains("custom-outline")).toBe(true);
+    expect(outline?.classList.contains("top-[calc(50%-0.5rem)]")).toBe(true);
     expect(outline?.querySelectorAll("button")).toHaveLength(2);
     expect(
       outline

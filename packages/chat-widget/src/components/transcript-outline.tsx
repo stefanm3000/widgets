@@ -35,7 +35,7 @@ export function TranscriptOutline({
   return (
     <details
       className={cn(
-        "group/outline absolute top-1/2 right-2 z-20 -translate-y-1/2",
+        "group/outline absolute top-[calc(50%-0.5rem)] right-2 z-20 -translate-y-1/2",
         className,
       )}
       part="message-outline"
