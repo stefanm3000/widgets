@@ -6,7 +6,7 @@
   }
 }
 
-.syntax-highlight .shiki span[style*="color"] {
+.syntax-highlight .sh__line > span {
   animation: syntax-color-in 240ms ease-out both;
 }
 
@@ -71,7 +71,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .syntax-highlight .shiki span[style*="color"] {
+  .syntax-highlight .sh__line > span {
     animation: none;
   }
 

@@ -1,46 +1,63 @@
-import { lazy, Suspense, useState } from "react";
+import { Code, FileTree, type Theme } from "@sugar-high/react";
+import { useState } from "react";
 
 import {
-  integrationSnippets,
-  type IntegrationFramework,
+  integrationFilePaths,
+  integrationFiles,
+  isIntegrationFilePath,
+  type IntegrationFilePath,
 } from "../helpers/integration-code";
 import { CopyCodeButton } from "./copy-code-button";
-import { IntegrationFrameworkSelector } from "./integration-framework-selector";
 import { Card, CardContent, CardHeader } from "./ui/card";
 
-const HighlightedIntegrationCode = lazy(
-  () => import("./highlighted-integration-code"),
-);
+const codeTheme = {
+  background: "#10120f",
+  foreground: "#d5d9cc",
+  class: "#d2a8ff",
+  comment: "#8b949e",
+  control: "#8b949e",
+  entity: "#ffa657",
+  identifier: "#d5d9cc",
+  jsxliterals: "#7ee787",
+  keyword: "#ff7b72",
+  property: "#79c0ff",
+  sign: "#8b949e",
+  string: "#a5d6ff",
+} as const satisfies Theme;
 
 export function IntegrationExample() {
-  const [framework, setFramework] = useState<IntegrationFramework>("react");
-  const snippet = integrationSnippets[framework];
+  const [activeFile, setActiveFile] =
+    useState<IntegrationFilePath>("react/App.tsx");
+  const snippet = integrationFiles[activeFile];
 
   return (
     <Card className="gap-0 bg-[#191b17] p-1.5 shadow-[0_22px_70px_rgba(22,24,19,0.16)] backdrop-blur-none">
-      <CardHeader className="flex-col items-stretch gap-2 text-[10px] font-semibold tracking-[0.08em] text-white/45 uppercase">
-        <div className="flex items-center justify-between">
-          <span>Partner integration</span>
-          <CopyCodeButton code={snippet.code} key={framework} />
-        </div>
-        <IntegrationFrameworkSelector
-          onChange={setFramework}
-          value={framework}
-        />
+      <CardHeader className="text-[10px] font-semibold tracking-[0.08em] text-white/45 uppercase">
+        <span>Partner implementations</span>
+        <CopyCodeButton code={snippet.code} key={activeFile} />
       </CardHeader>
-      <CardContent className="p-0 [&_.shiki]:m-0 [&_.shiki]:h-72 [&_.shiki]:overflow-auto [&_.shiki]:rounded-[18px] [&_.shiki]:bg-[#10120f]! [&_.shiki]:p-5 [&_.shiki]:text-[12px] [&_.shiki]:leading-6">
-        <Suspense
-          fallback={
-            <pre className="m-0 h-72 overflow-auto rounded-[18px] bg-[#10120f] p-5 text-[12px] leading-6 text-[#d5d9cc]">
-              <code>{snippet.code}</code>
-            </pre>
-          }
-        >
-          <HighlightedIntegrationCode
-            code={snippet.code}
-            language={snippet.language}
+      <CardContent className="p-0">
+        <div className="grid h-72 grid-cols-[120px_minmax(0,1fr)] overflow-hidden rounded-[18px] bg-[#10120f] sm:grid-cols-[148px_minmax(0,1fr)]">
+          <FileTree
+            activeFile={activeFile}
+            aria-label="Partner implementation files"
+            className="border-r border-white/10 text-[11px] text-white/65"
+            onActiveFileChange={(path) => {
+              if (isIntegrationFilePath(path)) setActiveFile(path);
+            }}
+            paths={integrationFilePaths}
+            theme={codeTheme}
           />
-        </Suspense>
+          <Code
+            className="syntax-highlight h-full min-w-0 overflow-auto"
+            lang={snippet.language}
+            padding="1.25rem"
+            theme={codeTheme}
+            wrapLongLines={false}
+          >
+            {snippet.code}
+          </Code>
+        </div>
       </CardContent>
     </Card>
   );

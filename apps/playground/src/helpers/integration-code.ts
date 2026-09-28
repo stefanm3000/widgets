@@ -1,23 +1,23 @@
-export type IntegrationFramework = "react" | "vue" | "svelte" | "javascript";
-export type IntegrationLanguage = "tsx" | "vue" | "svelte" | "javascript";
+export type IntegrationLanguage =
+  "javascript" | "svelte" | "typescript" | "vue";
 
 interface IntegrationSnippet {
   code: string;
-  label: string;
   language: IntegrationLanguage;
 }
 
-export const integrationFrameworks = [
-  "react",
-  "vue",
-  "svelte",
-  "javascript",
-] as const satisfies readonly IntegrationFramework[];
+export const integrationFilePaths = [
+  "react/App.tsx",
+  "vue/App.vue",
+  "svelte/App.svelte",
+  "vanilla/main.js",
+] as const;
 
-export const integrationSnippets = {
-  react: {
-    label: "React",
-    language: "tsx",
+export type IntegrationFilePath = (typeof integrationFilePaths)[number];
+
+export const integrationFiles = {
+  "react/App.tsx": {
+    language: "typescript",
     code: `import { ChatWidget } from "@pulse/chat-widget"
 import { createPulseClient } from "@pulse/sdk"
 
@@ -28,8 +28,7 @@ const client = createPulseClient({
 
 <ChatWidget client={client} roomId="support-room" />`,
   },
-  vue: {
-    label: "Vue",
+  "vue/App.vue": {
     language: "vue",
     code: `<script setup>
 import { onMounted, onUnmounted, ref } from "vue"
@@ -50,8 +49,7 @@ onUnmounted(() => client.dispose())
   <pulse-chat ref="chat" room-id="support-room" />
 </template>`,
   },
-  svelte: {
-    label: "Svelte",
+  "svelte/App.svelte": {
     language: "svelte",
     code: `<script>
   import { onDestroy } from "svelte"
@@ -70,8 +68,7 @@ onUnmounted(() => client.dispose())
 
 <pulse-chat bind:this={chat} room-id="support-room" />`,
   },
-  javascript: {
-    label: "JS",
+  "vanilla/main.js": {
     language: "javascript",
     code: `import "@pulse/embed"
 import { createPulseClient } from "@pulse/sdk"
@@ -88,10 +85,10 @@ window.addEventListener("pagehide", () => {
   client.dispose()
 }, { once: true })`,
   },
-} as const satisfies Record<IntegrationFramework, IntegrationSnippet>;
+} as const satisfies Record<IntegrationFilePath, IntegrationSnippet>;
 
-export function isIntegrationFramework(
+export function isIntegrationFilePath(
   value: string,
-): value is IntegrationFramework {
-  return value in integrationSnippets;
+): value is IntegrationFilePath {
+  return value in integrationFiles;
 }

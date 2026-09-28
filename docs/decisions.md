@@ -106,3 +106,11 @@ The SDK coalesces simultaneous startup credential requests and exposes the
 participant to the widget, so history can identify the current user's messages
 before the first send. This avoids decoding or trusting unverified JWT claims in
 the browser and keeps identity acquisition inside the browser-safe SDK boundary.
+
+## Use Sugar High for playground source previews
+
+Render the small partner examples with Sugar High's React components instead of
+loading Shiki grammars and themes at runtime. The implementation files remain
+read-only, render synchronously, and share one theme with Sugar High's accessible
+file tree. Sugar High's lighter language parsers trade some grammar-level fidelity
+for a smaller dependency surface that is sufficient for these short examples.
