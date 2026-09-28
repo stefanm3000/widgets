@@ -70,10 +70,19 @@ export function ChatTranscript({
                   message.optimistic || message.sender.id === currentUserId;
 
                 return (
-                  <MessageScrollerItem key={message.id} messageId={message.id}>
+                  <MessageScrollerItem
+                    key={message.clientMessageId}
+                    messageId={message.id}
+                  >
                     <Message
                       align={isOwnMessage ? "end" : "start"}
-                      className={messageClassName}
+                      aria-busy={message.optimistic || undefined}
+                      className={cn(
+                        "opacity-100 transition-opacity duration-200 motion-reduce:transition-none",
+                        message.optimistic && "opacity-50",
+                        messageClassName,
+                      )}
+                      data-pending={message.optimistic || undefined}
                       part="message"
                     >
                       <MessageAvatar>
@@ -83,26 +92,14 @@ export function ChatTranscript({
                         <MessageHeader>
                           <strong className="min-w-0 truncate font-semibold text-foreground">
                             {message.sender.displayName}
-                            {isOwnMessage && !message.optimistic
-                              ? " (you)"
-                              : ""}
+                            {isOwnMessage ? " (you)" : ""}
                           </strong>
-                          {message.optimistic ? (
-                            <span
-                              aria-label="Message is sending"
-                              className="shrink-0 text-[10px]"
-                              data-slot="message-status"
-                            >
-                              Sending…
-                            </span>
-                          ) : (
-                            <span
-                              className="shrink-0 rounded-full border border-border px-1.5 py-0.5 text-[9px] font-bold tracking-wide uppercase"
-                              data-slot="message-source"
-                            >
-                              {sourceLabels[message.sender.source]}
-                            </span>
-                          )}
+                          <span
+                            className="shrink-0 rounded-full border border-border px-1.5 py-0.5 text-[9px] font-bold tracking-wide uppercase"
+                            data-slot="message-source"
+                          >
+                            {sourceLabels[message.sender.source]}
+                          </span>
                           <time
                             className="shrink-0"
                             dateTime={message.createdAt}

@@ -12,12 +12,11 @@ export class ChatWidgetStore {
   private listeners = new Set<() => void>();
   private snapshot: ChatWidgetSnapshot = {
     connectionState: "offline",
-    currentUserId: null,
+    currentUser: null,
     error: null,
     loading: true,
     messages: [],
     room: null,
-    sending: false,
   };
   private started = false;
   private stopCallbacks: Array<() => void> = [];
@@ -45,10 +44,9 @@ export class ChatWidgetStore {
     body: string,
     clientMessageId: ReturnType<Crypto["randomUUID"]>,
   ): Promise<boolean> => {
-    if (this.snapshot.sending || this.snapshot.connectionState !== "connected")
-      return false;
+    if (this.snapshot.connectionState !== "connected") return false;
 
-    this.update({ error: null, sending: true });
+    this.update({ error: null });
     try {
       const message = await this.client.sendMessage(
         this.roomId,
@@ -56,15 +54,13 @@ export class ChatWidgetStore {
         clientMessageId,
       );
       this.update({
-        currentUserId: message.sender.id,
+        currentUser: message.sender,
         messages: mergeMessages(this.snapshot.messages, [message]),
       });
       return true;
     } catch (error) {
       this.update({ error: errorMessage(error, "Could not send message") });
       return false;
-    } finally {
-      this.update({ sending: false });
     }
   };
 
@@ -120,7 +116,7 @@ export class ChatWidgetStore {
       ]);
       if (!this.isActive(generation)) return;
       this.update({
-        ...(currentUser ? { currentUserId: currentUser.id } : {}),
+        ...(currentUser ? { currentUser } : {}),
         messages: mergeMessages(this.snapshot.messages, history.items),
         room,
       });

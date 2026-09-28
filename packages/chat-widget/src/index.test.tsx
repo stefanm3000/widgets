@@ -1,6 +1,7 @@
 import type { ConnectionState, Message, RealtimeEvent, Room } from "@pulse/sdk";
 import {
   act,
+  cleanup,
   fireEvent,
   render,
   screen,
@@ -98,6 +99,7 @@ function createClient() {
 }
 
 afterEach(() => {
+  cleanup();
   vi.restoreAllMocks();
 });
 
@@ -220,6 +222,7 @@ describe("ChatWidget", () => {
 
     const liveMessage = {
       ...message,
+      clientMessageId: "3ed94d98-d009-4d8f-bf31-aad58cee38fe",
       id: "70831012-904f-4098-a080-f76e89392cdb",
       body: "Live",
       sender: {
@@ -315,14 +318,19 @@ describe("ChatWidget", () => {
 
     expect(input.value).toBe("");
     expect(document.activeElement).toBe(input);
-    expect(getMessageBody(sentMessage.body)).toBeDefined();
-    expect(screen.getByText("Sending…")).toBeDefined();
+    const pendingMessage = getMessageBody(sentMessage.body).closest(
+      '[data-slot="message"]',
+    );
+    expect(pendingMessage?.className).toContain("opacity-50");
+    expect(pendingMessage?.getAttribute("aria-busy")).toBe("true");
+    expect(screen.queryByText("Sending…")).toBeNull();
+    expect(screen.getByText("Charismatic Lizard (you)")).toBeDefined();
+    expect(screen.getByText("Playground")).toBeDefined();
     await waitFor(() => expect(scrollTo).toHaveBeenCalled());
 
     await act(async () => finishSend?.());
 
     await waitFor(() => {
-      expect(screen.queryByText("Sending…")).toBeNull();
       expect(
         screen
           .getAllByText(sentMessage.body)
@@ -331,5 +339,99 @@ describe("ChatWidget", () => {
           ),
       ).toHaveLength(1);
     });
+    const confirmedMessage = getMessageBody(sentMessage.body).closest(
+      '[data-slot="message"]',
+    );
+    expect(confirmedMessage).toBe(pendingMessage);
+    expect(confirmedMessage?.className).toContain("opacity-100");
+    expect(confirmedMessage?.className).not.toContain("opacity-50");
+    expect(confirmedMessage?.getAttribute("aria-busy")).toBeNull();
+  });
+
+  it("submits more messages while earlier sends are still pending", async () => {
+    const fixture = createClient();
+    const finishSend = new Map<string, () => void>();
+    const messageIds = {
+      First: "28d7a5f9-339d-4b49-aabc-dd1d6e1222a1",
+      Second: "a5c5810a-211d-4ad8-963a-242d216e77f2",
+    } as const;
+
+    fixture.sendMessage.mockImplementation(
+      async (_roomId, body, clientMessageId) =>
+        new Promise((resolve) => {
+          finishSend.set(body, () =>
+            resolve({
+              ...sentMessage,
+              body,
+              clientMessageId: clientMessageId ?? sentMessage.clientMessageId,
+              id: messageIds[body as keyof typeof messageIds],
+            }),
+          );
+        }),
+    );
+
+    render(
+      createElement(ChatWidget, {
+        client: fixture.client,
+        roomId: room.id,
+      }),
+    );
+
+    expect(await screen.findByText(message.body)).toBeDefined();
+    act(() => fixture.setState("connected"));
+
+    const input = screen.getByLabelText("Message") as HTMLInputElement;
+    const button = screen.getByRole("button", { name: "Send" });
+    const form = input.closest("form");
+    if (!form) throw new Error("Could not find the message form");
+
+    fireEvent.change(input, { target: { value: "First" } });
+    fireEvent.submit(form);
+    expect(getMessageBody("First")).toBeDefined();
+
+    fireEvent.change(input, { target: { value: "Second" } });
+    expect(button.getAttribute("disabled")).toBeNull();
+    fireEvent.submit(form);
+
+    expect(input.value).toBe("");
+    expect(document.activeElement).toBe(input);
+    expect(fixture.sendMessage).toHaveBeenCalledTimes(2);
+    expect(
+      getMessageBody("First").closest('[data-slot="message"]')?.className,
+    ).toContain("opacity-50");
+    expect(
+      getMessageBody("Second").closest('[data-slot="message"]')?.className,
+    ).toContain("opacity-50");
+
+    await act(async () => finishSend.get("Second")?.());
+
+    await waitFor(() => {
+      expect(
+        getMessageBody("Second").closest('[data-slot="message"]')?.className,
+      ).toContain("opacity-100");
+    });
+    expect(
+      getMessageBody("First").closest('[data-slot="message"]')?.className,
+    ).toContain("opacity-50");
+
+    await act(async () => finishSend.get("First")?.());
+
+    await waitFor(() => {
+      expect(
+        getMessageBody("First").closest('[data-slot="message"]')?.className,
+      ).toContain("opacity-100");
+    });
+    expect(fixture.sendMessage).toHaveBeenNthCalledWith(
+      1,
+      room.id,
+      "First",
+      expect.any(String),
+    );
+    expect(fixture.sendMessage).toHaveBeenNthCalledWith(
+      2,
+      room.id,
+      "Second",
+      expect.any(String),
+    );
   });
 });

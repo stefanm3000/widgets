@@ -93,6 +93,10 @@ idempotent API request is pending. Reconcile the temporary entry by the same
 client message ID passed to the SDK, so a WebSocket event or HTTP response can
 replace it without showing a duplicate. A local send explicitly scrolls to its
 optimistic entry even when manual scrolling has stopped automatic following.
+Keep that client message ID as the rendered row key so confirmation preserves
+the DOM node and can transition its opacity from pending to confirmed without a
+layout shift. Sends remain independent and concurrent; one pending request does
+not disable the composer or block later optimistic messages.
 
 Because `useOptimistic` is a React 19 API, the React widget now declares React
 19 and React DOM 19 as its peer range. The framework-neutral embed already

@@ -5,7 +5,6 @@ import { cn } from "../utils/cn";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Spinner } from "./ui/spinner";
 
 interface ChatComposerProps {
   buttonClassName?: string;
@@ -14,7 +13,6 @@ interface ChatComposerProps {
   inputClassName?: string;
   onSend: (body: string) => Promise<boolean>;
   roomId: string;
-  sending: boolean;
 }
 
 export function ChatComposer({
@@ -24,12 +22,11 @@ export function ChatComposer({
   inputClassName,
   onSend,
   roomId,
-  sending,
 }: ChatComposerProps) {
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const connected = connectionState === "connected";
-  const canSend = connected && draft.trim().length > 0 && !sending;
+  const canSend = connected && draft.trim().length > 0;
   const inputId = `pulse-message-${roomId}`;
 
   const submit = (event: FormEvent) => {
@@ -83,14 +80,7 @@ export function ChatComposer({
         part="send-button"
         type="submit"
       >
-        {sending ? (
-          <>
-            <Spinner aria-hidden="true" />
-            <span className="sr-only">Sending</span>
-          </>
-        ) : (
-          "Send"
-        )}
+        Send
       </Button>
     </form>
   );

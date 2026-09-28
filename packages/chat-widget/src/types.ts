@@ -1,4 +1,10 @@
-import type { ConnectionState, Message, PulseClient, Room } from "@pulse/sdk";
+import type {
+  ConnectionState,
+  Message,
+  Participant,
+  PulseClient,
+  Room,
+} from "@pulse/sdk";
 
 export interface ChatWidgetTheme {
   colors?: Partial<{
@@ -49,12 +55,11 @@ export interface ChatWidgetProps {
 
 export interface ChatWidgetSnapshot {
   connectionState: ConnectionState;
-  currentUserId: string | null;
+  currentUser: Participant | null;
   error: string | null;
   loading: boolean;
   messages: Message[];
   room: Room | null;
-  sending: boolean;
 }
 
 export type OptimisticMessage = Message & { optimistic?: true };

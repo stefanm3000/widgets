@@ -88,7 +88,7 @@ export function ChatWidget({
 
       <ChatTranscript
         className={classNames.messageList}
-        currentUserId={snapshot.currentUserId}
+        currentUserId={snapshot.currentUser?.id ?? null}
         loading={snapshot.loading}
         messageClassName={classNames.message}
         messages={optimisticMessages}
@@ -112,9 +112,9 @@ export function ChatWidget({
             optimistic: true,
             roomId,
             sender: {
-              displayName: "You",
-              id: `optimistic:${clientMessageId}`,
-              source: "system",
+              displayName: snapshot.currentUser?.displayName ?? "You",
+              id: snapshot.currentUser?.id ?? `optimistic:${clientMessageId}`,
+              source: snapshot.currentUser?.source ?? "system",
             },
           };
 
@@ -126,7 +126,6 @@ export function ChatWidget({
           });
         }}
         roomId={roomId}
-        sending={snapshot.sending}
       />
     </section>
   );
