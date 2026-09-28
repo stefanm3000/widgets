@@ -1,5 +1,6 @@
-import type { Message as ChatMessage } from "@pulse/sdk";
+import { useLayoutEffect } from "react";
 
+import type { OptimisticMessage } from "../types";
 import { cn } from "../utils/cn";
 import { formatTime, initials } from "../utils/messages";
 import { Bubble, BubbleContent } from "./ui/bubble";
@@ -17,6 +18,7 @@ import {
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
+  useMessageScroller,
 } from "./ui/message-scroller";
 import { TranscriptOutline } from "./transcript-outline";
 
@@ -25,7 +27,7 @@ interface ChatTranscriptProps {
   currentUserId: string | null;
   loading: boolean;
   messageClassName?: string;
-  messages: ChatMessage[];
+  messages: OptimisticMessage[];
   outlineClassName?: string;
 }
 
@@ -64,7 +66,8 @@ export function ChatTranscript({
               </TranscriptStatus>
             ) : (
               messages.map((message) => {
-                const isOwnMessage = message.sender.id === currentUserId;
+                const isOwnMessage =
+                  message.optimistic || message.sender.id === currentUserId;
 
                 return (
                   <MessageScrollerItem key={message.id} messageId={message.id}>
@@ -80,14 +83,26 @@ export function ChatTranscript({
                         <MessageHeader>
                           <strong className="min-w-0 truncate font-semibold text-foreground">
                             {message.sender.displayName}
-                            {isOwnMessage ? " (you)" : ""}
+                            {isOwnMessage && !message.optimistic
+                              ? " (you)"
+                              : ""}
                           </strong>
-                          <span
-                            className="shrink-0 rounded-full border border-border px-1.5 py-0.5 text-[9px] font-bold tracking-wide uppercase"
-                            data-slot="message-source"
-                          >
-                            {sourceLabels[message.sender.source]}
-                          </span>
+                          {message.optimistic ? (
+                            <span
+                              aria-label="Message is sending"
+                              className="shrink-0 text-[10px]"
+                              data-slot="message-status"
+                            >
+                              Sending…
+                            </span>
+                          ) : (
+                            <span
+                              className="shrink-0 rounded-full border border-border px-1.5 py-0.5 text-[9px] font-bold tracking-wide uppercase"
+                              data-slot="message-source"
+                            >
+                              {sourceLabels[message.sender.source]}
+                            </span>
+                          )}
                           <time
                             className="shrink-0"
                             dateTime={message.createdAt}
@@ -111,9 +126,27 @@ export function ChatTranscript({
         </MessageScrollerViewport>
         <TranscriptOutline className={outlineClassName} messages={messages} />
         <MessageScrollerButton />
+        <ScrollToOptimisticMessage messages={messages} />
       </MessageScroller>
     </MessageScrollerProvider>
   );
+}
+
+function ScrollToOptimisticMessage({
+  messages,
+}: {
+  messages: OptimisticMessage[];
+}) {
+  const { scrollToMessage } = useMessageScroller();
+  const messageId = messages.filter((message) => message.optimistic).at(-1)?.id;
+
+  useLayoutEffect(() => {
+    if (messageId) {
+      scrollToMessage(messageId, { align: "end", behavior: "smooth" });
+    }
+  }, [messageId, scrollToMessage]);
+
+  return null;
 }
 
 function TranscriptStatus({ children }: { children: string }) {

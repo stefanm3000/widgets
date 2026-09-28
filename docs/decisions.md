@@ -85,3 +85,15 @@ Persist the validated source on both participants and message snapshots. The
 shared widget uses that snapshot to label messages and color their borders
 consistently: green for Vue, black for vanilla JavaScript, orange for the
 playground, and the neutral theme border for seeded system messages.
+
+## Require React 19 for optimistic sends
+
+Use React's `useOptimistic` hook to show a locally submitted message while its
+idempotent API request is pending. Reconcile the temporary entry by the same
+client message ID passed to the SDK, so a WebSocket event or HTTP response can
+replace it without showing a duplicate. A local send explicitly scrolls to its
+optimistic entry even when manual scrolling has stopped automatic following.
+
+Because `useOptimistic` is a React 19 API, the React widget now declares React
+19 and React DOM 19 as its peer range. The framework-neutral embed already
+bundles React 19, so non-React partner integrations keep the same public API.

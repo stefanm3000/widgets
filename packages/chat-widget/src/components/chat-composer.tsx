@@ -1,5 +1,5 @@
 import type { ConnectionState } from "@pulse/sdk";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 
 import { cn } from "../utils/cn";
 import { Button } from "./ui/button";
@@ -27,6 +27,7 @@ export function ChatComposer({
   sending,
 }: ChatComposerProps) {
   const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const connected = connectionState === "connected";
   const canSend = connected && draft.trim().length > 0 && !sending;
   const inputId = `pulse-message-${roomId}`;
@@ -36,8 +37,12 @@ export function ChatComposer({
     const body = draft.trim();
     if (!body) return;
 
+    setDraft("");
+    inputRef.current?.focus();
     void onSend(body).then((sent) => {
-      if (sent) setDraft("");
+      if (!sent) {
+        setDraft((currentDraft) => currentDraft || body);
+      }
     });
   };
 
@@ -59,12 +64,13 @@ export function ChatComposer({
           "box-border h-10 w-auto flex-1 rounded-[calc(var(--pulse-radius)*0.7)] bg-background",
           inputClassName,
         )}
-        disabled={!connected || sending}
+        disabled={!connected}
         id={inputId}
         maxLength={500}
         onChange={(event) => setDraft(event.target.value)}
         part="input"
         placeholder={connected ? "Write a message…" : "Waiting for connection…"}
+        ref={inputRef}
         type="text"
         value={draft}
       />

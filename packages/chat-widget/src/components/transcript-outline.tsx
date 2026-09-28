@@ -1,6 +1,6 @@
-import type { Message as ChatMessage } from "@pulse/sdk";
 import { useMemo, useRef } from "react";
 
+import type { OptimisticMessage } from "../types";
 import { cn } from "../utils/cn";
 import { formatTime } from "../utils/messages";
 import {
@@ -10,7 +10,7 @@ import {
 
 interface TranscriptOutlineProps {
   className?: string;
-  messages: ChatMessage[];
+  messages: OptimisticMessage[];
 }
 
 export function TranscriptOutline({

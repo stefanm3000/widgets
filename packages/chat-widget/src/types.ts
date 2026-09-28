@@ -55,3 +55,5 @@ export interface ChatWidgetSnapshot {
   room: Room | null;
   sending: boolean;
 }
+
+export type OptimisticMessage = Message & { optimistic?: true };

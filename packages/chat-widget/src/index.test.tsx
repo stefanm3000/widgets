@@ -7,7 +7,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { createElement } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChatWidget, type ChatWidgetClient } from "./index";
 
@@ -58,7 +58,16 @@ function createClient() {
   let stateListener: ((state: ConnectionState) => void) | undefined;
   const unsubscribe = vi.fn();
   const stopState = vi.fn();
-  const sendMessage = vi.fn(async () => sentMessage);
+  const sendMessage = vi.fn(
+    async (
+      _roomId: string,
+      _body: string,
+      clientMessageId?: ReturnType<Crypto["randomUUID"]>,
+    ) => ({
+      ...sentMessage,
+      clientMessageId: clientMessageId ?? sentMessage.clientMessageId,
+    }),
+  );
 
   const client: ChatWidgetClient = {
     getMessages: vi.fn(async () => ({ items: [message], nextCursor: null })),
@@ -89,6 +98,13 @@ function createClient() {
 
 afterEach(() => {
   vi.restoreAllMocks();
+});
+
+beforeEach(() => {
+  Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+    configurable: true,
+    value: vi.fn(),
+  });
 });
 
 describe("ChatWidget", () => {
@@ -130,6 +146,7 @@ describe("ChatWidget", () => {
       expect(fixture.sendMessage).toHaveBeenCalledWith(
         room.id,
         "Hello from the widget",
+        expect.any(String),
       );
     });
 
@@ -190,5 +207,93 @@ describe("ChatWidget", () => {
     view.unmount();
     expect(fixture.unsubscribe).toHaveBeenCalledOnce();
     expect(fixture.stopState).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the composer focused and scrolls to an optimistic message", async () => {
+    const fixture = createClient();
+    let finishSend: (() => void) | undefined;
+
+    fixture.sendMessage.mockImplementationOnce(
+      async (_roomId, _body, clientMessageId) =>
+        new Promise((resolve) => {
+          finishSend = () =>
+            resolve({
+              ...sentMessage,
+              clientMessageId: clientMessageId ?? sentMessage.clientMessageId,
+            });
+        }),
+    );
+
+    render(
+      createElement(ChatWidget, {
+        client: fixture.client,
+        roomId: room.id,
+      }),
+    );
+
+    expect(await screen.findByText(message.body)).toBeDefined();
+    act(() => fixture.setState("connected"));
+
+    const viewport = document.querySelector<HTMLElement>(
+      '[data-slot="message-scroller-viewport"]',
+    );
+    if (!viewport) throw new Error("Could not find the message viewport");
+
+    Object.defineProperty(viewport, "clientHeight", {
+      configurable: true,
+      value: 100,
+    });
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: HTMLElement) {
+        const top =
+          this.getAttribute("data-message-id")?.startsWith("optimistic:") ===
+          true
+            ? 500
+            : 0;
+        const height = this === viewport ? 100 : 40;
+
+        return {
+          bottom: top + height,
+          height,
+          left: 0,
+          right: 100,
+          toJSON: () => ({}),
+          top,
+          width: 100,
+          x: 0,
+          y: top,
+        };
+      },
+    );
+
+    fireEvent.wheel(viewport);
+    fireEvent.scroll(viewport, { target: { scrollTop: 12 } });
+    const scrollTo = vi.mocked(HTMLElement.prototype.scrollTo);
+    scrollTo.mockClear();
+
+    const input = screen.getByLabelText("Message") as HTMLInputElement;
+    const button = screen.getByRole("button", { name: "Send" });
+    input.focus();
+    fireEvent.change(input, { target: { value: sentMessage.body } });
+    fireEvent.click(button);
+
+    expect(input.value).toBe("");
+    expect(document.activeElement).toBe(input);
+    expect(getMessageBody(sentMessage.body)).toBeDefined();
+    expect(screen.getByText("Sending…")).toBeDefined();
+    await waitFor(() => expect(scrollTo).toHaveBeenCalled());
+
+    await act(async () => finishSend?.());
+
+    await waitFor(() => {
+      expect(screen.queryByText("Sending…")).toBeNull();
+      expect(
+        screen
+          .getAllByText(sentMessage.body)
+          .filter(
+            (element) => element.getAttribute("data-slot") === "bubble-content",
+          ),
+      ).toHaveLength(1);
+    });
   });
 });

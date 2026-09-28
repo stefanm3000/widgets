@@ -1,6 +1,11 @@
-import { useMemo, useSyncExternalStore } from "react";
+import {
+  startTransition,
+  useMemo,
+  useOptimistic,
+  useSyncExternalStore,
+} from "react";
 
-import type { ChatWidgetProps } from "../types";
+import type { ChatWidgetProps, OptimisticMessage } from "../types";
 import { ChatWidgetStore } from "../utils/chat-widget-store";
 import { cn } from "../utils/cn";
 import {
@@ -32,6 +37,25 @@ export function ChatWidget({
     store.getSnapshot,
     store.getServerSnapshot,
   );
+
+  const [optimisticMessages, addOptimisticMessage] = useOptimistic<
+    OptimisticMessage[],
+    OptimisticMessage
+  >(snapshot.messages, (messages, pendingMessage) => {
+    if (
+      messages.some(
+        (message) => message.clientMessageId === pendingMessage.clientMessageId,
+      )
+    ) {
+      return messages;
+    }
+
+    return [...messages, pendingMessage].sort(
+      (left, right) =>
+        left.createdAt.localeCompare(right.createdAt) ||
+        left.id.localeCompare(right.id),
+    );
+  });
 
   const systemTheme = useSyncExternalStore<ResolvedTheme>(
     subscribeToSystemTheme,
@@ -67,7 +91,7 @@ export function ChatWidget({
         currentUserId={snapshot.currentUserId}
         loading={snapshot.loading}
         messageClassName={classNames.message}
-        messages={snapshot.messages}
+        messages={optimisticMessages}
         outlineClassName={classNames.messageOutline}
       />
 
@@ -78,7 +102,29 @@ export function ChatWidget({
         className={classNames.composer}
         connectionState={snapshot.connectionState}
         inputClassName={classNames.input}
-        onSend={store.send}
+        onSend={(body) => {
+          const clientMessageId = globalThis.crypto.randomUUID();
+          const pendingMessage: OptimisticMessage = {
+            body,
+            clientMessageId,
+            createdAt: new Date().toISOString(),
+            id: `optimistic:${clientMessageId}`,
+            optimistic: true,
+            roomId,
+            sender: {
+              displayName: "You",
+              id: `optimistic:${clientMessageId}`,
+              source: "system",
+            },
+          };
+
+          return new Promise<boolean>((resolve) => {
+            startTransition(async () => {
+              addOptimisticMessage(pendingMessage);
+              resolve(await store.send(body, clientMessageId));
+            });
+          });
+        }}
         roomId={roomId}
         sending={snapshot.sending}
       />

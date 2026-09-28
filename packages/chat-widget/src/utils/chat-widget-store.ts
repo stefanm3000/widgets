@@ -41,13 +41,20 @@ export class ChatWidgetStore {
     };
   };
 
-  send = async (body: string): Promise<boolean> => {
+  send = async (
+    body: string,
+    clientMessageId: ReturnType<Crypto["randomUUID"]>,
+  ): Promise<boolean> => {
     if (this.snapshot.sending || this.snapshot.connectionState !== "connected")
       return false;
 
     this.update({ error: null, sending: true });
     try {
-      const message = await this.client.sendMessage(this.roomId, body);
+      const message = await this.client.sendMessage(
+        this.roomId,
+        body,
+        clientMessageId,
+      );
       this.update({
         currentUserId: message.sender.id,
         messages: mergeMessages(this.snapshot.messages, [message]),
