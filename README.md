@@ -74,6 +74,3 @@ both `DATABASE_URL` and `PULSE_TOKEN_SECRET`.
 - `packages/typescript-config`: shared strict TypeScript configurations.
 - `docs/architecture.md`: planned boundaries and delivery phases.
 - `docs/decisions.md`: implementation decisions and tradeoffs.
-
-Next: independently deployable Svelte and React partner demos, followed by
-deployment and portfolio documentation.
