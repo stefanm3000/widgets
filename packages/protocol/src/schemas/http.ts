@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 import { MAX_MESSAGE_LENGTH } from "../constants.js";
-import { messageSchema, participantSchema, roomIdSchema } from "./shared.js";
+import {
+  demoClientSourceSchema,
+  messageSchema,
+  participantSchema,
+  roomIdSchema,
+} from "./shared.js";
 
 export const historyQuerySchema = z.object({
   cursor: z.string().min(1).optional(),
@@ -23,7 +28,8 @@ export const sendMessageResponseSchema = z.object({
 });
 
 export const demoTokenRequestSchema = z.object({
-  displayName: z.string().trim().min(1).max(80),
+  sessionId: z.uuid(),
+  source: demoClientSourceSchema,
 });
 
 export const demoTokenResponseSchema = z.object({

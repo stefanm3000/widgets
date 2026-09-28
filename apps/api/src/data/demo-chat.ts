@@ -10,6 +10,7 @@ export const demoRoom: Room = {
 const systemParticipant: Participant = {
   id: "7bb92b54-0593-471e-819a-f85ab7089279",
   displayName: "Pulse Demo",
+  source: "system",
 };
 
 export const seededMessages: Message[] = [

@@ -12,6 +12,7 @@ import { PostgresChatStore } from "./postgres.js";
 const sender = {
   id: "f3c5ff5e-6469-4973-bd33-359a56def99c",
   displayName: "Persistent Tester",
+  source: "playground" as const,
 };
 
 function createPool(memory: IMemoryDb): Pool {

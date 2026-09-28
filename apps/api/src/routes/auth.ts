@@ -21,12 +21,13 @@ export function registerAuthRoutes(
           reply,
           400,
           "invalid_request",
-          "A valid display name is required",
+          "A valid demo source and session ID are required",
         );
       }
 
       const { identity, token } = await tokenService.issue(
-        parsed.data.displayName,
+        parsed.data.source,
+        parsed.data.sessionId,
         ["demo-room"],
       );
       return reply.send(

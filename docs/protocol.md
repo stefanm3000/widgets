@@ -16,12 +16,18 @@ public deployment will expose them beneath a versioned base path before release.
 - Room IDs are lowercase, URL-safe slugs.
 - Message and participant IDs are UUIDs.
 - A message contains its server ID and the caller-generated `clientMessageId`.
+- Each participant includes a validated `source` (`playground`, `vue`,
+  `vanilla`, or `system`) so clients can identify where a message originated.
 - Message bodies are trimmed, non-empty, and limited to 500 characters.
 - History pages contain ordered `items` and an opaque `nextCursor`.
 - API failures use a stable error code, readable message, and optional request ID.
 
 History cursors are opaque to consumers. The API owns their encoding and may
 change it without changing the public DTO. Clients pass the value back unchanged.
+
+The demo-token endpoint accepts a browser-generated UUID and a demo client
+source. It derives the same anonymous adjective–animal display name and user ID
+for that pair on every token refresh; callers do not submit display names.
 
 ## Realtime frames
 

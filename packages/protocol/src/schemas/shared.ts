@@ -8,9 +8,19 @@ export const roomIdSchema = z
   .max(128)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 
+export const messageSourceSchema = z.enum([
+  "playground",
+  "vue",
+  "vanilla",
+  "system",
+]);
+
+export const demoClientSourceSchema = messageSourceSchema.exclude(["system"]);
+
 export const participantSchema = z.object({
   id: z.uuid(),
   displayName: z.string().trim().min(1).max(80),
+  source: messageSourceSchema,
 });
 
 export const roomSchema = z.object({

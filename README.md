@@ -51,8 +51,10 @@ pnpm --filter @pulse/api dev
 ```
 
 The local API listens on `http://127.0.0.1:4000`. Start with
-`POST /auth/demo-token`, passing `{ "displayName": "Your name" }`, then use the
-returned bearer token with the room and message endpoints. Messages and replay
+`POST /auth/demo-token`, passing a stable anonymous session such as
+`{ "sessionId": "<uuid>", "source": "playground" }`, then use the returned
+bearer token with the room and message endpoints. The API assigns a stable
+adjective–animal display name to that source/session pair. Messages and replay
 cursors persist across API restarts in the local PostgreSQL volume.
 
 The API uses the in-memory store when `DATABASE_URL` is absent, which keeps unit

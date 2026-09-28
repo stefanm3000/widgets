@@ -29,6 +29,13 @@ interface ChatTranscriptProps {
   outlineClassName?: string;
 }
 
+const sourceLabels = {
+  playground: "Playground",
+  system: "Pulse",
+  vanilla: "Vanilla",
+  vue: "Vue",
+} as const;
+
 export function ChatTranscript({
   className,
   currentUserId,
@@ -72,8 +79,15 @@ export function ChatTranscript({
                       <MessageContent>
                         <MessageHeader>
                           <strong className="min-w-0 truncate font-semibold text-foreground">
-                            {isOwnMessage ? "You" : message.sender.displayName}
+                            {message.sender.displayName}
+                            {isOwnMessage ? " (you)" : ""}
                           </strong>
+                          <span
+                            className="shrink-0 rounded-full border border-border px-1.5 py-0.5 text-[9px] font-bold tracking-wide uppercase"
+                            data-slot="message-source"
+                          >
+                            {sourceLabels[message.sender.source]}
+                          </span>
                           <time
                             className="shrink-0"
                             dateTime={message.createdAt}
@@ -82,6 +96,7 @@ export function ChatTranscript({
                           </time>
                         </MessageHeader>
                         <Bubble
+                          source={message.sender.source}
                           variant={isOwnMessage ? "default" : "secondary"}
                         >
                           <BubbleContent>{message.body}</BubbleContent>

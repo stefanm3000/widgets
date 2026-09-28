@@ -15,11 +15,15 @@ import type {
   serverFrameSchema,
 } from "./schemas/realtime.js";
 import type {
+  demoClientSourceSchema,
   messageSchema,
+  messageSourceSchema,
   participantSchema,
   roomSchema,
 } from "./schemas/shared.js";
 
+export type DemoClientSource = z.infer<typeof demoClientSourceSchema>;
+export type MessageSource = z.infer<typeof messageSourceSchema>;
 export type Participant = z.infer<typeof participantSchema>;
 export type Room = z.infer<typeof roomSchema>;
 export type Message = z.infer<typeof messageSchema>;

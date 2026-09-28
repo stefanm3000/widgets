@@ -30,6 +30,14 @@ test("sends a message in Vanilla", async ({ page }) => {
   await input.fill(message);
   await sendButton.click();
   await expect(transcript.getByText(message)).toBeVisible();
+  const messageBubble = transcript
+    .locator('[data-slot="bubble"][data-source="vanilla"]')
+    .filter({ hasText: message });
+  await expect(messageBubble).toHaveCount(1);
+  await expect(messageBubble.locator('[data-slot="bubble-content"]')).toHaveCSS(
+    "border-top-color",
+    "rgb(17, 17, 17)",
+  );
 
   const stageBounds = await page.locator(".chat-stage").boundingBox();
   const inputBounds = await input.boundingBox();

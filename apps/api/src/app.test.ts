@@ -41,11 +41,14 @@ describe("HTTP chat API", () => {
     await app.close();
   });
 
-  async function issueToken(displayName = "Taylor") {
+  async function issueToken(
+    source: "playground" | "vue" | "vanilla" = "playground",
+    sessionId = randomUUID(),
+  ) {
     const response = await app.inject({
       method: "POST",
       url: "/auth/demo-token",
-      payload: { displayName },
+      payload: { sessionId, source },
     });
     expect(response.statusCode).toBe(200);
     return demoTokenResponseSchema.parse(response.json()).accessToken;
@@ -55,6 +58,26 @@ describe("HTTP chat API", () => {
     const response = await app.inject({ method: "GET", url: "/health" });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ status: "ok" });
+  });
+
+  it("assigns a stable anonymous identity for a client session", async () => {
+    const sessionId = randomUUID();
+    const firstResponse = await app.inject({
+      method: "POST",
+      url: "/auth/demo-token",
+      payload: { sessionId, source: "vue" },
+    });
+    const secondResponse = await app.inject({
+      method: "POST",
+      url: "/auth/demo-token",
+      payload: { sessionId, source: "vue" },
+    });
+    const first = demoTokenResponseSchema.parse(firstResponse.json());
+    const second = demoTokenResponseSchema.parse(secondResponse.json());
+
+    expect(first.user).toEqual(second.user);
+    expect(first.user.source).toBe("vue");
+    expect(first.user.displayName).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);
   });
 
   it("requires a valid token for room data", async () => {
@@ -128,8 +151,8 @@ describe("HTTP chat API", () => {
   });
 
   it("broadcasts a committed message to a subscribed client", async () => {
-    const receiverToken = await issueToken("Receiver");
-    const senderToken = await issueToken("Sender");
+    const receiverToken = await issueToken("vue");
+    const senderToken = await issueToken("vanilla");
     await app.listen({ host: "127.0.0.1", port: 0 });
     const address = app.server.address();
     if (!address || typeof address === "string") {
@@ -166,6 +189,7 @@ describe("HTTP chat API", () => {
     if (received.type === "event") {
       expect(received.event.payload.id).toBe(sentMessage.id);
       expect(received.event.payload.body).toBe("Delivered live");
+      expect(received.event.payload.sender.source).toBe("vanilla");
     }
 
     socket.close();

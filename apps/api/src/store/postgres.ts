@@ -33,6 +33,7 @@ function toMessage(record: MessageRecord): Message {
     sender: {
       id: record.senderId,
       displayName: record.senderDisplayName,
+      source: record.senderSource,
     },
     body: record.body,
     createdAt: record.createdAt.toISOString(),
@@ -198,7 +199,10 @@ export class PostgresChatStore implements ChatStore {
         .values(sender)
         .onConflictDoUpdate({
           target: participants.id,
-          set: { displayName: sender.displayName },
+          set: {
+            displayName: sender.displayName,
+            source: sender.source,
+          },
         });
 
       const [existing] = await transaction
@@ -227,6 +231,7 @@ export class PostgresChatStore implements ChatStore {
           roomId,
           senderId: sender.id,
           senderDisplayName: sender.displayName,
+          senderSource: sender.source,
           body: input.body,
           createdAt: new Date(),
         })

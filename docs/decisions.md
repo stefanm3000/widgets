@@ -71,3 +71,17 @@ persistence and cursor replay without requiring Docker in the test runner.
 Subscriptions remain process-local. The committed event log supports reconnect
 and replay on one API instance; horizontal deployments still require a shared
 fanout system such as PostgreSQL notifications or a message broker.
+
+## Derive stable anonymous demo identities
+
+Have each demo app persist a random session UUID and submit it with its fixed
+source when requesting a short-lived token. The API uses an HMAC of that pair to
+derive both a stable participant UUID and an adjective–animal display name. This
+keeps identity stable across token refreshes without collecting a user-entered
+name or adding mutable anonymous-user state to the database. The client-provided
+session UUID is demo identity continuity, not production authentication.
+
+Persist the validated source on both participants and message snapshots. The
+shared widget uses that snapshot to label messages and color their borders
+consistently: green for Vue, black for vanilla JavaScript, orange for the
+playground, and the neutral theme border for seeded system messages.

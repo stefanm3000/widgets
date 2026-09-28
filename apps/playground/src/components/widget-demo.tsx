@@ -2,14 +2,13 @@ import { ChatWidget } from "@pulse/chat-widget";
 
 import { useDemoSession } from "../hooks/use-demo-session";
 import { usePlaygroundStore } from "../stores/playground-store";
-import { IdentityForm } from "./identity-form";
 import { ThemeSelector } from "./theme-selector";
 import { Card } from "./ui/card";
 
 const roomId = "demo-room";
 
 export function WidgetDemo() {
-  const { applyIdentity, session } = useDemoSession();
+  const { session } = useDemoSession();
   const setTheme = usePlaygroundStore((state) => state.setTheme);
   const theme = usePlaygroundStore((state) => state.theme);
 
@@ -23,12 +22,7 @@ export function WidgetDemo() {
         theme={{ preset: theme, radius: "22px" }}
       />
 
-      <Card className="-mt-px grid gap-2 rounded-t-none rounded-b-2xl border-t-0 bg-white/70 p-2.5 sm:grid-cols-[1fr_auto]">
-        <IdentityForm
-          defaultDisplayName={session.displayName}
-          key={session.id}
-          onSubmit={applyIdentity}
-        />
+      <Card className="-mt-px flex justify-end rounded-t-none rounded-b-2xl border-t-0 bg-white/70 p-2.5">
         <ThemeSelector onChange={setTheme} value={theme} />
       </Card>
     </div>

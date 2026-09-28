@@ -1,4 +1,10 @@
-export type { Message, RealtimeEvent, Room } from "@pulse/protocol";
+export type {
+  Message,
+  MessageSource,
+  Participant,
+  RealtimeEvent,
+  Room,
+} from "@pulse/protocol";
 
 export { PulseApiError } from "./errors/pulse-api-error.js";
 export { createPulseClient, PulseClient } from "./pulse-client.js";

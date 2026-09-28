@@ -18,12 +18,12 @@ function isDemoToken(value: unknown): value is DemoToken {
   );
 }
 
-function createDemoTokenProvider(baseUrl: string, displayName: string) {
+function createDemoTokenProvider(baseUrl: string, sessionId: string) {
   const requestToken = async (): Promise<DemoToken> => {
     let response: Response;
     try {
       response = await fetch(new URL("auth/demo-token", baseUrl), {
-        body: JSON.stringify({ displayName }),
+        body: JSON.stringify({ sessionId, source: "playground" }),
         headers: { "content-type": "application/json" },
         method: "POST",
       });
@@ -53,7 +53,7 @@ function createDemoTokenProvider(baseUrl: string, displayName: string) {
   return async (): Promise<string> => {
     const token = await demoQueryClient.query({
       queryFn: requestToken,
-      queryKey: ["demo-token", baseUrl, displayName],
+      queryKey: ["demo-token", baseUrl, "playground", sessionId],
       staleTime: (query) => {
         const cachedToken = query.state.data;
         if (!isDemoToken(cachedToken)) return 0;
@@ -72,10 +72,10 @@ function createDemoTokenProvider(baseUrl: string, displayName: string) {
 
 export function createDemoClient(
   baseUrl: string,
-  displayName: string,
+  sessionId: string,
 ): PulseClient {
   return createPulseClient({
     baseUrl,
-    getToken: createDemoTokenProvider(baseUrl, displayName),
+    getToken: createDemoTokenProvider(baseUrl, sessionId),
   });
 }

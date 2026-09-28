@@ -24,7 +24,10 @@ export async function seedDatabase(database: PulseDatabase): Promise<void> {
         .values(message.sender)
         .onConflictDoUpdate({
           target: participants.id,
-          set: { displayName: message.sender.displayName },
+          set: {
+            displayName: message.sender.displayName,
+            source: message.sender.source,
+          },
         });
 
       const inserted = await transaction
@@ -35,6 +38,7 @@ export async function seedDatabase(database: PulseDatabase): Promise<void> {
           roomId: message.roomId,
           senderId: message.sender.id,
           senderDisplayName: message.sender.displayName,
+          senderSource: message.sender.source,
           body: message.body,
           createdAt: new Date(message.createdAt),
         })

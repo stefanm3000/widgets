@@ -7,6 +7,7 @@ import { MemoryChatStore } from "./store.js";
 const sender = {
   id: "f3c5ff5e-6469-4973-bd33-359a56def99c",
   displayName: "Replay Tester",
+  source: "playground" as const,
 };
 
 describe("memory chat store events", () => {

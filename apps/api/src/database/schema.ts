@@ -7,6 +7,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import type { MessageSource } from "@pulse/protocol";
 
 export const rooms = pgTable("rooms", {
   id: varchar("id", { length: 128 }).primaryKey(),
@@ -18,6 +19,10 @@ export const rooms = pgTable("rooms", {
 export const participants = pgTable("participants", {
   id: uuid("id").primaryKey(),
   displayName: varchar("display_name", { length: 80 }).notNull(),
+  source: varchar("source", { length: 20 })
+    .$type<MessageSource>()
+    .default("system")
+    .notNull(),
 });
 
 export const messages = pgTable(
@@ -32,6 +37,10 @@ export const messages = pgTable(
       .notNull()
       .references(() => participants.id),
     senderDisplayName: varchar("sender_display_name", { length: 80 }).notNull(),
+    senderSource: varchar("sender_source", { length: 20 })
+      .$type<MessageSource>()
+      .default("system")
+      .notNull(),
     body: varchar("body", { length: 500 }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },

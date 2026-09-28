@@ -20,23 +20,33 @@ const bubbleVariants = cva(
         secondary:
           "*:data-[slot=bubble-content]:bg-secondary *:data-[slot=bubble-content]:text-secondary-foreground",
       },
+      source: {
+        playground:
+          "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-[#c2410c]",
+        system: "*:data-[slot=bubble-content]:border-border",
+        vanilla:
+          "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-[#111111]",
+        vue: "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-[#168447]",
+      },
     },
-    defaultVariants: { variant: "secondary" },
+    defaultVariants: { source: "system", variant: "secondary" },
   },
 );
 
 export function Bubble({
   align = "start",
   className,
+  source = "system",
   variant = "secondary",
   ...props
 }: ComponentProps<"div"> &
   VariantProps<typeof bubbleVariants> & { align?: "start" | "end" }) {
   return (
     <div
-      className={cn(bubbleVariants({ variant }), className)}
+      className={cn(bubbleVariants({ source, variant }), className)}
       data-align={align}
       data-slot="bubble"
+      data-source={source}
       data-variant={variant}
       {...props}
     />

@@ -25,6 +25,7 @@ const message: Message = {
   sender: {
     id: "7bb92b54-0593-471e-819a-f85ab7089279",
     displayName: "Pulse Demo",
+    source: "system",
   },
   body: "Welcome to the live chat demo.",
   createdAt: "2026-01-01T00:00:01.000Z",
@@ -36,7 +37,8 @@ const sentMessage: Message = {
   clientMessageId: "c95edff5-5ec0-453f-a871-495414adb80e",
   sender: {
     id: "da09b773-5ad2-4d24-8fb5-0dbeb67f5b29",
-    displayName: "Widget visitor",
+    displayName: "Charismatic Lizard",
+    source: "playground",
   },
   body: "Hello from the widget",
   createdAt: "2026-01-01T00:00:02.000Z",
@@ -136,8 +138,11 @@ describe("ChatWidget", () => {
     const ownMessageRow = ownMessage.closest('[data-slot="message"]');
     const ownBubble = ownMessage.closest('[data-slot="bubble"]');
     expect(ownMessageRow?.getAttribute("data-align")).toBe("end");
+    expect(ownBubble?.getAttribute("data-source")).toBe("playground");
     expect(ownBubble?.getAttribute("data-variant")).toBe("default");
-    expect(screen.getByText("You")).toBeDefined();
+    expect(ownBubble?.className).toContain("border-[#c2410c]");
+    expect(screen.getByText("Charismatic Lizard (you)")).toBeDefined();
+    expect(screen.getByText("Playground")).toBeDefined();
 
     const outline = document.querySelector('[part="message-outline"]');
     expect(outline?.classList.contains("custom-outline")).toBe(true);
@@ -154,11 +159,20 @@ describe("ChatWidget", () => {
         .closest('[data-slot="message"]')
         ?.getAttribute("data-align"),
     ).toBe("start");
+    expect(
+      receivedMessage
+        .closest('[data-slot="bubble"]')
+        ?.getAttribute("data-source"),
+    ).toBe("system");
 
     const liveMessage = {
       ...message,
       id: "70831012-904f-4098-a080-f76e89392cdb",
       body: "Live",
+      sender: {
+        ...message.sender,
+        source: "vue" as const,
+      },
     };
     act(() =>
       fixture.emitEvent({
@@ -168,7 +182,10 @@ describe("ChatWidget", () => {
         payload: liveMessage,
       }),
     );
-    expect(getMessageBody("Live")).toBeDefined();
+    const liveBubble = getMessageBody("Live").closest('[data-slot="bubble"]');
+    expect(liveBubble?.getAttribute("data-source")).toBe("vue");
+    expect(liveBubble?.getAttribute("data-variant")).toBe("secondary");
+    expect(liveBubble?.className).toContain("border-[#168447]");
 
     view.unmount();
     expect(fixture.unsubscribe).toHaveBeenCalledOnce();
