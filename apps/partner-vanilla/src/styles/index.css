@@ -1,7 +1,9 @@
 :root {
   color: #111111;
-  background: #e8e8e3;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: #e9e9e4;
+  font-family:
+    ui-monospace, "SFMono-Regular", "Cascadia Code", "Liberation Mono", Menlo,
+    monospace;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -18,31 +20,9 @@ body {
   overflow: hidden;
   place-items: center;
   background:
-    linear-gradient(#d1d1cc 1px, transparent 1px) 0 0 / 100% 24px,
-    #e8e8e3;
-}
-
-.app-shell {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 14px;
-  width: calc(100vw - 32px);
-  max-width: 880px;
-  height: 80vh;
-}
-
-.app-header {
-  text-align: center;
-}
-
-h1 {
-  margin: 0;
-  font-family: "Courier New", monospace;
-  font-size: 1.1rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
+    linear-gradient(#d5d5cf 1px, transparent 1px) 0 0 / 100% 32px,
+    linear-gradient(90deg, #d5d5cf 1px, transparent 1px) 0 0 / 32px 100%,
+    #e9e9e4;
 }
 
 .chat-stage,
@@ -53,18 +33,73 @@ pulse-chat {
   min-height: 0;
 }
 
+.chat-stage {
+  width: min(760px, calc(100vw - 56px));
+  height: min(760px, 86vh);
+}
+
 pulse-chat::part(root) {
   box-sizing: border-box;
   height: 100%;
   min-height: 0;
   max-width: none;
+  border: 3px solid #111111;
+  border-radius: 0;
+  box-shadow: 14px 14px 0 #111111;
+}
+
+pulse-chat::part(header) {
+  border-bottom: 3px solid #111111;
+  background: #111111;
+  color: #ffffff;
+  padding-block: 18px;
+}
+
+pulse-chat::part(connection-status) {
+  border: 2px solid #ffffff;
+  border-radius: 0;
+  background: #111111;
+  color: #ffffff;
+}
+
+pulse-chat::part(message-list) {
+  background:
+    linear-gradient(#e4e4df 1px, transparent 1px) 0 0 / 100% 24px,
+    #f4f4f0;
+}
+
+pulse-chat::part(composer) {
+  gap: 12px;
+  border-top: 3px solid #111111;
+  background: #ffffff;
+  padding: 16px;
+}
+
+pulse-chat::part(input) {
+  height: 44px;
   border: 2px solid #111111;
   border-radius: 0;
-  box-shadow: 8px 8px 0 #111111;
+  background: #f4f4f0;
+  box-shadow: none;
+}
+
+pulse-chat::part(send-button) {
+  height: 44px;
+  border: 2px solid #111111;
+  border-radius: 0;
+  background: #111111;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 @media (max-width: 640px) {
-  .app-shell {
-    width: calc(100vw - 24px);
+  .chat-stage {
+    width: calc(100vw - 38px);
+    height: min(780px, calc(100vh - 38px));
+  }
+
+  pulse-chat::part(root) {
+    box-shadow: 9px 9px 0 #111111;
   }
 }

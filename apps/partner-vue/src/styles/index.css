@@ -1,14 +1,8 @@
 :root {
-  color: #143820;
-  background: #dff3e5;
+  color: #27183b;
+  background: #eee7ff;
   font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+    "Avenir Next", Avenir, "Trebuchet MS", ui-sans-serif, system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -25,30 +19,10 @@ body {
   overflow: hidden;
   place-items: center;
   background:
-    radial-gradient(circle at 15% 5%, #ffffff 0, transparent 28rem),
-    radial-gradient(circle at 90% 28%, #b8e8c7 0, transparent 32rem), #dff3e5;
-}
-
-.app-shell {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 14px;
-  width: calc(100vw - 40px);
-  max-width: 900px;
-  height: 80vh;
-}
-
-.app-header {
-  text-align: center;
-}
-
-h1 {
-  margin: 0;
-  color: #19713b;
-  font-size: 1.2rem;
-  font-weight: 750;
-  letter-spacing: -0.025em;
-  line-height: 1;
+    radial-gradient(circle at 12% 12%, #fff9cf 0, transparent 34%),
+    radial-gradient(circle at 88% 18%, #f4bfff 0, transparent 36%),
+    radial-gradient(circle at 68% 90%, #9bf4e8 0, transparent 38%),
+    linear-gradient(135deg, #f5edff, #dcd5ff);
 }
 
 .chat-stage,
@@ -58,23 +32,94 @@ pulse-chat {
   min-height: 0;
 }
 
+.chat-stage {
+  width: min(780px, calc(100vw - 56px));
+  height: min(760px, 86vh);
+  transform: rotate(-0.45deg);
+}
+
 pulse-chat::part(root) {
   box-sizing: border-box;
   height: 100%;
   min-height: 0;
   max-width: none;
-  border: 1px solid #a9d5b6;
-  border-radius: 40px;
-  box-shadow: 0 28px 80px rgb(31 111 57 / 18%);
+  border: 1px solid rgb(255 255 255 / 80%);
+  border-radius: 48px 30px 44px 34px;
+  background: rgb(255 255 255 / 54%);
+  box-shadow:
+    0 30px 80px rgb(83 43 142 / 22%),
+    -20px 24px 70px rgb(46 212 187 / 13%),
+    24px -18px 64px rgb(234 117 255 / 16%);
+  backdrop-filter: blur(28px) saturate(150%);
   corner-shape: squircle;
 }
 
+pulse-chat::part(header) {
+  border-bottom-color: rgb(116 71 245 / 18%);
+  background: linear-gradient(
+    115deg,
+    rgb(255 255 255 / 72%),
+    rgb(244 222 255 / 62%) 54%,
+    rgb(206 255 246 / 56%)
+  );
+  padding: 20px 22px;
+}
+
+pulse-chat::part(connection-status) {
+  border-color: rgb(255 255 255 / 82%);
+  background: rgb(255 255 255 / 52%);
+  box-shadow: 0 8px 24px rgb(73 37 132 / 10%);
+  backdrop-filter: blur(12px);
+}
+
+pulse-chat::part(message-list) {
+  background:
+    radial-gradient(circle at 12% 22%, rgb(255 238 161 / 28%), transparent 30%),
+    radial-gradient(circle at 88% 72%, rgb(93 226 209 / 20%), transparent 34%),
+    rgb(255 255 255 / 28%);
+}
+
+pulse-chat::part(message) {
+  transition: transform 180ms ease;
+}
+
+pulse-chat::part(message):hover {
+  transform: translateY(-2px) rotate(0.25deg);
+}
+
+pulse-chat::part(composer) {
+  gap: 10px;
+  border-top-color: rgb(116 71 245 / 16%);
+  background: rgb(255 255 255 / 48%);
+  padding: 16px 18px 18px;
+  backdrop-filter: blur(18px);
+}
+
+pulse-chat::part(input) {
+  height: 46px;
+  border-color: rgb(255 255 255 / 90%);
+  background: rgb(255 255 255 / 62%);
+  box-shadow:
+    inset 0 0 0 1px rgb(116 71 245 / 10%),
+    0 8px 24px rgb(68 36 116 / 8%);
+}
+
+pulse-chat::part(send-button) {
+  height: 46px;
+  border: 0;
+  background: linear-gradient(135deg, #7047ee, #a73df0 62%, #e353ba);
+  box-shadow: 0 10px 24px rgb(116 71 245 / 28%);
+  font-weight: 750;
+}
+
 @media (max-width: 640px) {
-  .app-shell {
-    width: calc(100vw - 24px);
+  .chat-stage {
+    width: calc(100vw - 28px);
+    height: min(780px, calc(100vh - 28px));
+    transform: none;
   }
 
   pulse-chat::part(root) {
-    border-radius: 30px;
+    border-radius: 34px 24px 32px 26px;
   }
 }

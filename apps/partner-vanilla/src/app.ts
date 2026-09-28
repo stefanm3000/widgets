@@ -13,22 +13,17 @@ const theme = {
     surface: "#ffffff",
     text: "#111111",
   },
-  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+  fontFamily:
+    'ui-monospace, "SFMono-Regular", "Cascadia Code", "Liberation Mono", Menlo, monospace',
   preset: "light",
   radius: "0px",
 } as const satisfies ChatWidgetTheme;
 
 export function startPartnerApp(root: HTMLElement): void {
   root.innerHTML = `
-    <div class="app-shell">
-      <header class="app-header">
-        <h1>Vanilla</h1>
-      </header>
-
-      <main class="chat-stage" aria-label="Vanilla chat widget example">
-        <div class="widget-host" data-widget-host></div>
-      </main>
-    </div>
+    <main class="chat-stage" aria-label="Vanilla chat widget example">
+      <div class="widget-host" data-widget-host></div>
+    </main>
   `;
 
   const client = createPartnerClient(getApiUrl());

@@ -10,10 +10,10 @@ test("delivers a Vanilla message live to Vue", async ({ context }) => {
   ]);
 
   await expect(
-    vanillaPage.getByRole("heading", { name: "Vanilla", exact: true }),
+    vanillaPage.getByRole("main", { name: "Vanilla chat widget example" }),
   ).toBeVisible();
   await expect(
-    vuePage.getByRole("heading", { name: "Vue", exact: true }),
+    vuePage.getByRole("main", { name: "Vue chat widget example" }),
   ).toBeVisible();
 
   const vanillaWidget = vanillaPage.locator("pulse-chat");
@@ -34,5 +34,7 @@ test("delivers a Vanilla message live to Vue", async ({ context }) => {
   await vanillaInput.fill(message);
   await vanillaWidget.getByRole("button", { name: "Send" }).click();
 
-  await expect(vueWidget.getByText(message)).toBeVisible();
+  await expect(
+    vueWidget.getByRole("region", { name: "Chat messages" }).getByText(message),
+  ).toBeVisible();
 });

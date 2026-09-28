@@ -10,16 +10,17 @@ const chat = useTemplateRef<PulseChatElement>("chat");
 const client = createPartnerClient(getApiUrl());
 const theme = {
   colors: {
-    background: "#eaf8ef",
-    border: "#b8d9c2",
-    muted: "#56705e",
-    primary: "#168447",
-    surface: "#ffffff",
-    text: "#143820",
+    background: "#fff9ff",
+    border: "#d9c8ff",
+    muted: "#715e83",
+    primary: "#7447f5",
+    surface: "#f4ecff",
+    text: "#27183b",
   },
-  fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+  fontFamily:
+    '"Avenir Next", Avenir, "Trebuchet MS", ui-sans-serif, system-ui, sans-serif',
   preset: "light",
-  radius: "36px",
+  radius: "28px",
 } as const satisfies ChatWidgetTheme;
 
 onMounted(() => {
