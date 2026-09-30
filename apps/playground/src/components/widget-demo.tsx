@@ -8,7 +8,7 @@ export function WidgetDemo() {
   const { session } = useDemoSession();
 
   return (
-    <div className="mx-auto w-full max-w-170">
+    <div className="w-full">
       <ChatWidget
         className="playground-chat-widget max-w-none shadow-xl"
         client={session.client}

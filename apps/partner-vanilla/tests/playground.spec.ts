@@ -20,6 +20,7 @@ test("shows equal columns, restores source URL state, and supports keyboard popo
   const widgetBounds = (await widget.boundingBox())!;
   const codeBounds = (await code.boundingBox())!;
   expect(Math.abs(widgetBounds.width - codeBounds.width)).toBeLessThan(1);
+  expect(widgetBounds.width).toBeGreaterThan(640);
 
   const trigger = widget.getByRole("button", {
     name: "New channel",
