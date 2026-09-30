@@ -13,7 +13,7 @@ export function WidgetDemo() {
         className="playground-chat-widget max-w-none shadow-xl"
         client={session.client}
         roomId={roomId}
-        theme={{ preset: "light", radius: "22px" }}
+        theme={{ preset: "dark", radius: "22px" }}
       />
     </div>
   );

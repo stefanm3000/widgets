@@ -6,14 +6,15 @@ test("shows equal columns, restores source URL state, and supports keyboard popo
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.emulateMedia({ colorScheme: "dark" });
+  await page.emulateMedia({ colorScheme: "light" });
   await page.goto("http://localhost:5173?file=vue%2FApp.vue&partner=smoke");
 
   const widget = page.locator('[part="root"]');
   const code = page.locator('[data-slot="card"]');
   const input = widget.getByRole("textbox", { name: "Message", exact: true });
   await expect(input).toBeEnabled();
-  await expect(widget).toHaveAttribute("data-theme", "light");
+  await expect(widget).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
   await expect(page.locator(".syntax-highlight")).toContainText(
     "<script setup>",
   );
