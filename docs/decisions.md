@@ -133,13 +133,33 @@ Keep the parent mapping in the API database, outside the public room DTO. Both
 stores implement channel creation and listing; PostgreSQL inserts the room and
 mapping in one transaction. No browser credentials or token claims are changed.
 
-The sidebar follows the composable sidebar reference using existing UI primitives,
-scoped widget tokens, and icon collapse. Narrow widget containers start collapsed.
-The sidebar stays in the flex layout at every width; its animated width resizes
-the conversation alongside it. A resize observer shares the chat header’s measured
-height with the sidebar, keeping their dividers aligned when text wraps or
-partners change padding. Reduced-motion preferences disable the transition.
-Each selected conversation mounts its own
-store and composer so late responses, optimistic messages, and drafts cannot
-cross channels. Drafts reset when switching. Lists refresh on mount, browser
-focus, or the refresh button; a new realtime channel-list event is deferred.
+The sidebar follows the composable sidebar reference with scoped widget tokens
+and a manual icon toggle. It defaults to expanded at every container width.
+CSS grid subgrid shares the header row between the sidebar and conversation,
+so wrapping and partner padding align their dividers without measuring the DOM.
+Theme presets are explicitly light or dark; partner apps choose the preset and
+may override semantic CSS tokens. The widget does not follow the system theme.
+
+## Use Query hooks and URL state in the widget
+
+TanStack Query owns channel lists, room details, identity, history, and mutations.
+Each widget has its own cache, and replacing its SDK client advances a cache
+scope so credentials and conversation data stay separate. Realtime events merge
+into the same message query used by history. React 19 callback refs attach SDK
+subscriptions and return their cleanup when the room changes or the widget
+unmounts. React Compiler memoizes components and hooks in both the widget library
+and playground builds, including the subscription refs.
+
+Use nuqs for URL state: TanStack Query manages server data rather than search
+parameters. The `pulse-channel:<roomId>` parameter identifies a channel within
+its configured room; unknown channel IDs fall back to the parent room. Channel
+selection adds browser history entries and preserves unrelated URL parameters.
+Instances configured for the same room follow the same selected channel.
+
+Native uncontrolled forms handle the message draft and channel name. Switching
+conversations clears the draft through the form's ref lifecycle, while failed
+sends restore it only if the same composer session remains active and empty.
+The channel form uses a shadcn-style Radix popover portalled into the widget root
+to inherit partner tokens and remain inside the embed's Shadow DOM. React
+`useId` supplies accessible DOM IDs; message and session IDs remain UUIDs because
+the API validates them and uses message IDs for idempotency.

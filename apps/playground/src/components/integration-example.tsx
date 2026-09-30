@@ -1,12 +1,11 @@
 import { Code, FileTree, type Theme } from "@sugar-high/react";
 import { ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import {
   integrationFilePaths,
   integrationFiles,
   isIntegrationFilePath,
-  type IntegrationFilePath,
 } from "../helpers/integration-code";
 import { CopyCodeButton } from "./copy-code-button";
 import { Card, CardContent, CardHeader } from "./ui/card";
@@ -23,27 +22,29 @@ const partnerDeployments = [
 ] as const;
 
 const codeTheme = {
-  background: "#10120f",
-  foreground: "#d5d9cc",
-  class: "#d2a8ff",
-  comment: "#8b949e",
-  control: "#8b949e",
-  entity: "#ffa657",
-  identifier: "#d5d9cc",
-  jsxliterals: "#7ee787",
-  keyword: "#ff7b72",
-  property: "#79c0ff",
-  sign: "#8b949e",
-  string: "#a5d6ff",
+  background: "var(--code-background)",
+  foreground: "var(--code-foreground)",
+  class: "var(--code-class)",
+  comment: "var(--code-comment)",
+  control: "var(--code-control)",
+  entity: "var(--code-entity)",
+  identifier: "var(--code-identifier)",
+  jsxliterals: "var(--code-jsxliterals)",
+  keyword: "var(--code-keyword)",
+  property: "var(--code-property)",
+  sign: "var(--code-sign)",
+  string: "var(--code-string)",
 } as const satisfies Theme;
 
 export function IntegrationExample() {
-  const [activeFile, setActiveFile] =
-    useState<IntegrationFilePath>("react/App.tsx");
+  const [activeFile, setActiveFile] = useQueryState(
+    "file",
+    parseAsStringLiteral(integrationFilePaths).withDefault("react/App.tsx"),
+  );
   const snippet = integrationFiles[activeFile];
 
   return (
-    <Card className="h-full gap-0 rounded-[22px] bg-[#191b17] p-1.5 shadow-[0_22px_70px_rgba(22,24,19,0.16)] backdrop-blur-none">
+    <Card className="h-full gap-0 rounded-[22px] bg-code-card p-1.5 shadow-xl backdrop-blur-none">
       <CardHeader className="justify-between gap-1.5">
         <nav aria-label="Partner app deployments" className="flex gap-1.5">
           {partnerDeployments.map(({ href, label }) => (
@@ -59,16 +60,16 @@ export function IntegrationExample() {
             </a>
           ))}
         </nav>
-        <CopyCodeButton code={snippet.code} key={activeFile} />
+        <CopyCodeButton code={snippet.code} />
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 p-0">
-        <div className="grid h-72 min-h-0 w-full grid-cols-[120px_minmax(0,1fr)] overflow-hidden rounded-2xl bg-[#10120f] sm:grid-cols-[148px_minmax(0,1fr)] md:h-full">
+        <div className="grid h-72 min-h-0 w-full grid-cols-[120px_minmax(0,1fr)] overflow-hidden rounded-2xl bg-code-background sm:grid-cols-[148px_minmax(0,1fr)] md:h-full">
           <FileTree
             activeFile={activeFile}
             aria-label="Partner implementation files"
             className="border-r border-white/10 text-white/65 [--sh-font-size:12px]"
             onActiveFileChange={(path) => {
-              if (isIntegrationFilePath(path)) setActiveFile(path);
+              if (isIntegrationFilePath(path)) void setActiveFile(path);
             }}
             paths={integrationFilePaths}
             theme={codeTheme}

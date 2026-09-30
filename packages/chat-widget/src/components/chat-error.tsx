@@ -5,7 +5,7 @@ export function ChatError({ message }: { message: string | null }) {
 
   return (
     <Marker
-      className="border-t border-destructive/25 bg-destructive/10 px-4 py-2 text-destructive"
+      className="row-start-3 border-t border-destructive/25 bg-destructive/10 px-4 py-2 text-destructive"
       part="error"
       role="alert"
     >

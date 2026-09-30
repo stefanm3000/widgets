@@ -19,18 +19,20 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "lucide-react": "1.48.0",
+    "nuqs": "2.10.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "tailwind-merge": "3.7.0",
-    "zustand": "5.0.15"
+    "tailwind-merge": "3.7.0"
   },
   "devDependencies": {
     "@pulse/eslint-config": "workspace:*",
     "@pulse/typescript-config": "workspace:*",
+    "@rolldown/plugin-babel": "0.2.4",
     "@tailwindcss/vite": "4.3.3",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
+    "babel-plugin-react-compiler": "1.0.0",
     "eslint": "10.9.1",
     "tailwindcss": "4.3.3",
     "typescript": "7.0.2",

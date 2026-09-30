@@ -106,7 +106,7 @@ const client = createPulseClient({
 })
 const chat = document.querySelector("pulse-chat")
 chat.client = client
-chat.theme = { preset: "system", radius: "20px" }
+chat.theme = { preset: "light", radius: "20px" }
 
 window.addEventListener("pagehide", () => {
   client.dispose()

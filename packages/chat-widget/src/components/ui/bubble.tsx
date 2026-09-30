@@ -22,11 +22,11 @@ const bubbleVariants = cva(
       },
       source: {
         playground:
-          "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-[#c2410c]",
+          "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-partner-playground",
         system: "*:data-[slot=bubble-content]:border-border",
         vanilla:
-          "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-[#111111]",
-        vue: "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-[#168447]",
+          "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-partner-vanilla",
+        vue: "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-partner-vue",
       },
     },
     defaultVariants: { source: "system", variant: "secondary" },

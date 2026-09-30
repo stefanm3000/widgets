@@ -1,169 +1,64 @@
-import {
-  startTransition,
-  useMemo,
-  useOptimistic,
-  useSyncExternalStore,
-} from "react";
+import { useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { NuqsAdapter } from "nuqs/adapters/react";
 
-import type { ChatWidgetProps, OptimisticMessage } from "../types";
-import { ChannelStore } from "../utils/channel-store";
-import { ChannelSidebar } from "./channel-sidebar";
-import { ChatWidgetStore } from "../utils/chat-widget-store";
+import { useChannels } from "../hooks/use-channels";
+import {
+  useWidgetQueryClient,
+  WidgetQueryScope,
+} from "../hooks/use-widget-query-client";
+import type { ChatWidgetProps } from "../types";
 import { cn } from "../utils/cn";
-import {
-  createThemeStyle,
-  getSystemTheme,
-  type ResolvedTheme,
-  resolveTheme,
-  subscribeToSystemTheme,
-} from "../utils/theme";
-import { ChatComposer } from "./chat-composer";
-import { ChatError } from "./chat-error";
-import { ChatHeader } from "./chat-header";
-import { ChatTranscript } from "./chat-transcript";
+import { createThemeStyle } from "../utils/theme";
+import { ChannelSidebar } from "./channel-sidebar";
+import { ChatConversation } from "./chat-conversation";
 
-export function ChatWidget({
+export function ChatWidget(props: ChatWidgetProps) {
+  const { queryClient, scope } = useWidgetQueryClient(props.client);
+  return (
+    <QueryClientProvider client={queryClient}>
+      <WidgetQueryScope value={scope}>
+        <NuqsAdapter>
+          <WidgetLayout {...props} />
+        </NuqsAdapter>
+      </WidgetQueryScope>
+    </QueryClientProvider>
+  );
+}
+
+function WidgetLayout({
   className,
   classNames = {},
   client,
   roomId,
   theme = {},
 }: ChatWidgetProps) {
-  const channels = useMemo(
-    () => new ChannelStore(client, roomId),
-    [client, roomId],
+  const channels = useChannels(client, roomId);
+  const [popoverContainer, setPopoverContainer] = useState<HTMLElement | null>(
+    null,
   );
-  const channelSnapshot = useSyncExternalStore(
-    channels.subscribe,
-    channels.getSnapshot,
-    channels.getSnapshot,
-  );
-
-  const systemTheme = useSyncExternalStore<ResolvedTheme>(
-    subscribeToSystemTheme,
-    getSystemTheme,
-    () => "light",
-  );
-  const resolvedTheme = resolveTheme(theme.preset, systemTheme);
-  const style = useMemo(
-    () => createThemeStyle(theme, resolvedTheme),
-    [resolvedTheme, theme],
-  );
-
   return (
     <section
+      ref={setPopoverContainer}
       className={cn(
-        "pulse-channel-layout relative flex h-[min(680px,80vh)] w-full min-w-65 max-w-170 overflow-hidden border border-border bg-background text-foreground shadow-[0_22px_60px_rgb(26_35_52/14%)] rounded-(--pulse-radius) [font-family:var(--pulse-font)]",
+        "pulse-channel-layout relative grid h-[min(680px,80vh)] w-full min-w-65 max-w-170 grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto_auto] overflow-hidden rounded-(--pulse-radius) border border-border bg-background text-foreground shadow-xl [font-family:var(--pulse-font)]",
         classNames.root,
         className,
       )}
-      data-theme={resolvedTheme}
+      data-theme={theme.preset ?? "light"}
       part="root"
-      style={style}
+      style={createThemeStyle(theme)}
     >
       <ChannelSidebar
-        key={`sidebar:${roomId}`}
-        store={channels}
+        {...channels}
         className={classNames.sidebar}
+        popoverContainer={popoverContainer}
       />
       <ChatConversation
-        key={channelSnapshot.activeRoomId}
         client={client}
-        roomId={channelSnapshot.activeRoomId}
+        roomId={channels.activeRoomId}
         classNames={classNames}
       />
     </section>
-  );
-}
-
-function ChatConversation({
-  client,
-  roomId,
-  classNames = {},
-}: Pick<ChatWidgetProps, "client" | "roomId" | "classNames">) {
-  const store = useMemo(
-    () => new ChatWidgetStore(client, roomId),
-    [client, roomId],
-  );
-
-  const snapshot = useSyncExternalStore(
-    store.subscribe,
-    store.getSnapshot,
-    store.getServerSnapshot,
-  );
-
-  const [optimisticMessages, addOptimisticMessage] = useOptimistic<
-    OptimisticMessage[],
-    OptimisticMessage
-  >(snapshot.messages, (messages, pendingMessage) => {
-    if (
-      messages.some(
-        (message) => message.clientMessageId === pendingMessage.clientMessageId,
-      )
-    ) {
-      return messages;
-    }
-
-    return [...messages, pendingMessage].sort(
-      (left, right) =>
-        left.createdAt.localeCompare(right.createdAt) ||
-        left.id.localeCompare(right.id),
-    );
-  });
-
-  return (
-    <div
-      className="pulse-conversation grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto_auto]"
-      part="conversation"
-    >
-      <ChatHeader
-        className={classNames.header}
-        connectionState={snapshot.connectionState}
-        roomName={snapshot.room?.name}
-        statusClassName={classNames.connectionStatus}
-      />
-
-      <ChatTranscript
-        className={classNames.messageList}
-        currentUserId={snapshot.currentUser?.id ?? null}
-        loading={snapshot.loading}
-        messageClassName={classNames.message}
-        messages={optimisticMessages}
-        outlineClassName={classNames.messageOutline}
-      />
-
-      <ChatError message={snapshot.error} />
-
-      <ChatComposer
-        buttonClassName={classNames.sendButton}
-        className={classNames.composer}
-        connectionState={snapshot.connectionState}
-        inputClassName={classNames.input}
-        onSend={(body) => {
-          const clientMessageId = globalThis.crypto.randomUUID();
-          const pendingMessage: OptimisticMessage = {
-            body,
-            clientMessageId,
-            createdAt: new Date().toISOString(),
-            id: `optimistic:${clientMessageId}`,
-            optimistic: true,
-            roomId,
-            sender: {
-              displayName: snapshot.currentUser?.displayName ?? "You",
-              id: snapshot.currentUser?.id ?? `optimistic:${clientMessageId}`,
-              source: snapshot.currentUser?.source ?? "system",
-            },
-          };
-
-          return new Promise<boolean>((resolve) => {
-            startTransition(async () => {
-              addOptimisticMessage(pendingMessage);
-              resolve(await store.send(body, clientMessageId));
-            });
-          });
-        }}
-        roomId={roomId}
-      />
-    </div>
   );
 }

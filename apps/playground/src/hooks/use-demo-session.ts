@@ -1,7 +1,8 @@
-import { usePlaygroundStore } from "../stores/playground-store";
+import { useState } from "react";
+
+import { createDemoSession, getApiUrl } from "../helpers/demo-session";
 
 export function useDemoSession() {
-  const session = usePlaygroundStore((state) => state.session);
-
+  const [session] = useState(() => createDemoSession(getApiUrl()));
   return { session };
 }

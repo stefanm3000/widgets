@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 
 import type { OptimisticMessage } from "../types";
 import { cn } from "../utils/cn";
@@ -22,38 +22,17 @@ export function TranscriptOutline({
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const { scrollToMessage } = useMessageScroller();
   const { currentAnchorId, visibleMessageIds } = useMessageScrollerVisibility();
-  const visibleIds = useMemo(
-    () => new Set(visibleMessageIds),
-    [visibleMessageIds],
-  );
+  const visibleIds = new Set(visibleMessageIds);
   const currentMessageId =
     currentAnchorId ?? visibleMessageIds[0] ?? messages.at(-1)?.id ?? null;
   const currentMessageIndex = messages.findIndex(
     (message) => message.id === currentMessageId,
   );
-  const outlineMarkers = useMemo(() => {
-    const markerCount = Math.min(messages.length, MAX_OUTLINE_MARKERS);
-
-    return Array.from({ length: markerCount }, (_, markerIndex) => {
-      const startIndex = Math.floor(
-        (markerIndex * messages.length) / markerCount,
-      );
-      const endIndex = Math.floor(
-        ((markerIndex + 1) * messages.length) / markerCount,
-      );
-      const firstMessage = messages[startIndex];
-      const lastMessage = messages[endIndex - 1];
-
-      return {
-        current:
-          currentMessageIndex >= startIndex && currentMessageIndex < endIndex,
-        key: `${firstMessage?.id}:${lastMessage?.id}`,
-        visible: messages
-          .slice(startIndex, endIndex)
-          .some((message) => visibleIds.has(message.id)),
-      };
-    });
-  }, [currentMessageIndex, messages, visibleIds]);
+  const outlineMarkers = createOutlineMarkers(
+    messages,
+    currentMessageIndex,
+    visibleIds,
+  );
 
   if (messages.length < 2) return null;
 
@@ -124,4 +103,32 @@ export function TranscriptOutline({
       </div>
     </details>
   );
+}
+
+function createOutlineMarkers(
+  messages: OptimisticMessage[],
+  currentMessageIndex: number,
+  visibleIds: Set<string>,
+) {
+  const markerCount = Math.min(messages.length, MAX_OUTLINE_MARKERS);
+
+  return Array.from({ length: markerCount }, (_, markerIndex) => {
+    const startIndex = Math.floor(
+      (markerIndex * messages.length) / markerCount,
+    );
+    const endIndex = Math.floor(
+      ((markerIndex + 1) * messages.length) / markerCount,
+    );
+    const firstMessage = messages[startIndex];
+    const lastMessage = messages[endIndex - 1];
+
+    return {
+      current:
+        currentMessageIndex >= startIndex && currentMessageIndex < endIndex,
+      key: `${firstMessage?.id}:${lastMessage?.id}`,
+      visible: messages
+        .slice(startIndex, endIndex)
+        .some((message) => visibleIds.has(message.id)),
+    };
+  });
 }

@@ -112,7 +112,7 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
   const vanilla = await context.newPage();
   const vue = await context.newPage();
   await Promise.all([
-    vanilla.goto("http://localhost:5174"),
+    vanilla.goto("http://localhost:5174?partner=vanilla"),
     vue.goto("http://localhost:5175"),
   ]);
   const first = vanilla.locator("pulse-chat");
@@ -132,8 +132,13 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
     .getByRole("button", { name: "Create channel", exact: true })
     .click();
   await expect(first.getByRole("heading", { name: channel })).toHaveCount(1);
+  const selectedChannel = new URL(vanilla.url()).searchParams.get(
+    "pulse-channel:demo-room",
+  );
+  expect(selectedChannel).toBeTruthy();
+  expect(new URL(vanilla.url()).searchParams.get("partner")).toBe("vanilla");
   await expect(
-    first.getByRole("button", { name: channel, exact: true }),
+    first.getByRole("button", { name: "New channel", exact: true }),
   ).toBeFocused();
   await vanilla.screenshot({
     path: testInfo.outputPath("channels-expanded.png"),
@@ -165,6 +170,12 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
       .getByRole("region", { name: "Chat messages" })
       .getByText(message, { exact: true }),
   ).toHaveCount(0);
+  await vanilla.goBack();
+  await expect(first.getByRole("heading", { name: channel })).toBeVisible();
+  await vanilla.goForward();
+  await expect(
+    first.getByRole("heading", { name: "Live chat demo" }),
+  ).toBeVisible();
   await first.getByRole("button", { name: channel, exact: true }).click();
   await expect(
     first
@@ -172,6 +183,11 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
       .getByText(message, { exact: true }),
   ).toBeVisible();
   await vanilla.reload();
+  await expect(first.getByRole("heading", { name: channel })).toBeVisible();
+  expect(
+    new URL(vanilla.url()).searchParams.get("pulse-channel:demo-room"),
+  ).toBe(selectedChannel);
+  expect(new URL(vanilla.url()).searchParams.get("partner")).toBe("vanilla");
   await expect(
     first.getByRole("button", { name: channel, exact: true }),
   ).toBeVisible();
@@ -183,6 +199,10 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
   ).toBeVisible();
 
   await vanilla.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    first.getByRole("button", { name: "Collapse channels" }),
+  ).toBeVisible();
+  await first.getByRole("button", { name: "Collapse channels" }).click();
   await vanilla.screenshot({
     path: testInfo.outputPath("channels-mobile.png"),
   });
@@ -208,6 +228,12 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
     chatBounds.x + 1,
   );
   expect(chatBounds.width).toBeLessThan(collapsedChatWidth);
+  for (const button of await first.locator('[part="channel-button"]').all()) {
+    const bounds = (await button.boundingBox())!;
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+      sidebarBounds.x + sidebarBounds.width + 1,
+    );
+  }
   for (const part of ["input", "send-button", "message-list"]) {
     const bounds = (await first.locator(`[part="${part}"]`).boundingBox())!;
     const rootBounds = (await first.locator('[part="root"]').boundingBox())!;

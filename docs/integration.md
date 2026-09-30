@@ -72,16 +72,16 @@ import "@pulse/chat-widget/styles.css";
   client={client}
   roomId="demo-room"
   theme={{
-    preset: "system",
-    colors: { primary: "#5b5bd6" },
+    preset: "light",
+    colors: { primary: "oklch(0.55 0.18 280)" },
     radius: "18px",
   }}
 />;
 ```
 
-The widget accepts `light`, `dark`, and `system` presets. System mode listens to
-`prefers-color-scheme` and removes the listener on unmount. Semantic color,
-radius, and font values become CSS custom properties scoped to the widget root.
+The widget defaults to `light`; partners may pass `light` or `dark` explicitly.
+Semantic color, radius, and font values become CSS custom properties scoped to
+the widget root. The widget does not read the operating system theme.
 
 `classNames` exposes `root`, `header`, `messageList`, `message`, `composer`,
 `input`, `sendButton`, and `connectionStatus` slots for inline React consumers.

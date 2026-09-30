@@ -10,11 +10,10 @@ export function WidgetDemo() {
   return (
     <div className="mx-auto w-full max-w-170">
       <ChatWidget
-        className="playground-chat-widget max-w-none shadow-[0_24px_70px_rgba(35,39,29,0.14)]"
+        className="playground-chat-widget max-w-none shadow-xl"
         client={session.client}
-        key={session.id}
         roomId={roomId}
-        theme={{ preset: "system", radius: "22px" }}
+        theme={{ preset: "light", radius: "22px" }}
       />
     </div>
   );

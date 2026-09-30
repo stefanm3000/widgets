@@ -5,14 +5,14 @@ import type { ComponentProps } from "react";
 import { cn } from "../../utils/cn";
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 aria-invalid:border-destructive aria-invalid:ring-destructive/20",
+  "box-border inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 aria-invalid:border-destructive aria-invalid:ring-destructive/20",
   {
     variants: {
       variant: {
         default:
           "bg-primary text-primary-foreground shadow-xs hover:brightness-95",
         destructive: "bg-destructive text-white shadow-xs hover:brightness-95",
-        ghost: "hover:bg-muted hover:text-foreground",
+        ghost: "border-0 bg-transparent hover:bg-muted hover:text-foreground",
         outline:
           "border border-border bg-background text-foreground shadow-xs hover:bg-muted",
         secondary:

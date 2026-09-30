@@ -8,7 +8,6 @@ const uuidPattern =
 
 export interface DemoSession {
   client: PulseClient;
-  id: string;
 }
 
 export function getApiUrl(): string {
@@ -32,6 +31,5 @@ export function createDemoSession(baseUrl: string): DemoSession {
 
   return {
     client: createDemoClient(baseUrl, sessionId),
-    id: globalThis.crypto.randomUUID(),
   };
 }
