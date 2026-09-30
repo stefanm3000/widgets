@@ -1,4 +1,49 @@
-import { expect, test, type Locator } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
+
+async function expectStyledPopover(
+  page: Page,
+  widget: Locator,
+  border: string,
+) {
+  const trigger = widget.getByRole("button", {
+    name: "New channel",
+    exact: true,
+  });
+  await trigger.click();
+  const popover = widget.getByRole("dialog", { name: "New channel" });
+  await expect(popover).toHaveCSS("border-top-style", "solid");
+  await expect(popover).toHaveCSS("border-top-width", "1px");
+  await expect(popover).toHaveCSS("border-top-color", border);
+  await expect(popover).toHaveCSS("animation-name", "pulse-popover-in");
+  await popover.evaluate(async (element) => {
+    await Promise.all(
+      element.getAnimations().map((animation) => animation.finished),
+    );
+  });
+
+  const exitAnimation = popover.evaluate(
+    (element) =>
+      new Promise<string>((resolve) => {
+        element.addEventListener(
+          "animationstart",
+          (event) => resolve((event as AnimationEvent).animationName),
+          { once: true },
+        );
+      }),
+  );
+  await page.keyboard.press("Escape");
+  expect(await exitAnimation).toBe("pulse-popover-out");
+  await expect(popover).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await trigger.click();
+  await expect(popover).toHaveCSS("animation-name", "none");
+  await page.keyboard.press("Escape");
+  await expect(popover).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+}
 
 async function expectAlignedHeaders(widget: Locator) {
   await expect(widget.locator('[part="sidebar-header"]')).toHaveCSS(
@@ -125,6 +170,8 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
   ).toBeEnabled();
   await expectAlignedHeaders(first);
   await expectAlignedHeaders(second);
+  await expectStyledPopover(vanilla, first, "rgb(222, 222, 222)");
+  await expectStyledPopover(vue, second, "rgb(217, 200, 255)");
   const channel = `Design ${Date.now()}`;
   await first.getByRole("button", { name: "New channel", exact: true }).click();
   await first.getByRole("textbox", { name: "Channel name" }).fill(channel);

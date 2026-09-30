@@ -27,6 +27,32 @@
   --color-partner-vue: var(--pulse-partner-vue);
   --color-partner-vanilla: var(--pulse-partner-vanilla);
   --color-partner-playground: var(--pulse-partner-playground);
+  --animate-popover-in: pulse-popover-in 160ms ease-out;
+  --animate-popover-out: pulse-popover-out 120ms ease-in;
+
+  @keyframes pulse-popover-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes pulse-popover-out {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    to {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
 }
 
 @layer utilities {
