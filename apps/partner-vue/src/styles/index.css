@@ -35,7 +35,6 @@ pulse-chat {
 .chat-stage {
   width: min(780px, calc(100vw - 56px));
   height: min(760px, 86vh);
-  transform: rotate(-0.45deg);
 }
 
 pulse-chat::part(root) {
@@ -84,7 +83,7 @@ pulse-chat::part(message) {
 }
 
 pulse-chat::part(message):hover {
-  transform: translateY(-2px) rotate(0.25deg);
+  transform: translateY(-2px);
 }
 
 pulse-chat::part(composer) {
@@ -116,7 +115,6 @@ pulse-chat::part(send-button) {
   .chat-stage {
     width: calc(100vw - 28px);
     height: min(780px, calc(100vh - 28px));
-    transform: none;
   }
 
   pulse-chat::part(root) {
