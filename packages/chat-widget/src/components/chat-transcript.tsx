@@ -123,19 +123,19 @@ export function ChatTranscript({
         </MessageScrollerViewport>
         <TranscriptOutline className={outlineClassName} messages={messages} />
         <MessageScrollerButton />
-        <ScrollToOptimisticMessage messages={messages} />
+        <ScrollToLatestMessage messages={messages} />
       </MessageScroller>
     </MessageScrollerProvider>
   );
 }
 
-function ScrollToOptimisticMessage({
+function ScrollToLatestMessage({
   messages,
 }: {
   messages: OptimisticMessage[];
 }) {
   const { scrollToMessage } = useMessageScroller();
-  const messageId = messages.filter((message) => message.optimistic).at(-1)?.id;
+  const messageId = messages.at(-1)?.id;
 
   useLayoutEffect(() => {
     if (messageId) {
