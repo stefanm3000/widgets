@@ -277,7 +277,7 @@ describe("ChatWidget", () => {
     expect(ownMessageRow?.getAttribute("data-align")).toBe("end");
     expect(ownBubble?.getAttribute("data-source")).toBe("playground");
     expect(ownBubble?.getAttribute("data-variant")).toBe("default");
-    expect(ownBubble?.className).toContain("border-[#c2410c]");
+    expect(ownBubble?.className).toContain("border-partner-playground");
     expect(screen.getByText("Charismatic Lizard (you)")).toBeDefined();
     expect(screen.getByText("Playground")).toBeDefined();
 
@@ -328,7 +328,7 @@ describe("ChatWidget", () => {
     const liveBubble = getMessageBody("Live").closest('[data-slot="bubble"]');
     expect(liveBubble?.getAttribute("data-source")).toBe("vue");
     expect(liveBubble?.getAttribute("data-variant")).toBe("secondary");
-    expect(liveBubble?.className).toContain("border-[#168447]");
+    expect(liveBubble?.className).toContain("border-partner-vue");
 
     view.unmount();
     expect(fixture.unsubscribe).toHaveBeenCalledOnce();

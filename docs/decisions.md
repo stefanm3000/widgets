@@ -133,13 +133,9 @@ Keep the parent mapping in the API database, outside the public room DTO. Both
 stores implement channel creation and listing; PostgreSQL inserts the room and
 mapping in one transaction. No browser credentials or token claims are changed.
 
-The sidebar follows the composable sidebar reference using existing UI primitives,
-scoped widget tokens, and icon collapse. Narrow widget containers start collapsed.
-The sidebar stays in the flex layout at every width; its animated width resizes
-the conversation alongside it. A resize observer shares the chat header’s measured
-height with the sidebar, keeping their dividers aligned when text wraps or
-partners change padding. Reduced-motion preferences disable the transition.
-Each selected conversation mounts its own
-store and composer so late responses, optimistic messages, and drafts cannot
-cross channels. Drafts reset when switching. Lists refresh on mount, browser
-focus, or the refresh button; a new realtime channel-list event is deferred.
+The sidebar follows the composable sidebar reference with scoped widget tokens
+and a manual icon toggle. It defaults to expanded at every container width.
+CSS grid subgrid shares the header row between the sidebar and conversation,
+so wrapping and partner padding align their dividers without measuring the DOM.
+Theme presets are explicitly light or dark; partner apps choose the preset and
+may override semantic CSS tokens. The widget does not follow the system theme.

@@ -1,5 +1,4 @@
 import type { ConnectionState } from "@pulse/sdk";
-import { useLayoutEffect, useRef } from "react";
 
 import { cn } from "../utils/cn";
 import { Marker, MarkerContent, MarkerIcon } from "./ui/marker";
@@ -24,30 +23,11 @@ export function ChatHeader({
   roomName,
   statusClassName,
 }: ChatHeaderProps) {
-  const headerRef = useRef<HTMLElement>(null);
-  useLayoutEffect(() => {
-    const header = headerRef.current;
-    const root = header?.closest<HTMLElement>('[part="root"]');
-    if (!header || !root) return;
-    const syncHeight = (entries?: ResizeObserverEntry[]) => {
-      root.style.setProperty(
-        "--pulse-header-height",
-        `${entries?.[0]?.borderBoxSize[0]?.blockSize ?? header.offsetHeight}px`,
-      );
-    };
-    syncHeight();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(syncHeight);
-    observer.observe(header, { box: "border-box" });
-    return () => observer.disconnect();
-  }, []);
-
   const pending =
     connectionState === "connecting" || connectionState === "reconnecting";
 
   return (
     <header
-      ref={headerRef}
       className={cn(
         "flex flex-wrap items-center justify-between gap-2 border-b border-border bg-card px-5 py-4",
         className,
@@ -66,7 +46,7 @@ export function ChatHeader({
         aria-live="polite"
         className={cn(
           "w-auto shrink-0 rounded-[calc(var(--pulse-radius)*0.7)] border border-border bg-muted px-2.5 py-1.5 font-semibold",
-          connectionState === "connected" && "text-emerald-600",
+          connectionState === "connected" && "text-connected",
           statusClassName,
         )}
         part="connection-status"

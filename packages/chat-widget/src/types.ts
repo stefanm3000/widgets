@@ -17,7 +17,7 @@ export interface ChatWidgetTheme {
     text: string;
   }>;
   fontFamily?: string;
-  preset?: "light" | "dark" | "system";
+  preset?: "light" | "dark";
   radius?: string;
 }
 

@@ -1,73 +1,49 @@
 @import "tailwindcss";
 
+@theme inline {
+  --color-page: var(--page);
+  --color-page-foreground: var(--page-foreground);
+  --color-code-card: var(--code-card);
+  --color-code-background: var(--code-background);
+}
+
+:root {
+  --page: oklch(0.96 0.008 90);
+  --page-foreground: oklch(0.2 0.008 130);
+  --page-glow:
+    radial-gradient(
+      circle at 15% 15%,
+      oklch(0.92 0.2 120 / 22%),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 85% 5%,
+      oklch(0.65 0.18 270 / 16%),
+      transparent 26%
+    );
+  --code-card: oklch(0.22 0.008 130);
+  --code-background: oklch(0.18 0.008 130);
+  --code-foreground: oklch(0.87 0.015 120);
+  --code-class: oklch(0.8 0.13 305);
+  --code-comment: oklch(0.66 0.02 250);
+  --code-control: var(--code-comment);
+  --code-entity: oklch(0.8 0.14 60);
+  --code-identifier: var(--code-foreground);
+  --code-jsxliterals: oklch(0.83 0.15 145);
+  --code-keyword: oklch(0.75 0.16 25);
+  --code-property: oklch(0.78 0.12 250);
+  --code-sign: var(--code-comment);
+  --code-string: oklch(0.86 0.08 250);
+}
+
 @keyframes syntax-color-in {
   from {
-    color: #d5d9cc;
+    color: var(--code-foreground);
   }
 }
 
 .syntax-highlight .sh__line > span {
   animation: syntax-color-in 240ms ease-out both;
-}
-
-@property --pulse-background {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #f5f7fb;
-}
-
-@property --pulse-border {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #dce1ea;
-}
-
-@property --pulse-danger {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #b42318;
-}
-
-@property --pulse-muted {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #687386;
-}
-
-@property --pulse-primary {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #5b5bd6;
-}
-
-@property --pulse-primary-foreground {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #ffffff;
-}
-
-@property --pulse-surface {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #ffffff;
-}
-
-@property --pulse-text {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #172033;
-}
-
-.playground-chat-widget {
-  transition:
-    --pulse-background 240ms ease-out,
-    --pulse-border 240ms ease-out,
-    --pulse-danger 240ms ease-out,
-    --pulse-muted 240ms ease-out,
-    --pulse-primary 240ms ease-out,
-    --pulse-primary-foreground 240ms ease-out,
-    --pulse-surface 240ms ease-out,
-    --pulse-text 240ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {

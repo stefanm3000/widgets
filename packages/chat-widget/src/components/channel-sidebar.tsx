@@ -5,13 +5,7 @@ import {
   Plus,
   RefreshCw,
 } from "lucide-react";
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useId, useRef, useState, useSyncExternalStore } from "react";
 
 import type { ChannelStore } from "../utils/channel-store";
 import { cn } from "../utils/cn";
@@ -35,35 +29,12 @@ export function ChannelSidebar({
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const id = useId();
-  const sidebar = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const container = sidebar.current?.parentElement;
-    if (!container || typeof ResizeObserver === "undefined") return;
-    let wasNarrow: boolean | undefined;
-    const observer = new ResizeObserver(([entry]) => {
-      if (!entry) return;
-      const narrow = entry.contentRect.width < 560;
-      if (narrow !== wasNarrow) setCollapsed(narrow);
-      wasNarrow = narrow;
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
   const createButton = useRef<HTMLButtonElement>(null);
-  const activeButton = useRef<HTMLButtonElement>(null);
-  const focusAfterCreate = useRef(false);
-  useEffect(() => {
-    if (focusAfterCreate.current && !showForm) {
-      focusAfterCreate.current = false;
-      activeButton.current?.focus();
-    }
-  }, [showForm, snapshot.activeRoomId]);
 
   return (
     <aside
-      ref={sidebar}
       className={cn(
-        "pulse-channel-sidebar flex min-h-0 shrink-0 flex-col bg-card",
+        "pulse-channel-sidebar col-start-1 row-span-4 grid min-h-0 grid-rows-subgrid bg-card",
         className,
       )}
       data-collapsed={collapsed}
@@ -71,7 +42,7 @@ export function ChannelSidebar({
       aria-label="Channels"
     >
       <div
-        className="box-border flex h-[var(--pulse-header-height,68px)] shrink-0 items-center gap-2 px-1.5"
+        className="box-border flex shrink-0 items-center gap-2 px-1.5"
         part="sidebar-header"
       >
         <Button
@@ -92,7 +63,7 @@ export function ChannelSidebar({
         </Button>
         {!collapsed && <span className="text-sm font-semibold">Channels</span>}
       </div>
-      <div id={id} className="flex min-h-0 flex-1 flex-col gap-2 p-1.5">
+      <div id={id} className="row-span-3 flex min-h-0 flex-col gap-2 p-1.5">
         <Button
           ref={createButton}
           variant="ghost"
@@ -120,7 +91,6 @@ export function ChannelSidebar({
               if (!name.trim() || snapshot.creating) return;
               void store.create(name.trim()).then((created) => {
                 if (created) {
-                  focusAfterCreate.current = true;
                   setName("");
                   setShowForm(false);
                 }
@@ -172,9 +142,6 @@ export function ChannelSidebar({
             {snapshot.rooms.map((room) => (
               <li key={room.id}>
                 <Button
-                  ref={
-                    room.id === snapshot.activeRoomId ? activeButton : undefined
-                  }
                   variant="ghost"
                   type="button"
                   aria-label={room.name}
