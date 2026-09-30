@@ -1,12 +1,11 @@
 import { Code, FileTree, type Theme } from "@sugar-high/react";
 import { ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import {
   integrationFilePaths,
   integrationFiles,
   isIntegrationFilePath,
-  type IntegrationFilePath,
 } from "../helpers/integration-code";
 import { CopyCodeButton } from "./copy-code-button";
 import { Card, CardContent, CardHeader } from "./ui/card";
@@ -38,8 +37,10 @@ const codeTheme = {
 } as const satisfies Theme;
 
 export function IntegrationExample() {
-  const [activeFile, setActiveFile] =
-    useState<IntegrationFilePath>("react/App.tsx");
+  const [activeFile, setActiveFile] = useQueryState(
+    "file",
+    parseAsStringLiteral(integrationFilePaths).withDefault("react/App.tsx"),
+  );
   const snippet = integrationFiles[activeFile];
 
   return (
@@ -59,7 +60,7 @@ export function IntegrationExample() {
             </a>
           ))}
         </nav>
-        <CopyCodeButton code={snippet.code} key={activeFile} />
+        <CopyCodeButton code={snippet.code} />
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 p-0">
         <div className="grid h-72 min-h-0 w-full grid-cols-[120px_minmax(0,1fr)] overflow-hidden rounded-2xl bg-code-background sm:grid-cols-[148px_minmax(0,1fr)] md:h-full">
@@ -68,7 +69,7 @@ export function IntegrationExample() {
             aria-label="Partner implementation files"
             className="border-r border-white/10 text-white/65 [--sh-font-size:12px]"
             onActiveFileChange={(path) => {
-              if (isIntegrationFilePath(path)) setActiveFile(path);
+              if (isIntegrationFilePath(path)) void setActiveFile(path);
             }}
             paths={integrationFilePaths}
             theme={codeTheme}

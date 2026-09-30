@@ -88,8 +88,8 @@ both `DATABASE_URL` and `PULSE_TOKEN_SECRET`.
 
 ### Channels
 
-The widget includes a collapsible left sidebar for creating and selecting
-channels. Channels are shared by everyone who has access to the configured
+The widget includes an expanded left sidebar with a manual collapse toggle and
+a popover for creating channels. Channels are shared by everyone who has access to the configured
 `roomId`; the original room remains selectable. Names can contain up to 120
 characters. Use **Refresh channels** to discover channels created in another
 client (the list also refreshes when the browser regains focus).
@@ -98,4 +98,6 @@ The SDK exposes `getChannels(roomId)` and `createChannel(roomId, name)` through
 `GET /rooms/:id/channels` and `POST /rooms/:id/channels`. Apply the database
 migrations with `pnpm --filter @pulse/api db:migrate` before running this version
 against an existing PostgreSQL database. Memory-mode channels last only until
-the API restarts. Switching channels clears the unsent draft.
+the API restarts. Switching channels clears the unsent draft. The selected channel is stored in
+the `pulse-channel:<roomId>` URL parameter, preserving other partner parameters
+and supporting reloads and browser navigation.

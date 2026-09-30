@@ -1,11 +1,14 @@
 import type { Message } from "@pulse/sdk";
 
-export function mergeMessages(
-  current: Message[],
-  incoming: Message[],
-): Message[] {
-  const messages = new Map(current.map((message) => [message.id, message]));
-  for (const message of incoming) messages.set(message.id, message);
+export function mergeMessages<T extends Message>(
+  current: T[],
+  incoming: T[],
+): T[] {
+  const messages = new Map(
+    current.map((message) => [message.clientMessageId, message]),
+  );
+  for (const message of incoming)
+    messages.set(message.clientMessageId, message);
 
   return [...messages.values()].sort(
     (left, right) =>

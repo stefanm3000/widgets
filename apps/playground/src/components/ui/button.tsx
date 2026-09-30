@@ -13,9 +13,9 @@ const buttonVariants = cva(
         sm: "h-8 px-3 text-xs",
       },
       variant: {
-        default: "bg-[#1a1c17] text-white hover:bg-black",
+        default: "bg-page-foreground text-white hover:bg-black",
         outline:
-          "border border-black/10 bg-white/70 text-[#151713] shadow-sm hover:bg-white",
+          "border border-black/10 bg-white/70 text-page-foreground shadow-sm hover:bg-white",
       },
     },
     defaultVariants: {

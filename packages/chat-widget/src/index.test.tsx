@@ -110,6 +110,7 @@ afterEach(() => {
 });
 
 beforeEach(() => {
+  window.history.replaceState(null, "", "/");
   Object.defineProperty(HTMLElement.prototype, "scrollTo", {
     configurable: true,
     value: vi.fn(),
@@ -258,6 +259,11 @@ describe("ChatWidget", () => {
     expect(button.disabled).toBe(true);
 
     act(() => fixture.setState("connected"));
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("Message") as HTMLInputElement).disabled,
+      ).toBe(false),
+    );
     fireEvent.change(input, { target: { value: "Hello from the widget" } });
     expect(button.disabled).toBe(false);
     fireEvent.click(button);
@@ -325,6 +331,7 @@ describe("ChatWidget", () => {
         payload: liveMessage,
       }),
     );
+    await waitFor(() => expect(getMessageBody("Live")).toBeDefined());
     const liveBubble = getMessageBody("Live").closest('[data-slot="bubble"]');
     expect(liveBubble?.getAttribute("data-source")).toBe("vue");
     expect(liveBubble?.getAttribute("data-variant")).toBe("secondary");
@@ -378,7 +385,9 @@ describe("ChatWidget", () => {
       }),
     );
 
-    expect(getMessageBody("Newest live message")).toBeDefined();
+    await waitFor(() =>
+      expect(getMessageBody("Newest live message")).toBeDefined(),
+    );
     expect(
       outline?.querySelectorAll('[data-slot="message-outline-marker"]'),
     ).toHaveLength(40);
@@ -409,6 +418,11 @@ describe("ChatWidget", () => {
 
     expect(await screen.findByText(message.body)).toBeDefined();
     act(() => fixture.setState("connected"));
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("Message") as HTMLInputElement).disabled,
+      ).toBe(false),
+    );
 
     const viewport = document.querySelector<HTMLElement>(
       '[data-slot="message-scroller-viewport"]',
@@ -516,6 +530,11 @@ describe("ChatWidget", () => {
 
     expect(await screen.findByText(message.body)).toBeDefined();
     act(() => fixture.setState("connected"));
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("Message") as HTMLInputElement).disabled,
+      ).toBe(false),
+    );
 
     const input = screen.getByLabelText("Message") as HTMLInputElement;
     const button = screen.getByRole("button", { name: "Send" });
@@ -524,7 +543,7 @@ describe("ChatWidget", () => {
 
     fireEvent.change(input, { target: { value: "First" } });
     fireEvent.submit(form);
-    expect(getMessageBody("First")).toBeDefined();
+    await waitFor(() => expect(getMessageBody("First")).toBeDefined());
 
     fireEvent.change(input, { target: { value: "Second" } });
     expect(button.getAttribute("disabled")).toBeNull();
@@ -532,7 +551,7 @@ describe("ChatWidget", () => {
 
     expect(input.value).toBe("");
     expect(document.activeElement).toBe(input);
-    expect(fixture.sendMessage).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(fixture.sendMessage).toHaveBeenCalledTimes(2));
     expect(
       getMessageBody("First").closest('[data-slot="message"]')?.className,
     ).toContain("opacity-50");

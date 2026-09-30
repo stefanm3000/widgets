@@ -176,16 +176,17 @@
     cursor: default;
   }
 
-  .pulse-channel-sidebar [data-variant="ghost"] {
-    background-color: transparent;
-  }
-
-  .pulse-channel-sidebar[data-collapsed="true"] {
+  .pulse-channel-sidebar[data-state="collapsed"] {
     width: 49px;
   }
 
-  .pulse-conversation {
+  .pulse-conversation [part="composer"],
+  .pulse-conversation [part="message-list"] {
     container-type: inline-size;
+  }
+
+  .pulse-conversation [part="composer"] {
+    flex-wrap: wrap;
   }
 
   @media (prefers-reduced-motion: reduce) {

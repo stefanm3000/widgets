@@ -98,9 +98,7 @@ describe("pulse-chat", () => {
     await waitFor(() => {
       const widget =
         element.shadowRoot?.querySelector<HTMLElement>('[part="root"]');
-      expect(widget?.style.getPropertyValue("--pulse-background")).toBe(
-        "#11131a",
-      );
+      expect(widget?.getAttribute("data-theme")).toBe("dark");
     });
     expect(fixture.client.subscribe).toHaveBeenCalledOnce();
 

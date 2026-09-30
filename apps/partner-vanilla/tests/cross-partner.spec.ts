@@ -133,7 +133,7 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
     .click();
   await expect(first.getByRole("heading", { name: channel })).toHaveCount(1);
   await expect(
-    first.getByRole("button", { name: channel, exact: true }),
+    first.getByRole("button", { name: "New channel", exact: true }),
   ).toBeFocused();
   await vanilla.screenshot({
     path: testInfo.outputPath("channels-expanded.png"),
@@ -183,6 +183,10 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
   ).toBeVisible();
 
   await vanilla.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    first.getByRole("button", { name: "Collapse channels" }),
+  ).toBeVisible();
+  await first.getByRole("button", { name: "Collapse channels" }).click();
   await vanilla.screenshot({
     path: testInfo.outputPath("channels-mobile.png"),
   });

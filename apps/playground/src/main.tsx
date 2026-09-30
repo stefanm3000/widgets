@@ -1,3 +1,4 @@
+import { NuqsAdapter } from "nuqs/adapters/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -11,6 +12,8 @@ if (!root) throw new Error("Playground root element is missing");
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <NuqsAdapter>
+      <App />
+    </NuqsAdapter>
   </StrictMode>,
 );

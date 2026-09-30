@@ -1,6 +1,6 @@
 import type { ConnectionState } from "@pulse/sdk";
-import { type FormEvent, useRef, useState } from "react";
 
+import { useMessageComposer } from "../hooks/use-message-composer";
 import { cn } from "../utils/cn";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -23,36 +23,19 @@ export function ChatComposer({
   onSend,
   roomId,
 }: ChatComposerProps) {
-  const [draft, setDraft] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const composer = useMessageComposer(onSend, roomId);
   const connected = connectionState === "connected";
-  const canSend = connected && draft.trim().length > 0;
-  const inputId = `pulse-message-${roomId}`;
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    const body = draft.trim();
-    if (!body) return;
-
-    setDraft("");
-    inputRef.current?.focus();
-    void onSend(body).then((sent) => {
-      if (!sent) {
-        setDraft((currentDraft) => currentDraft || body);
-      }
-    });
-  };
-
   return (
     <form
+      ref={composer.attach}
       className={cn(
-        "flex items-center gap-2 border-t border-border bg-card p-3.5",
+        "row-start-4 flex items-center gap-2 border-t border-border bg-card p-3.5",
         className,
       )}
-      onSubmit={submit}
+      onSubmit={composer.submit}
       part="composer"
     >
-      <Label className="sr-only" htmlFor={inputId}>
+      <Label className="sr-only" htmlFor={composer.inputId}>
         Message
       </Label>
       <Input
@@ -62,21 +45,21 @@ export function ChatComposer({
           inputClassName,
         )}
         disabled={!connected}
-        id={inputId}
+        id={composer.inputId}
+        name="message"
         maxLength={500}
-        onChange={(event) => setDraft(event.target.value)}
         part="input"
         placeholder={connected ? "Write a message…" : "Waiting for connection…"}
-        ref={inputRef}
+        ref={composer.inputRef}
         type="text"
-        value={draft}
+        required
       />
       <Button
         className={cn(
           "box-border h-10 w-20 rounded-[calc(var(--pulse-radius)*0.7)]",
           buttonClassName,
         )}
-        disabled={!canSend}
+        disabled={!connected}
         part="send-button"
         type="submit"
       >
