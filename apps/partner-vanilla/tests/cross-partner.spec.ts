@@ -1,4 +1,22 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
+
+async function expectAlignedHeaders(widget: Locator) {
+  await expect(widget.locator('[part="sidebar-header"]')).toHaveCSS(
+    "border-bottom-style",
+    "solid",
+  );
+  await expect
+    .poll(async () => {
+      const bottom = (element: HTMLElement) =>
+        element.offsetTop + element.offsetHeight;
+      const sidebar = await widget
+        .locator('[part="sidebar-header"]')
+        .evaluate(bottom);
+      const chat = await widget.locator('[part="header"]').evaluate(bottom);
+      return Math.abs(sidebar - chat);
+    })
+    .toBeLessThan(1);
+}
 
 test("delivers Vanilla messages live to Vue and scrolls to the latest message", async ({
   context,
@@ -105,6 +123,8 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
   await expect(
     second.getByRole("textbox", { name: "Message", exact: true }),
   ).toBeEnabled();
+  await expectAlignedHeaders(first);
+  await expectAlignedHeaders(second);
   const channel = `Design ${Date.now()}`;
   await first.getByRole("button", { name: "New channel", exact: true }).click();
   await first.getByRole("textbox", { name: "Channel name" }).fill(channel);
@@ -181,6 +201,7 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
   await expect
     .poll(async () => (await sidebar.boundingBox())!.width)
     .toBeGreaterThan(100);
+  await expectAlignedHeaders(first);
   const sidebarBounds = (await sidebar.boundingBox())!;
   const chatBounds = (await conversation.boundingBox())!;
   expect(sidebarBounds.x + sidebarBounds.width).toBeLessThanOrEqual(
@@ -202,6 +223,7 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
   await expect
     .poll(async () => (await conversation.boundingBox())!.width)
     .toBe(collapsedChatWidth);
+  await expectAlignedHeaders(first);
   await vanilla.emulateMedia({ reducedMotion: "reduce" });
   await expect(sidebar).toHaveCSS("transition-duration", "0s");
   await expect(

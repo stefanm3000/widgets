@@ -136,7 +136,9 @@ mapping in one transaction. No browser credentials or token claims are changed.
 The sidebar follows the composable sidebar reference using existing UI primitives,
 scoped widget tokens, and icon collapse. Narrow widget containers start collapsed.
 The sidebar stays in the flex layout at every width; its animated width resizes
-the conversation alongside it. Reduced-motion preferences disable the transition.
+the conversation alongside it. A resize observer shares the chat header’s measured
+height with the sidebar, keeping their dividers aligned when text wraps or
+partners change padding. Reduced-motion preferences disable the transition.
 Each selected conversation mounts its own
 store and composer so late responses, optimistic messages, and drafts cannot
 cross channels. Drafts reset when switching. Lists refresh on mount, browser

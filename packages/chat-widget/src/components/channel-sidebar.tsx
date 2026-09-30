@@ -63,14 +63,17 @@ export function ChannelSidebar({
     <aside
       ref={sidebar}
       className={cn(
-        "pulse-channel-sidebar flex min-h-0 shrink-0 flex-col border-r border-border bg-card",
+        "pulse-channel-sidebar flex min-h-0 shrink-0 flex-col bg-card",
         className,
       )}
       data-collapsed={collapsed}
       part="sidebar"
       aria-label="Channels"
     >
-      <div className="flex h-17 shrink-0 items-center gap-2 border-b border-border px-1.5">
+      <div
+        className="box-border flex h-[var(--pulse-header-height,68px)] shrink-0 items-center gap-2 px-1.5"
+        part="sidebar-header"
+      >
         <Button
           variant="ghost"
           size="icon"

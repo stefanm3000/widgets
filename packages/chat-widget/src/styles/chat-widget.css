@@ -127,6 +127,10 @@
     transition: width 220ms ease;
   }
 
+  .pulse-channel-sidebar [part="sidebar-header"] {
+    border-bottom: 1px solid var(--pulse-border);
+  }
+
   .pulse-channel-sidebar button {
     border: 0;
     color: inherit;
