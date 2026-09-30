@@ -37,26 +37,10 @@ const sourceLabels = {
   vue: "Vue",
 } as const;
 
-export function ChatTranscript({
-  className,
-  currentUserId,
-  loading,
-  messageClassName,
-  messages,
-  outlineClassName,
-}: ChatTranscriptProps) {
+export function ChatTranscript(props: ChatTranscriptProps) {
   return (
     <MessageScrollerProvider autoScroll defaultScrollPosition="end">
-      <TranscriptContent
-        {...{
-          className,
-          currentUserId,
-          loading,
-          messageClassName,
-          messages,
-          outlineClassName,
-        }}
-      />
+      <TranscriptContent {...props} />
     </MessageScrollerProvider>
   );
 }

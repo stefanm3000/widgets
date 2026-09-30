@@ -40,7 +40,7 @@ export function ChannelSidebar({
           />
           <nav
             aria-label="Chat channels"
-            className="min-h-0 flex-1 overflow-y-auto"
+            className="min-h-0 min-w-0 flex-1 overflow-y-auto"
           >
             <SidebarMenu>
               {channels.data?.map((room) => (

@@ -27,7 +27,7 @@ export function NewChannelPopover({
       <PopoverTrigger asChild>
         <SidebarMenuButton aria-label="New channel" title="New channel">
           <Plus aria-hidden="true" />
-          <span className="group-data-[state=collapsed]/sidebar:hidden">
+          <span className="truncate group-data-[state=collapsed]/sidebar:hidden">
             New channel
           </span>
         </SidebarMenuButton>

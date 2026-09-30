@@ -19,7 +19,10 @@ export function useWidgetQueryClient(client: ChatWidgetClient) {
   return { queryClient, scope: scope.version };
 }
 
-export function useWidgetQueryKey(resource: string, roomId?: string) {
+export function useWidgetQueryKey(
+  resource: string,
+  roomId?: string,
+): [number, ...string[]] {
   const scope = useContext(WidgetQueryScope);
   return roomId ? [scope, resource, roomId] : [scope, resource];
 }

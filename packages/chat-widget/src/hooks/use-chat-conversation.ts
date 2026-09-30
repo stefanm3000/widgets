@@ -1,11 +1,12 @@
 import type { Message } from "@pulse/sdk";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { startTransition, useOptimistic } from "react";
 
-import { useWidgetQueryKey } from "./use-widget-query-client";
 import type { ChatWidgetClient, OptimisticMessage } from "../types";
 import { mergeMessages } from "../utils/messages";
+import { useWidgetQueryKey } from "./use-widget-query-client";
 import { useChatSubscription } from "./use-chat-subscription";
+import { useSendMessage, type PendingSend } from "./use-send-message";
 
 export function useChatConversation(client: ChatWidgetClient, roomId: string) {
   const queryClient = useQueryClient();
@@ -13,7 +14,6 @@ export function useChatConversation(client: ChatWidgetClient, roomId: string) {
   const live = useChatSubscription(client, roomId);
   const roomKey = useWidgetQueryKey("room", roomId);
   const userKey = useWidgetQueryKey("current-user");
-  const sendKey = useWidgetQueryKey("send-message", roomId);
   const room = useQuery({
     queryKey: roomKey,
     queryFn: () => client.getRoom(roomId),
@@ -36,36 +36,19 @@ export function useChatConversation(client: ChatWidgetClient, roomId: string) {
   });
   const [messages, addPendingMessage] = useOptimistic<
     OptimisticMessage[],
-    OptimisticMessage
-  >(history.data ?? [], (messages, message) =>
-    message.roomId !== roomId ||
-    messages.some((item) => item.clientMessageId === message.clientMessageId)
-      ? messages
-      : mergeMessages(messages, [message]),
-  );
-  const sendMessage = useMutation({
-    mutationKey: sendKey,
-    mutationFn: ({
-      message,
-      client,
-    }: {
-      message: OptimisticMessage;
-      client: ChatWidgetClient;
-      queryKey: (string | number)[];
-      userKey: (string | number)[];
-    }) =>
-      client.sendMessage(
-        message.roomId,
-        message.body,
-        message.clientMessageId as ReturnType<Crypto["randomUUID"]>,
-      ),
-    onSuccess: (message, variables) => {
-      queryClient.setQueryData<Message[]>(variables.queryKey, (messages = []) =>
-        mergeMessages(messages, [message]),
-      );
-      queryClient.setQueryData(variables.userKey, message.sender);
-    },
+    PendingSend
+  >(history.data ?? [], (messages, pending) => {
+    const message = pending.message;
+    if (
+      pending.queryKey[0] !== queryKey[0] ||
+      message.roomId !== roomId ||
+      messages.some((item) => item.clientMessageId === message.clientMessageId)
+    ) {
+      return messages;
+    }
+    return mergeMessages(messages, [message]);
   });
+  const sendMessage = useSendMessage(roomId);
 
   function send(body: string): Promise<boolean> {
     if (live.connectionState !== "connected") return Promise.resolve(false);
@@ -83,11 +66,12 @@ export function useChatConversation(client: ChatWidgetClient, roomId: string) {
         source: "system",
       },
     };
+    const pending = { message, client, queryKey, userKey };
     return new Promise((resolve) => {
       startTransition(async () => {
-        addPendingMessage(message);
+        addPendingMessage(pending);
         try {
-          await sendMessage.mutateAsync({ message, client, queryKey, userKey });
+          await sendMessage.mutateAsync(pending);
           resolve(true);
         } catch {
           resolve(false);

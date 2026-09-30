@@ -1,9 +1,9 @@
 import type { ConnectionState, Message } from "@pulse/sdk";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useWidgetQueryKey } from "./use-widget-query-client";
 import type { ChatWidgetClient } from "../types";
 import { mergeMessages } from "../utils/messages";
+import { useWidgetQueryKey } from "./use-widget-query-client";
 
 interface LiveState {
   connectionState: ConnectionState;

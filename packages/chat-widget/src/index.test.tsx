@@ -590,4 +590,158 @@ describe("ChatWidget", () => {
       expect.any(String),
     );
   });
+
+  it("merges live messages received before history finishes", async () => {
+    const fixture = createClient();
+    let finishHistory:
+      ((history: { items: Message[]; nextCursor: null }) => void) | undefined;
+    vi.mocked(fixture.client.getMessages).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishHistory = resolve;
+        }),
+    );
+    render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    act(() =>
+      fixture.emitEvent({
+        eventId: "2",
+        roomId: room.id,
+        type: "message.created",
+        payload: sentMessage,
+      }),
+    );
+    await waitFor(() => expect(getMessageBody(sentMessage.body)).toBeDefined());
+    await act(async () =>
+      finishHistory?.({ items: [message, sentMessage], nextCursor: null }),
+    );
+    await waitFor(() => expect(getMessageBody(message.body)).toBeDefined());
+    expect(
+      screen
+        .getAllByText(sentMessage.body)
+        .filter(
+          (element) => element.getAttribute("data-slot") === "bubble-content",
+        ),
+    ).toHaveLength(1);
+  });
+
+  it("keeps the same composer across channels and ignores a late failed draft", async () => {
+    const fixture = createClient();
+    const channel = { ...room, id: "design", name: "Design" };
+    vi.mocked(fixture.client.getChannels).mockResolvedValue([channel]);
+    vi.mocked(fixture.client.getRoom).mockImplementation(async (id) =>
+      id === channel.id ? channel : room,
+    );
+    vi.mocked(fixture.client.getMessages).mockImplementation(async (id) => ({
+      items: id === room.id ? [message] : [],
+      nextCursor: null,
+    }));
+    let failSend: ((error: Error) => void) | undefined;
+    fixture.sendMessage.mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          failSend = reject;
+        }),
+    );
+    render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    await waitFor(() => expect(getMessageBody(message.body)).toBeDefined());
+    act(() => fixture.setState("connected"));
+    const input = screen.getByLabelText("Message") as HTMLInputElement;
+    await waitFor(() => expect(input.disabled).toBe(false));
+    fireEvent.change(input, { target: { value: "Unsent message" } });
+    fireEvent.submit(input.closest("form")!);
+    await waitFor(() => expect(fixture.sendMessage).toHaveBeenCalledOnce());
+    fireEvent.click(screen.getByRole("button", { name: "Design" }));
+    await screen.findByRole("heading", { name: "Design" });
+    expect(screen.getByLabelText("Message")).toBe(input);
+    expect(input.value).toBe("");
+    expect(screen.queryByText("Unsent message")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: room.name }));
+    await screen.findByRole("heading", { name: room.name });
+    await act(async () => failSend?.(new Error("Send failed")));
+    expect(input.value).toBe("");
+  });
+
+  it("restores a failed draft without overwriting newer text", async () => {
+    const fixture = createClient();
+    const rejects: Array<(error: Error) => void> = [];
+    fixture.sendMessage.mockImplementation(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejects.push(reject);
+        }),
+    );
+    render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    await waitFor(() => expect(getMessageBody(message.body)).toBeDefined());
+    act(() => fixture.setState("connected"));
+    const input = screen.getByLabelText("Message") as HTMLInputElement;
+    await waitFor(() => expect(input.disabled).toBe(false));
+    fireEvent.change(input, { target: { value: "Retry me" } });
+    fireEvent.submit(input.closest("form")!);
+    await waitFor(() => expect(rejects).toHaveLength(1));
+    await act(async () => rejects[0]?.(new Error("Send failed")));
+    await waitFor(() => expect(input.value).toBe("Retry me"));
+    fireEvent.submit(input.closest("form")!);
+    await waitFor(() => expect(rejects).toHaveLength(2));
+    fireEvent.change(input, { target: { value: "Newer draft" } });
+    await act(async () => rejects[1]?.(new Error("Send failed again")));
+    expect(input.value).toBe("Newer draft");
+  });
+
+  it("isolates optimistic sends and late results when the SDK client changes", async () => {
+    const first = createClient();
+    const second = createClient();
+    const secondMessage = {
+      ...message,
+      body: "Second client history",
+      id: "second-message",
+      clientMessageId: "second-client-message",
+    };
+    vi.mocked(second.client.getMessages).mockResolvedValue({
+      items: [secondMessage],
+      nextCursor: null,
+    });
+    let finishSend: ((value: Message) => void) | undefined;
+    first.sendMessage.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishSend = resolve;
+        }),
+    );
+    const view = render(
+      createElement(ChatWidget, { client: first.client, roomId: room.id }),
+    );
+    await waitFor(() => expect(getMessageBody(message.body)).toBeDefined());
+    act(() => first.setState("connected"));
+    const input = screen.getByLabelText("Message") as HTMLInputElement;
+    await waitFor(() => expect(input.disabled).toBe(false));
+    fireEvent.change(input, { target: { value: sentMessage.body } });
+    fireEvent.submit(input.closest("form")!);
+    await waitFor(() => expect(first.sendMessage).toHaveBeenCalledOnce());
+    view.rerender(
+      createElement(ChatWidget, { client: second.client, roomId: room.id }),
+    );
+    await waitFor(() =>
+      expect(getMessageBody(secondMessage.body)).toBeDefined(),
+    );
+    expect(screen.queryByText(message.body)).toBeNull();
+    expect(screen.queryAllByText(sentMessage.body)).toHaveLength(0);
+    expect(screen.getByLabelText("Message")).toBe(input);
+    expect(first.unsubscribe).toHaveBeenCalledOnce();
+    await act(async () =>
+      finishSend?.({
+        ...sentMessage,
+        clientMessageId:
+          first.sendMessage.mock.calls[0]?.[2] ?? sentMessage.clientMessageId,
+      }),
+    );
+    expect(screen.queryAllByText(sentMessage.body)).toHaveLength(0);
+    act(() => second.setState("connected"));
+    await waitFor(() => expect(input.disabled).toBe(false));
+  });
 });

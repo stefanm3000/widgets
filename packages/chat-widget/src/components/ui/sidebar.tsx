@@ -39,7 +39,7 @@ export function Sidebar({ className, ...props }: ComponentProps<"aside">) {
   return (
     <aside
       className={cn(
-        "pulse-channel-sidebar group/sidebar col-start-1 row-span-4 grid min-h-0 grid-rows-subgrid bg-card",
+        "pulse-channel-sidebar group/sidebar col-start-1 row-span-4 grid min-h-0 min-w-0 grid-cols-[minmax(0,1fr)] grid-rows-subgrid bg-card",
         className,
       )}
       data-slot="sidebar"
@@ -88,7 +88,10 @@ export function SidebarContent({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       id={id}
-      className={cn("row-span-3 flex min-h-0 flex-col gap-2 p-1.5", className)}
+      className={cn(
+        "row-span-3 flex min-h-0 min-w-0 flex-col gap-2 p-1.5",
+        className,
+      )}
       data-slot="sidebar-content"
       {...props}
     />
@@ -98,7 +101,7 @@ export function SidebarContent({ className, ...props }: ComponentProps<"div">) {
 export function SidebarMenu({ className, ...props }: ComponentProps<"ul">) {
   return (
     <ul
-      className={cn("m-0 flex list-none flex-col gap-1 p-0", className)}
+      className={cn("m-0 flex min-w-0 list-none flex-col gap-1 p-0", className)}
       data-slot="sidebar-menu"
       {...props}
     />
@@ -119,7 +122,7 @@ export function SidebarMenuButton({
       variant="ghost"
       type="button"
       className={cn(
-        "w-full justify-start px-2.5 text-muted-foreground data-[active=true]:bg-muted data-[active=true]:text-foreground group-data-[state=collapsed]/sidebar:size-9 group-data-[state=collapsed]/sidebar:justify-center group-data-[state=collapsed]/sidebar:p-0",
+        "min-w-0 w-full justify-start px-2.5 text-muted-foreground data-[active=true]:bg-muted data-[active=true]:text-foreground group-data-[state=collapsed]/sidebar:size-9 group-data-[state=collapsed]/sidebar:justify-center group-data-[state=collapsed]/sidebar:p-0",
         className,
       )}
       data-slot="sidebar-menu-button"

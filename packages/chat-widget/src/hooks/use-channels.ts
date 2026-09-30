@@ -2,8 +2,8 @@ import type { Room } from "@pulse/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseAsString, useQueryState } from "nuqs";
 
-import { useWidgetQueryKey } from "./use-widget-query-client";
 import type { ChatWidgetClient } from "../types";
+import { useWidgetQueryKey } from "./use-widget-query-client";
 
 export function useChannels(client: ChatWidgetClient, roomId: string) {
   const queryClient = useQueryClient();
