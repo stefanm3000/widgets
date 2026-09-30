@@ -13,6 +13,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 
+import { TokenService } from "./token.js";
 import { buildApp } from "./app.js";
 
 const tokenSecret = "test-token-secret-with-at-least-32-characters";
@@ -53,6 +54,118 @@ describe("HTTP chat API", () => {
     expect(response.statusCode).toBe(200);
     return demoTokenResponseSchema.parse(response.json()).accessToken;
   }
+
+  it("creates shared channels with isolated history and inherited room access", async () => {
+    const token = await issueToken();
+    const headers = { authorization: `Bearer ${token}` };
+    const created = await app.inject({
+      method: "POST",
+      url: "/rooms/demo-room/channels",
+      headers,
+      payload: { name: "  Design  " },
+    });
+    expect(created.statusCode).toBe(201);
+    const channel = roomSchema.parse(created.json());
+    expect(channel.name).toBe("Design");
+    const otherHeaders = { authorization: `Bearer ${await issueToken("vue")}` };
+    const list = await app.inject({
+      method: "GET",
+      url: "/rooms/demo-room/channels",
+      headers: otherHeaders,
+    });
+    expect(list.json().items).toEqual([channel]);
+    const history = await app.inject({
+      method: "GET",
+      url: `/rooms/${channel.id}/messages`,
+      headers: otherHeaders,
+    });
+    expect(history.json().items).toEqual([]);
+    const sent = await app.inject({
+      method: "POST",
+      url: `/rooms/${channel.id}/messages`,
+      headers,
+      payload: { clientMessageId: randomUUID(), body: "Only in Design" },
+    });
+    expect(sent.statusCode).toBe(201);
+    const original = await app.inject({
+      method: "GET",
+      url: "/rooms/demo-room/messages",
+      headers,
+    });
+    expect(
+      original
+        .json()
+        .items.some(
+          (message: { body: string }) => message.body === "Only in Design",
+        ),
+    ).toBe(false);
+
+    const restricted = await new TokenService(tokenSecret).issue(
+      "vue",
+      randomUUID(),
+      ["unrelated-room"],
+    );
+    const deniedHeaders = { authorization: `Bearer ${restricted.token}` };
+    for (const url of [
+      `/rooms/${channel.id}`,
+      `/rooms/${channel.id}/messages`,
+      "/rooms/demo-room/channels",
+    ]) {
+      expect(
+        (await app.inject({ method: "GET", url, headers: deniedHeaders }))
+          .statusCode,
+      ).toBe(403);
+    }
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: "/rooms/demo-room/channels",
+          headers: deniedHeaders,
+          payload: { name: "Denied" },
+        })
+      ).statusCode,
+    ).toBe(403);
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: `/rooms/${channel.id}/channels`,
+          headers,
+          payload: { name: "Nested" },
+        })
+      ).statusCode,
+    ).toBe(400);
+  });
+
+  it("validates channel names and requires authentication", async () => {
+    expect(
+      (await app.inject({ method: "GET", url: "/rooms/demo-room/channels" }))
+        .statusCode,
+    ).toBe(401);
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: "/rooms/demo-room/channels",
+          payload: { name: "Design" },
+        })
+      ).statusCode,
+    ).toBe(401);
+    const headers = { authorization: `Bearer ${await issueToken()}` };
+    for (const name of ["", "   ", "x".repeat(121)]) {
+      expect(
+        (
+          await app.inject({
+            method: "POST",
+            url: "/rooms/demo-room/channels",
+            headers,
+            payload: { name },
+          })
+        ).statusCode,
+      ).toBe(400);
+    }
+  });
 
   it("reports health without authentication", async () => {
     const response = await app.inject({ method: "GET", url: "/health" });

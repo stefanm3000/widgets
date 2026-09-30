@@ -16,6 +16,7 @@ import type { AddMessageResult, ChatStore, EventReplay } from "./chat-store.js";
 import { RoomEventListeners } from "./listeners.js";
 
 export class MemoryChatStore implements ChatStore {
+  private readonly channelParents = new Map<string, string>();
   private readonly rooms = new Map([[demoRoom.id, demoRoom]]);
   private readonly messages = new Map([
     [demoRoom.id, structuredClone(seededMessages)],
@@ -30,6 +31,30 @@ export class MemoryChatStore implements ChatStore {
   );
   private readonly eventListeners = new RoomEventListeners();
   private nextEventId = BigInt(this.events.length + 1);
+
+  async getParentRoomId(roomId: string): Promise<string | undefined> {
+    return this.channelParents.get(roomId);
+  }
+
+  async listChannels(parentRoomId: string): Promise<Room[]> {
+    return [...this.rooms.values()].filter(
+      (room) => this.channelParents.get(room.id) === parentRoomId,
+    );
+  }
+
+  async createChannel(parentRoomId: string, name: string): Promise<Room> {
+    if (!this.rooms.has(parentRoomId)) throw new Error("Parent room not found");
+    const room: Room = {
+      id: randomUUID(),
+      name,
+      description: null,
+      createdAt: new Date().toISOString(),
+    };
+    this.rooms.set(room.id, room);
+    this.messages.set(room.id, []);
+    this.channelParents.set(room.id, parentRoomId);
+    return room;
+  }
 
   async getRoom(roomId: string): Promise<Room | undefined> {
     return this.rooms.get(roomId);

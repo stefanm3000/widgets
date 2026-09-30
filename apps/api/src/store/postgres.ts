@@ -14,6 +14,7 @@ import type { Pool } from "pg";
 
 import { createDatabase, type PulseDatabase } from "../database/client.js";
 import {
+  channels,
   messages,
   participants,
   realtimeEvents,
@@ -78,6 +79,44 @@ export class PostgresChatStore implements ChatStore {
 
   async close(): Promise<void> {
     await this.pool.end();
+  }
+
+  async getParentRoomId(roomId: string): Promise<string | undefined> {
+    const [channel] = await this.database
+      .select()
+      .from(channels)
+      .where(eq(channels.roomId, roomId))
+      .limit(1);
+    return channel?.parentRoomId;
+  }
+
+  async listChannels(parentRoomId: string): Promise<Room[]> {
+    const records = await this.database
+      .select({ room: rooms })
+      .from(rooms)
+      .innerJoin(channels, eq(channels.roomId, rooms.id))
+      .where(eq(channels.parentRoomId, parentRoomId))
+      .orderBy(asc(rooms.createdAt), asc(rooms.id));
+    return records.map(({ room }) => toRoom(room));
+  }
+
+  async createChannel(parentRoomId: string, name: string): Promise<Room> {
+    return this.database.transaction(async (transaction) => {
+      const [room] = await transaction
+        .insert(rooms)
+        .values({
+          id: randomUUID(),
+          name,
+          description: null,
+          createdAt: new Date(),
+        })
+        .returning();
+      if (!room) throw new Error("Channel insert failed");
+      await transaction
+        .insert(channels)
+        .values({ roomId: room.id, parentRoomId });
+      return toRoom(room);
+    });
   }
 
   async getRoom(roomId: string): Promise<Room | undefined> {

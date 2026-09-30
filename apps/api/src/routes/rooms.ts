@@ -1,4 +1,6 @@
 import {
+  channelListSchema,
+  createChannelRequestSchema,
   historyQuerySchema,
   messagePageSchema,
   roomIdSchema,
@@ -20,6 +22,53 @@ export function registerRoomRoutes(
   store: ChatStore,
   tokenService: TokenService,
 ): void {
+  app.get("/rooms/:id/channels", async (request, reply) => {
+    const identity = await authenticate(request, reply, tokenService);
+    if (!identity) return;
+    const params = roomParamsSchema.safeParse(request.params);
+    if (!params.success)
+      return sendApiError(reply, 400, "invalid_request", "Invalid room ID");
+    if (!(await authorizeRoom(identity, params.data.id, reply, store))) return;
+    if (!(await store.getRoom(params.data.id)))
+      return sendApiError(reply, 404, "not_found", "Room not found");
+    return reply.send(
+      channelListSchema.parse({
+        items: await store.listChannels(params.data.id),
+      }),
+    );
+  });
+
+  app.post(
+    "/rooms/:id/channels",
+    { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } },
+    async (request, reply) => {
+      const identity = await authenticate(request, reply, tokenService);
+      if (!identity) return;
+      const params = roomParamsSchema.safeParse(request.params);
+      const body = createChannelRequestSchema.safeParse(request.body);
+      if (!params.success || !body.success)
+        return sendApiError(
+          reply,
+          400,
+          "invalid_request",
+          "Enter a channel name between 1 and 120 characters",
+        );
+      if (!(await authorizeRoom(identity, params.data.id, reply, store)))
+        return;
+      if (!(await store.getRoom(params.data.id)))
+        return sendApiError(reply, 404, "not_found", "Room not found");
+      if (await store.getParentRoomId(params.data.id))
+        return sendApiError(
+          reply,
+          400,
+          "invalid_request",
+          "Channels cannot contain other channels",
+        );
+      const room = await store.createChannel(params.data.id, body.data.name);
+      return reply.code(201).send(roomSchema.parse(room));
+    },
+  );
+
   app.get("/rooms/:id", async (request, reply) => {
     const identity = await authenticate(request, reply, tokenService);
     if (!identity) return;
@@ -28,7 +77,7 @@ export function registerRoomRoutes(
     if (!params.success) {
       return sendApiError(reply, 400, "invalid_request", "Invalid room ID");
     }
-    if (!authorizeRoom(identity, params.data.id, reply)) return;
+    if (!(await authorizeRoom(identity, params.data.id, reply, store))) return;
 
     const room = await store.getRoom(params.data.id);
     if (!room) return sendApiError(reply, 404, "not_found", "Room not found");
@@ -49,7 +98,7 @@ export function registerRoomRoutes(
         "Invalid history request",
       );
     }
-    if (!authorizeRoom(identity, params.data.id, reply)) return;
+    if (!(await authorizeRoom(identity, params.data.id, reply, store))) return;
 
     const page = await store.getMessages(params.data.id, query.data);
     if (!page) {
@@ -77,7 +126,7 @@ export function registerRoomRoutes(
         "Invalid message request",
       );
     }
-    if (!authorizeRoom(identity, params.data.id, reply)) return;
+    if (!(await authorizeRoom(identity, params.data.id, reply, store))) return;
 
     const result = await store.addMessage(
       params.data.id,

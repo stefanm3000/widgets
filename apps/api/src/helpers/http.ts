@@ -1,6 +1,7 @@
 import { apiErrorSchema, type ApiError } from "@pulse/protocol";
 import type { FastifyReply, FastifyRequest } from "fastify";
 
+import type { ChatStore } from "../store.js";
 import type { TokenService } from "../token.js";
 import type { DemoIdentity } from "../types.js";
 
@@ -45,12 +46,23 @@ export async function authenticate(
   return identity;
 }
 
-export function authorizeRoom(
+export async function canAccessRoom(
+  identity: DemoIdentity,
+  roomId: string,
+  store: ChatStore,
+): Promise<boolean> {
+  if (identity.rooms.includes(roomId)) return true;
+  const parentRoomId = await store.getParentRoomId(roomId);
+  return parentRoomId !== undefined && identity.rooms.includes(parentRoomId);
+}
+
+export async function authorizeRoom(
   identity: DemoIdentity,
   roomId: string,
   reply: FastifyReply,
-): boolean {
-  if (identity.rooms.includes(roomId)) return true;
+  store: ChatStore,
+): Promise<boolean> {
+  if (await canAccessRoom(identity, roomId, store)) return true;
   sendApiError(
     reply,
     403,

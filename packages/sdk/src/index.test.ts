@@ -107,6 +107,40 @@ describe("PulseClient HTTP", () => {
     client.dispose();
   });
 
+  it("lists channels and validates creation before sending an authenticated request", async () => {
+    const room = {
+      id: "design",
+      name: "Design",
+      description: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    };
+    const fetchMock = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ items: [room] })))
+      .mockResolvedValueOnce(new Response(JSON.stringify(room)));
+    const client = createPulseClient({
+      baseUrl: "https://api.example.com",
+      fetch: fetchMock,
+      getToken: () => "demo-token",
+    });
+    await expect(client.getChannels("demo-room")).resolves.toEqual([room]);
+    await expect(
+      client.createChannel("demo-room", " Design "),
+    ).resolves.toEqual(room);
+    const [url, init] = fetchMock.mock.calls[1]!;
+    expect(String(url)).toBe(
+      "https://api.example.com/rooms/demo-room/channels",
+    );
+    expect(init?.method).toBe("POST");
+    expect(JSON.parse(String(init?.body))).toEqual({ name: "Design" });
+    expect(new Headers(init?.headers).get("authorization")).toBe(
+      "Bearer demo-token",
+    );
+    await expect(client.createChannel("demo-room", " ")).rejects.toThrow();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    client.dispose();
+  });
+
   it("surfaces structured API errors", async () => {
     const client = createPulseClient({
       baseUrl: "https://api.example.com",

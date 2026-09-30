@@ -37,6 +37,14 @@ export class PulseClient {
     });
   }
 
+  getChannels(roomId: string): Promise<Room[]> {
+    return this.#http.getChannels(roomId);
+  }
+
+  createChannel(roomId: string, name: string): Promise<Room> {
+    return this.#http.createChannel(roomId, name);
+  }
+
   getRoom(roomId: string): Promise<Room> {
     return this.#http.getRoom(roomId);
   }

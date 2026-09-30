@@ -19,6 +19,9 @@ export interface AddMessageResult {
 }
 
 export interface ChatStore {
+  createChannel(parentRoomId: string, name: string): Promise<Room>;
+  listChannels(parentRoomId: string): Promise<Room[]>;
+  getParentRoomId(roomId: string): Promise<string | undefined>;
   addMessage(
     roomId: string,
     sender: Participant,

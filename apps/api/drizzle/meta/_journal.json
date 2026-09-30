@@ -15,6 +15,13 @@
       "when": 1790573892113,
       "tag": "0001_bumpy_lorna_dane",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790756665718,
+      "tag": "0002_add_channels",
+      "breakpoints": true
     }
   ]
 }

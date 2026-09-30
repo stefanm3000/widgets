@@ -16,6 +16,19 @@ export const rooms = pgTable("rooms", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 });
 
+export const channels = pgTable(
+  "channels",
+  {
+    roomId: varchar("room_id", { length: 128 })
+      .primaryKey()
+      .references(() => rooms.id, { onDelete: "cascade" }),
+    parentRoomId: varchar("parent_room_id", { length: 128 })
+      .notNull()
+      .references(() => rooms.id, { onDelete: "cascade" }),
+  },
+  (table) => [index("channels_parent_room_idx").on(table.parentRoomId)],
+);
+
 export const participants = pgTable("participants", {
   id: uuid("id").primaryKey(),
   displayName: varchar("display_name", { length: 80 }).notNull(),

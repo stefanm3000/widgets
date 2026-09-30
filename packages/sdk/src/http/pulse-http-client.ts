@@ -1,5 +1,7 @@
 import {
   apiErrorSchema,
+  channelListSchema,
+  createChannelRequestSchema,
   messagePageSchema,
   roomSchema,
   sendMessageResponseSchema,
@@ -20,6 +22,23 @@ interface PulseHttpClientOptions {
 
 export class PulseHttpClient {
   constructor(private readonly options: PulseHttpClientOptions) {}
+
+  async getChannels(roomId: string): Promise<Room[]> {
+    return channelListSchema.parse(
+      await this.request(`rooms/${encodeURIComponent(roomId)}/channels`),
+    ).items;
+  }
+
+  async createChannel(roomId: string, name: string): Promise<Room> {
+    const body = createChannelRequestSchema.parse({ name });
+    return roomSchema.parse(
+      await this.request(`rooms/${encodeURIComponent(roomId)}/channels`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+    );
+  }
 
   async getRoom(roomId: string): Promise<Room> {
     const data = await this.request(`rooms/${encodeURIComponent(roomId)}`);

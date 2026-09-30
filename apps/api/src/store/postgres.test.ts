@@ -92,6 +92,29 @@ describe("postgres chat store", () => {
     ]);
   });
 
+  it("persists channel membership and isolated messages across store restarts", async () => {
+    if (!store) throw new Error("Expected a PostgreSQL store");
+    const channel = await store.createChannel("demo-room", "Design");
+    expect(await store.getMessages(channel.id, { limit: 50 })).toEqual({
+      items: [],
+      nextCursor: null,
+    });
+    await store.addMessage(channel.id, sender, {
+      clientMessageId: randomUUID(),
+      body: "Channel message",
+    });
+    await store.close();
+    store = new PostgresChatStore(createPool(memory));
+    expect(await store.listChannels("demo-room")).toEqual([channel]);
+    expect(await store.getParentRoomId(channel.id)).toBe("demo-room");
+    expect(
+      (await store.getMessages(channel.id, { limit: 50 }))?.items[0]?.body,
+    ).toBe("Channel message");
+    expect(
+      (await store.getMessages("demo-room", { limit: 50 }))?.items,
+    ).toHaveLength(2);
+  });
+
   it("seeds rooms and paginates history", async () => {
     if (!store) throw new Error("Expected a PostgreSQL store");
     const room = await store.getRoom("demo-room");

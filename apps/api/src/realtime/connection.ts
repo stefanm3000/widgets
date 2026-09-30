@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { clientFrameSchema, PROTOCOL_VERSION } from "@pulse/protocol";
 import { WebSocket, type RawData } from "ws";
 
+import { canAccessRoom } from "../helpers/http.js";
 import type { ChatStore } from "../store.js";
 import type { DemoIdentity } from "../types.js";
 import { sendFrame, sendRealtimeError } from "./helpers.js";
@@ -77,7 +78,7 @@ export function handleConnection(
       return;
     }
 
-    if (!identity.rooms.includes(frame.roomId)) {
+    if (!(await canAccessRoom(identity, frame.roomId, store))) {
       sendRealtimeError(
         socket,
         "forbidden",
@@ -91,6 +92,7 @@ export function handleConnection(
       return;
     }
 
+    if (socket.readyState !== WebSocket.OPEN) return;
     subscriptions.get(frame.roomId)?.();
     const stop = store.subscribe(frame.roomId, (event) => {
       sendFrame(socket, { version: PROTOCOL_VERSION, type: "event", event });
@@ -125,10 +127,16 @@ export function handleConnection(
     }
   };
 
+  let pending = Promise.resolve();
   socket.on("message", (data, isBinary) => {
-    void handleMessage(data, isBinary).catch(() => {
-      socket.close(1011, "Unable to process frame");
-    });
+    pending = pending
+      .then(() => {
+        if (socket.readyState === WebSocket.OPEN)
+          return handleMessage(data, isBinary);
+      })
+      .catch(() => {
+        socket.close(1011, "Unable to process frame");
+      });
   });
 
   const heartbeat = setInterval(() => {

@@ -6,7 +6,14 @@ import {
   messageSchema,
   participantSchema,
   roomIdSchema,
+  roomSchema,
 } from "./shared.js";
+
+export const createChannelRequestSchema = z.object({
+  name: roomSchema.shape.name,
+});
+
+export const channelListSchema = z.object({ items: z.array(roomSchema) });
 
 export const historyQuerySchema = z.object({
   cursor: z.string().min(1).optional(),
