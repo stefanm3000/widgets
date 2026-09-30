@@ -118,3 +118,26 @@ loading Shiki grammars and themes at runtime. The implementation files remain
 read-only, render synchronously, and share one theme with Sugar High's accessible
 file tree. Sugar High's lighter language parsers trade some grammar-level fidelity
 for a smaller dependency surface that is sufficient for these short examples.
+
+## Scope channels to their configured room
+
+Treat a channel as a room with a server-owned parent mapping. The widget's
+`roomId` remains its initial conversation and channel scope. Authenticated users
+with access to that parent can list, create, read, send, and subscribe to its
+channels with their existing token. HTTP and WebSocket paths share the same
+access check. Channels are shared with the room's participants, not private to
+their creator. Channel nesting is rejected; duplicate names are allowed because
+server-generated UUIDs identify channels independently of display names.
+
+Keep the parent mapping in the API database, outside the public room DTO. Both
+stores implement channel creation and listing; PostgreSQL inserts the room and
+mapping in one transaction. No browser credentials or token claims are changed.
+
+The sidebar follows the composable sidebar reference using existing UI primitives,
+scoped widget tokens, and icon collapse. Narrow widget containers start collapsed.
+The sidebar stays in the flex layout at every width; its animated width resizes
+the conversation alongside it. Reduced-motion preferences disable the transition.
+Each selected conversation mounts its own
+store and composer so late responses, optimistic messages, and drafts cannot
+cross channels. Drafts reset when switching. Lists refresh on mount, browser
+focus, or the refresh button; a new realtime channel-list event is deferred.

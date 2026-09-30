@@ -34,6 +34,12 @@ function createClient() {
   const stopRefetch = vi.fn();
 
   const client = {
+    getChannels: vi.fn(async () => []),
+    createChannel: vi.fn(async () => ({
+      ...room,
+      id: "new-channel",
+      name: "New channel",
+    })),
     getCurrentUser: vi.fn(async () => null),
     getMessages: vi.fn(async () => ({ items: [message], nextCursor: null })),
     getRoom: vi.fn(async () => room),

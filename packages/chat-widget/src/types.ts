@@ -31,10 +31,13 @@ export interface ChatWidgetClassNames {
   messageOutline?: string;
   root?: string;
   sendButton?: string;
+  sidebar?: string;
 }
 
 export type ChatWidgetClient = Pick<
   PulseClient,
+  | "createChannel"
+  | "getChannels"
   | "getCurrentUser"
   | "getMessages"
   | "getRoom"

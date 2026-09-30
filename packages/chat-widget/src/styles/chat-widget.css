@@ -113,3 +113,67 @@
     );
   }
 }
+
+@layer components {
+  .pulse-channel-layout {
+    container-type: inline-size;
+  }
+
+  .pulse-channel-sidebar {
+    box-sizing: border-box;
+    width: min(184px, 40cqw);
+    overflow: hidden;
+    border-right: 1px solid var(--pulse-border);
+    transition: width 220ms ease;
+  }
+
+  .pulse-channel-sidebar button {
+    border: 0;
+    color: inherit;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .pulse-channel-sidebar button:disabled {
+    cursor: default;
+  }
+
+  .pulse-channel-sidebar [data-variant="ghost"] {
+    background-color: transparent;
+  }
+
+  .pulse-channel-sidebar[data-collapsed="true"] {
+    width: 49px;
+  }
+
+  .pulse-conversation {
+    container-type: inline-size;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pulse-channel-sidebar {
+      transition: none;
+    }
+  }
+}
+
+@layer utilities {
+  @container (max-width: 260px) {
+    .pulse-conversation [part="composer"] {
+      flex-wrap: wrap;
+    }
+
+    .pulse-conversation [part="input"] {
+      flex-basis: 100%;
+      width: 100%;
+    }
+
+    .pulse-conversation [part="send-button"] {
+      margin-left: auto;
+    }
+
+    .pulse-conversation [data-slot="message-header"] {
+      flex-wrap: wrap;
+    }
+  }
+}

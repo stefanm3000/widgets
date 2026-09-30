@@ -6,6 +6,8 @@ import {
 } from "react";
 
 import type { ChatWidgetProps, OptimisticMessage } from "../types";
+import { ChannelStore } from "../utils/channel-store";
+import { ChannelSidebar } from "./channel-sidebar";
 import { ChatWidgetStore } from "../utils/chat-widget-store";
 import { cn } from "../utils/cn";
 import {
@@ -27,6 +29,58 @@ export function ChatWidget({
   roomId,
   theme = {},
 }: ChatWidgetProps) {
+  const channels = useMemo(
+    () => new ChannelStore(client, roomId),
+    [client, roomId],
+  );
+  const channelSnapshot = useSyncExternalStore(
+    channels.subscribe,
+    channels.getSnapshot,
+    channels.getSnapshot,
+  );
+
+  const systemTheme = useSyncExternalStore<ResolvedTheme>(
+    subscribeToSystemTheme,
+    getSystemTheme,
+    () => "light",
+  );
+  const resolvedTheme = resolveTheme(theme.preset, systemTheme);
+  const style = useMemo(
+    () => createThemeStyle(theme, resolvedTheme),
+    [resolvedTheme, theme],
+  );
+
+  return (
+    <section
+      className={cn(
+        "pulse-channel-layout relative flex h-[min(680px,80vh)] w-full min-w-65 max-w-170 overflow-hidden border border-border bg-background text-foreground shadow-[0_22px_60px_rgb(26_35_52/14%)] rounded-(--pulse-radius) [font-family:var(--pulse-font)]",
+        classNames.root,
+        className,
+      )}
+      data-theme={resolvedTheme}
+      part="root"
+      style={style}
+    >
+      <ChannelSidebar
+        key={`sidebar:${roomId}`}
+        store={channels}
+        className={classNames.sidebar}
+      />
+      <ChatConversation
+        key={channelSnapshot.activeRoomId}
+        client={client}
+        roomId={channelSnapshot.activeRoomId}
+        classNames={classNames}
+      />
+    </section>
+  );
+}
+
+function ChatConversation({
+  client,
+  roomId,
+  classNames = {},
+}: Pick<ChatWidgetProps, "client" | "roomId" | "classNames">) {
   const store = useMemo(
     () => new ChatWidgetStore(client, roomId),
     [client, roomId],
@@ -57,27 +111,10 @@ export function ChatWidget({
     );
   });
 
-  const systemTheme = useSyncExternalStore<ResolvedTheme>(
-    subscribeToSystemTheme,
-    getSystemTheme,
-    () => "light",
-  );
-  const resolvedTheme = resolveTheme(theme.preset, systemTheme);
-  const style = useMemo(
-    () => createThemeStyle(theme, resolvedTheme),
-    [resolvedTheme, theme],
-  );
-
   return (
-    <section
-      className={cn(
-        "grid h-[min(680px,80vh)] w-full min-w-65 max-w-110 grid-rows-[auto_minmax(0,1fr)_auto_auto] overflow-hidden border border-border bg-background text-foreground shadow-[0_22px_60px_rgb(26_35_52/14%)] rounded-(--pulse-radius) [font-family:var(--pulse-font)]",
-        classNames.root,
-        className,
-      )}
-      data-theme={resolvedTheme}
-      part="root"
-      style={style}
+    <div
+      className="pulse-conversation grid min-h-0 min-w-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto_auto]"
+      part="conversation"
     >
       <ChatHeader
         className={classNames.header}
@@ -127,6 +164,6 @@ export function ChatWidget({
         }}
         roomId={roomId}
       />
-    </section>
+    </div>
   );
 }

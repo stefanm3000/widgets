@@ -87,3 +87,124 @@ test("delivers Vanilla messages live to Vue and scrolls to the latest message", 
     )
     .toBeLessThanOrEqual(20);
 });
+
+test("creates a shared channel, switches history, and collapses the sidebar", async ({
+  context,
+}, testInfo) => {
+  const vanilla = await context.newPage();
+  const vue = await context.newPage();
+  await Promise.all([
+    vanilla.goto("http://localhost:5174"),
+    vue.goto("http://localhost:5175"),
+  ]);
+  const first = vanilla.locator("pulse-chat");
+  const second = vue.locator("pulse-chat");
+  await expect(
+    first.getByRole("textbox", { name: "Message", exact: true }),
+  ).toBeEnabled();
+  await expect(
+    second.getByRole("textbox", { name: "Message", exact: true }),
+  ).toBeEnabled();
+  const channel = `Design ${Date.now()}`;
+  await first.getByRole("button", { name: "New channel", exact: true }).click();
+  await first.getByRole("textbox", { name: "Channel name" }).fill(channel);
+  await first
+    .getByRole("button", { name: "Create channel", exact: true })
+    .click();
+  await expect(first.getByRole("heading", { name: channel })).toHaveCount(1);
+  await expect(
+    first.getByRole("button", { name: channel, exact: true }),
+  ).toBeFocused();
+  await vanilla.screenshot({
+    path: testInfo.outputPath("channels-expanded.png"),
+  });
+  await first.getByRole("button", { name: "Collapse channels" }).click();
+  await expect(
+    first.getByRole("button", { name: "Expand channels" }),
+  ).toHaveAttribute("aria-expanded", "false");
+  await second.getByRole("button", { name: "Refresh channels" }).click();
+  await second.getByRole("button", { name: channel, exact: true }).click();
+  const message = `Message in ${channel}`;
+  await first
+    .getByRole("textbox", { name: "Message", exact: true })
+    .fill(message);
+  await first.getByRole("button", { name: "Send", exact: true }).click();
+  await expect(
+    second
+      .getByRole("region", { name: "Chat messages" })
+      .getByText(message, { exact: true }),
+  ).toBeVisible();
+  await first
+    .getByRole("button", { name: "Live chat demo", exact: true })
+    .click();
+  await expect(
+    first.getByRole("heading", { name: "Live chat demo" }),
+  ).toBeVisible();
+  await expect(
+    first
+      .getByRole("region", { name: "Chat messages" })
+      .getByText(message, { exact: true }),
+  ).toHaveCount(0);
+  await first.getByRole("button", { name: channel, exact: true }).click();
+  await expect(
+    first
+      .getByRole("region", { name: "Chat messages" })
+      .getByText(message, { exact: true }),
+  ).toBeVisible();
+  await vanilla.reload();
+  await expect(
+    first.getByRole("button", { name: channel, exact: true }),
+  ).toBeVisible();
+  await first.getByRole("button", { name: channel, exact: true }).click();
+  await expect(
+    first
+      .getByRole("region", { name: "Chat messages" })
+      .getByText(message, { exact: true }),
+  ).toBeVisible();
+
+  await vanilla.setViewportSize({ width: 390, height: 844 });
+  await vanilla.screenshot({
+    path: testInfo.outputPath("channels-mobile.png"),
+  });
+  await expect(
+    first.getByRole("button", { name: "Expand channels" }),
+  ).toBeVisible();
+  const sidebar = first.locator('[part="sidebar"]');
+  const conversation = first.locator('[part="conversation"]');
+  await expect.poll(async () => (await sidebar.boundingBox())!.width).toBe(49);
+  const collapsedChatWidth = (await conversation.boundingBox())!.width;
+  await expect(sidebar).toHaveCSS("transition-property", "width");
+  await first.getByRole("button", { name: "Expand channels" }).click();
+  await expect(
+    first.getByRole("button", { name: "Collapse channels" }),
+  ).toBeVisible();
+  await expect
+    .poll(async () => (await sidebar.boundingBox())!.width)
+    .toBeGreaterThan(100);
+  const sidebarBounds = (await sidebar.boundingBox())!;
+  const chatBounds = (await conversation.boundingBox())!;
+  expect(sidebarBounds.x + sidebarBounds.width).toBeLessThanOrEqual(
+    chatBounds.x + 1,
+  );
+  expect(chatBounds.width).toBeLessThan(collapsedChatWidth);
+  for (const part of ["input", "send-button", "message-list"]) {
+    const bounds = (await first.locator(`[part="${part}"]`).boundingBox())!;
+    const rootBounds = (await first.locator('[part="root"]').boundingBox())!;
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+      rootBounds.x + rootBounds.width + 1,
+    );
+  }
+  await vanilla.screenshot({
+    path: testInfo.outputPath("channels-mobile-expanded.png"),
+  });
+  await first.getByRole("button", { name: "Collapse channels" }).click();
+  await expect.poll(async () => (await sidebar.boundingBox())!.width).toBe(49);
+  await expect
+    .poll(async () => (await conversation.boundingBox())!.width)
+    .toBe(collapsedChatWidth);
+  await vanilla.emulateMedia({ reducedMotion: "reduce" });
+  await expect(sidebar).toHaveCSS("transition-duration", "0s");
+  await expect(
+    first.getByRole("textbox", { name: "Message", exact: true }),
+  ).toBeVisible();
+});

@@ -71,6 +71,12 @@ function createClient() {
   );
 
   const client: ChatWidgetClient = {
+    getChannels: vi.fn(async () => []),
+    createChannel: vi.fn(async () => ({
+      ...room,
+      id: "new-channel",
+      name: "New channel",
+    })),
     getCurrentUser: vi.fn(async () => sentMessage.sender),
     getMessages: vi.fn(async () => ({ items: [message], nextCursor: null })),
     getRoom: vi.fn(async () => room),
@@ -111,6 +117,83 @@ beforeEach(() => {
 });
 
 describe("ChatWidget", () => {
+  it("creates and switches channels, collapses the sidebar, and isolates late history", async () => {
+    const fixture = createClient();
+    const channel = { ...room, id: "design", name: "Design" };
+    vi.mocked(fixture.client.createChannel).mockResolvedValue(channel);
+    vi.mocked(fixture.client.getRoom).mockImplementation(async (id) =>
+      id === channel.id ? channel : room,
+    );
+    let resolveHistory:
+      ((value: { items: Message[]; nextCursor: null }) => void) | undefined;
+    vi.mocked(fixture.client.getMessages).mockImplementation(async (id) =>
+      id === channel.id
+        ? { items: [], nextCursor: null }
+        : new Promise((resolve) => {
+            resolveHistory = resolve;
+          }),
+    );
+    render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    await screen.findByRole("button", { name: room.name });
+    fireEvent.click(screen.getByRole("button", { name: "New channel" }));
+    fireEvent.change(screen.getByLabelText("Channel name"), {
+      target: { value: "Design" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create channel" }));
+    await screen.findByRole("heading", { name: "Design" });
+    expect(fixture.client.createChannel).toHaveBeenCalledWith(
+      room.id,
+      "Design",
+    );
+    expect(fixture.unsubscribe).toHaveBeenCalledOnce();
+    await act(async () =>
+      resolveHistory?.({ items: [message], nextCursor: null }),
+    );
+    expect(screen.queryByText(message.body)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse channels" }));
+    expect(
+      screen
+        .getByRole("button", { name: "Expand channels" })
+        .getAttribute("aria-expanded"),
+    ).toBe("false");
+    expect(
+      screen
+        .getByRole("button", { name: "Design" })
+        .getAttribute("aria-current"),
+    ).toBe("page");
+    vi.mocked(fixture.client.getMessages).mockResolvedValue({
+      items: [message],
+      nextCursor: null,
+    });
+    fireEvent.click(screen.getByRole("button", { name: room.name }));
+    await screen.findByText(message.body);
+    expect(fixture.unsubscribe).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps a failed channel name for retry without leaving the current conversation", async () => {
+    const fixture = createClient();
+    vi.mocked(fixture.client.createChannel).mockRejectedValueOnce(
+      new Error("Could not create channel"),
+    );
+    render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    await screen.findByText(message.body);
+    fireEvent.click(screen.getByRole("button", { name: "New channel" }));
+    fireEvent.change(screen.getByLabelText("Channel name"), {
+      target: { value: "Design" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create channel" }));
+    await screen.findByRole("alert");
+    expect(
+      (screen.getByLabelText("Channel name") as HTMLInputElement).value,
+    ).toBe("Design");
+    expect(screen.getByRole("heading", { name: room.name })).toBeDefined();
+    expect(fixture.unsubscribe).not.toHaveBeenCalled();
+  });
+
   it("marks messages from the current user on the first load", async () => {
     const fixture = createClient();
     vi.mocked(fixture.client.getMessages).mockResolvedValueOnce({

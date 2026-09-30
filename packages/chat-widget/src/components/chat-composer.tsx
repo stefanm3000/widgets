@@ -58,7 +58,7 @@ export function ChatComposer({
       <Input
         autoComplete="off"
         className={cn(
-          "box-border h-10 w-auto flex-1 rounded-[calc(var(--pulse-radius)*0.7)] bg-background",
+          "box-border h-10 min-w-0 w-auto flex-1 rounded-[calc(var(--pulse-radius)*0.7)] bg-background",
           inputClassName,
         )}
         disabled={!connected}

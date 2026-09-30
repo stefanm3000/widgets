@@ -3,6 +3,13 @@
 Pulse is a framework-agnostic TypeScript SDK and embeddable live chat widget.
 This repository demonstrates one backend and protocol across unrelated partner websites.
 
+![Pulse architecture: React uses the chat widget directly; Vue and vanilla JavaScript use its Shadow DOM embed. Each browser's SDK connects to the shared API through REST and WebSockets, with messages persisted in PostgreSQL before broadcast.](docs/images/pulse-architecture.png)
+
+The SDK and API share versioned schemas from `@pulse/protocol`. A message sent
+from one partner site is persisted before being broadcast to other browsers
+subscribed to the same room or channel. See [the architecture](docs/architecture.md)
+for package boundaries and integration details.
+
 ## Status
 
 The versioned protocol and API are implemented. The API serves a seeded room
@@ -74,3 +81,17 @@ both `DATABASE_URL` and `PULSE_TOKEN_SECRET`.
 - `packages/typescript-config`: shared strict TypeScript configurations.
 - `docs/architecture.md`: planned boundaries and delivery phases.
 - `docs/decisions.md`: implementation decisions and tradeoffs.
+
+### Channels
+
+The widget includes a collapsible left sidebar for creating and selecting
+channels. Channels are shared by everyone who has access to the configured
+`roomId`; the original room remains selectable. Names can contain up to 120
+characters. Use **Refresh channels** to discover channels created in another
+client (the list also refreshes when the browser regains focus).
+
+The SDK exposes `getChannels(roomId)` and `createChannel(roomId, name)` through
+`GET /rooms/:id/channels` and `POST /rooms/:id/channels`. Apply the database
+migrations with `pnpm --filter @pulse/api db:migrate` before running this version
+against an existing PostgreSQL database. Memory-mode channels last only until
+the API restarts. Switching channels clears the unsent draft.
