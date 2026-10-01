@@ -268,4 +268,7 @@ pg-mem tests for fast local feedback when PostgreSQL is unavailable.
 The browser fixture also exposes a test-only token setup route that runs the
 normal authentication handler with a distinct simulated client IP per request.
 History-scroll checks use it so additional partner sessions do not exhaust the
-shared proxy IP's demo-token quota. Production routes keep their rate limits.
+shared proxy IP's demo-token quota. The fixture also accepts a validated test
+client IP header for history-test browsers, giving each its own normal request
+budget when the suite grows. These hooks exist only in the browser fixture;
+production routes keep their rate limits.

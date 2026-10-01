@@ -1,14 +1,17 @@
 import { expect, test, type WebSocketRoute } from "@playwright/test";
 
+let browserClient = 0;
 for (const [partner, url] of [
   ["Vanilla", "http://localhost:5174"],
   ["Vue", "http://localhost:5175"],
   ["React", "http://localhost:5173"],
 ] as const) {
+  const clientIp = `192.0.2.${++browserClient}`;
   test(`recovers idle subscriptions and automatically loads anchored history in ${partner}`, async ({
     page,
     request,
   }) => {
+    await page.setExtraHTTPHeaders({ "x-pulse-test-client-ip": clientIp });
     await page.route("**/api/auth/demo-token", async (route) => {
       const response = await route.fetch({
         url: "http://127.0.0.1:4000/__test__/auth/demo-token",
@@ -34,7 +37,10 @@ for (const [partner, url] of [
     const widget = page.locator('[part="root"]');
     await expect.poll(() => subscriptions).toBe(1);
     const credentials = await (await session).json();
-    const headers = { authorization: `Bearer ${credentials.accessToken}` };
+    const headers = {
+      authorization: `Bearer ${credentials.accessToken}`,
+      "x-pulse-test-client-ip": clientIp,
+    };
     await sockets[0]!.close({ code: 1012, reason: "Test reconnect" });
     const body = `Sent during reconnect ${Date.now()}`;
     const sent = await request.post(

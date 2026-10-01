@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { isIP } from "node:net";
 import { setTimeout } from "node:timers/promises";
 
 import { buildApp } from "../dist/app.js";
@@ -30,6 +31,13 @@ const app = await buildApp({
   allowedOrigins: config.allowedOrigins,
   tokenSecret: config.tokenSecret,
   store,
+});
+// Isolate each history-test browser's rate budget behind the shared local proxy.
+app.addHook("onRequest", async (request) => {
+  const clientIp = request.headers["x-pulse-test-client-ip"];
+  if (typeof clientIp === "string" && isIP(clientIp)) {
+    Object.defineProperty(request, "ip", { value: clientIp });
+  }
 });
 // Only this isolated browser fixture exposes test credentials. Issuing them
 // directly keeps MCP reload checks out of the demo endpoint's shared rate budget.
