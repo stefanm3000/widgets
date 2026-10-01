@@ -42,15 +42,15 @@ pnpm check
 
 Initialized with `pnpm dlx create-turbo@latest`. The default Next.js apps and generic UI package were removed to make room for the planned stack.
 
-| Command          | Purpose                                             |
-| ---------------- | --------------------------------------------------- |
-| `pnpm dev`       | Run development servers once app packages are added |
-| `pnpm build`     | Build workspace packages                            |
-| `pnpm lint`      | Run package linters                                 |
-| `pnpm typecheck` | Run package check-types scripts                     |
-| `pnpm test`      | Run package tests                                   |
-| `pnpm format`    | Format source and documentation                     |
-| `pnpm check`     | Check formatting, lint, types, tests, and builds    |
+| Command          | Purpose                                          |
+| ---------------- | ------------------------------------------------ |
+| `pnpm dev`       | Run the API and partner development servers      |
+| `pnpm build`     | Build workspace packages                         |
+| `pnpm lint`      | Run package linters                              |
+| `pnpm typecheck` | Run package check-types scripts                  |
+| `pnpm test`      | Run package tests                                |
+| `pnpm format`    | Format source and documentation                  |
+| `pnpm check`     | Check formatting, lint, types, tests, and builds |
 
 ### Run the API
 
@@ -75,6 +75,8 @@ both `DATABASE_URL` and `PULSE_TOKEN_SECRET`.
 ## Workspace
 
 - `apps/`: reserved for the API, playground, and partner demos.
+- `apps/mcp`: local stdio MCP tools for authenticated Pulse reads and writes;
+  see [MCP setup](docs/mcp.md).
 - `apps/partner-vanilla`: independently runnable plain TypeScript integration using the embed.
 - `apps/partner-vue`: independently runnable Vue integration using the same custom element.
 - `packages/eslint-config`: shared base and React lint configurations.

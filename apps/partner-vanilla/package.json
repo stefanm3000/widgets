@@ -16,11 +16,14 @@
     "@pulse/sdk": "workspace:*"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.31.0",
     "@playwright/test": "1.63.0",
     "@pulse/eslint-config": "workspace:*",
     "@pulse/partner-vue": "workspace:*",
     "@pulse/playground": "workspace:*",
+    "@pulse/protocol": "workspace:*",
     "@pulse/typescript-config": "workspace:*",
+    "@types/node": "24.19.0",
     "eslint": "10.9.1",
     "typescript": "7.0.2",
     "vite": "8.3.1"

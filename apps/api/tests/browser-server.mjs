@@ -4,6 +4,7 @@ import { setTimeout } from "node:timers/promises";
 import { buildApp } from "../dist/app.js";
 import { readConfig } from "../dist/config.js";
 import { MemoryChatStore } from "../dist/store.js";
+import { TokenService } from "../dist/token.js";
 
 const config = readConfig(process.env);
 const store = new MemoryChatStore();
@@ -29,6 +30,19 @@ const app = await buildApp({
   allowedOrigins: config.allowedOrigins,
   tokenSecret: config.tokenSecret,
   store,
+});
+// Only this isolated browser fixture exposes test credentials. Issuing them
+// directly keeps MCP reload checks out of the demo endpoint's shared rate budget.
+const tokenService = new TokenService(config.tokenSecret);
+app.get("/test/mcp-credentials", async () => {
+  const credentials = {};
+  for (const source of ["playground", "vanilla", "vue"]) {
+    const { identity, token } = await tokenService.issue(source, randomUUID(), [
+      "demo-room",
+    ]);
+    credentials[source] = { accessToken: token, ...identity };
+  }
+  return credentials;
 });
 const close = async () => {
   await app.close();

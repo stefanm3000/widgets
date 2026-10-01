@@ -21,7 +21,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        "pnpm --filter @pulse/api build && exec node ../api/tests/browser-server.mjs",
+        "pnpm --filter @pulse/api build && pnpm --filter @pulse/mcp build && exec node ../api/tests/browser-server.mjs",
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,
       url: "http://127.0.0.1:4000/health",
