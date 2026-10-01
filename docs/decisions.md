@@ -242,6 +242,18 @@ after restoration. This trades layout work for stable history navigation;
 large loaded transcripts will need virtualization that preserves measured row
 heights. Verify the final page where the history button disappears as well.
 
+## Load earlier history when its control enters the viewport
+
+Use a shared `useInfiniteScroll` hook with the chat viewport as the Intersection
+Observer root. The earlier-history button doubles as the observed sentinel,
+preserving keyboard access and manual loading when the browser lacks the API.
+Observe again after each successful page so short transcripts can fill the
+viewport. Pause observation during history requests and after pagination errors;
+the existing error display and button provide an explicit retry without a request
+loop. Disconnect observers on ref changes and unmount, and ignore queued callbacks
+after cleanup. Keep the scroller's existing prepend restoration and live-message
+merge behavior.
+
 ## Run browser checks fresh and test real PostgreSQL transactions
 
 Browser tests depend explicitly on the API build and do not use Turbo's test
@@ -252,3 +264,8 @@ CI uses Node.js 24, the frozen lockfile, Playwright Chromium, and PostgreSQL
 concurrent idempotency, ordered replay, and rollback tests. Each run creates and
 drops its own temporary database; the supplied test role needs CREATEDB. Keep
 pg-mem tests for fast local feedback when PostgreSQL is unavailable.
+
+The browser fixture also exposes a test-only token setup route that runs the
+normal authentication handler with a distinct simulated client IP per request.
+History-scroll checks use it so additional partner sessions do not exhaust the
+shared proxy IP's demo-token quota. Production routes keep their rate limits.

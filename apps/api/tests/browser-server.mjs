@@ -44,6 +44,21 @@ app.get("/test/mcp-credentials", async () => {
   }
   return credentials;
 });
+let browserSession = 0;
+// Simulate separate client IPs for browser setup instead of sharing the proxy's
+// ten-token quota. Only this test server exposes the setup route.
+app.post("/__test__/auth/demo-token", async (request, reply) => {
+  const response = await app.inject({
+    method: "POST",
+    url: "/auth/demo-token",
+    payload: request.body,
+    remoteAddress: `192.0.2.${++browserSession}`,
+  });
+  return reply
+    .code(response.statusCode)
+    .type("application/json")
+    .send(response.body);
+});
 const close = async () => {
   await app.close();
   process.exit(0);

@@ -104,9 +104,55 @@ function createClient() {
   };
 }
 
+function mockIntersectionObserver() {
+  const observers: {
+    callback: IntersectionObserverCallback;
+    options?: IntersectionObserverInit;
+    observe: ReturnType<typeof vi.fn>;
+    unobserve: ReturnType<typeof vi.fn>;
+    disconnect: ReturnType<typeof vi.fn>;
+  }[] = [];
+  vi.stubGlobal(
+    "IntersectionObserver",
+    vi.fn(function (
+      callback: IntersectionObserverCallback,
+      options?: IntersectionObserverInit,
+    ) {
+      const observer = {
+        callback,
+        options,
+        observe: vi.fn(),
+        unobserve: vi.fn(),
+        disconnect: vi.fn(),
+      };
+      observers.push(observer);
+      return observer;
+    }),
+  );
+
+  return (target: Element) => {
+    const observer = [...observers]
+      .reverse()
+      .find((observer) =>
+        observer.observe.mock.calls.some(([element]) => element === target),
+      );
+    if (!observer) throw new Error("Target is not observed");
+    return {
+      ...observer,
+      intersect(isIntersecting: boolean) {
+        observer.callback(
+          [{ target, isIntersecting } as IntersectionObserverEntry],
+          observer as unknown as IntersectionObserver,
+        );
+      },
+    };
+  };
+}
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 beforeEach(() => {
@@ -144,8 +190,9 @@ describe("ChatWidget", () => {
     ).toHaveLength(2);
   });
 
-  it("loads earlier pages and keeps messages received during pagination", async () => {
+  it("automatically loads earlier pages and keeps messages received during pagination", async () => {
     const fixture = createClient();
+    const getObserver = mockIntersectionObserver();
     const earlier = {
       ...message,
       id: "earlier",
@@ -167,15 +214,26 @@ describe("ChatWidget", () => {
       createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
     );
     await screen.findByText(message.body);
-    fireEvent.click(
-      screen.getByRole("button", { name: "Load earlier messages" }),
+    const sentinel = screen.getByRole("button", {
+      name: "Load earlier messages",
+    });
+    const observer = getObserver(sentinel);
+    expect(observer.options?.root).toBe(
+      screen.getByRole("region", { name: "Chat messages" }),
     );
+    act(() => observer.intersect(false));
+    expect(fixture.client.getMessages).toHaveBeenCalledTimes(1);
+    act(() => {
+      observer.intersect(true);
+      observer.intersect(true);
+    });
     await waitFor(() =>
       expect(fixture.client.getMessages).toHaveBeenCalledWith(room.id, {
         limit: 50,
         cursor: "1",
       }),
     );
+    expect(fixture.client.getMessages).toHaveBeenCalledTimes(2);
     act(() =>
       fixture.emitEvent({
         eventId: "3",
@@ -197,6 +255,139 @@ describe("ChatWidget", () => {
     expect(
       screen.queryByRole("button", { name: "Load earlier messages" }),
     ).toBeNull();
+    expect(observer.disconnect).toHaveBeenCalled();
+  });
+
+  it("loads successive earlier pages when the sentinel remains visible", async () => {
+    const fixture = createClient();
+    const getObserver = mockIntersectionObserver();
+    const earlier = {
+      ...message,
+      id: "earlier",
+      clientMessageId: "earlier",
+      body: "Earlier",
+      createdAt: "2025-12-31T23:59:59.000Z",
+    };
+    const oldest = {
+      ...earlier,
+      id: "oldest",
+      clientMessageId: "oldest",
+      body: "Oldest",
+      createdAt: "2025-12-31T23:59:58.000Z",
+    };
+    vi.mocked(fixture.client.getMessages)
+      .mockResolvedValueOnce({ items: [message], nextCursor: "2" })
+      .mockResolvedValueOnce({ items: [earlier], nextCursor: "1" })
+      .mockResolvedValueOnce({ items: [oldest], nextCursor: null });
+    render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    const sentinel = await screen.findByRole("button", {
+      name: "Load earlier messages",
+    });
+    const firstObserver = getObserver(sentinel);
+    act(() => firstObserver.intersect(true));
+    await screen.findAllByText(earlier.body);
+    await waitFor(() =>
+      expect(getObserver(sentinel).observe).not.toBe(firstObserver.observe),
+    );
+    const nextObserver = getObserver(sentinel);
+    act(() => nextObserver.intersect(true));
+    await screen.findAllByText(oldest.body);
+    expect(fixture.client.getMessages).toHaveBeenNthCalledWith(3, room.id, {
+      limit: 50,
+      cursor: "1",
+    });
+    expect(
+      screen.queryByRole("button", { name: "Load earlier messages" }),
+    ).toBeNull();
+    act(() => nextObserver.intersect(true));
+    expect(fixture.client.getMessages).toHaveBeenCalledTimes(3);
+  });
+
+  it("stops automatic pagination after an error and allows a manual retry", async () => {
+    const fixture = createClient();
+    const getObserver = mockIntersectionObserver();
+    vi.mocked(fixture.client.getMessages)
+      .mockResolvedValueOnce({ items: [message], nextCursor: "1" })
+      .mockRejectedValueOnce(new Error("Could not load earlier messages"))
+      .mockResolvedValueOnce({ items: [], nextCursor: null });
+    render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    const sentinel = await screen.findByRole("button", {
+      name: "Load earlier messages",
+    });
+    const observer = getObserver(sentinel);
+    act(() => observer.intersect(true));
+    expect((await screen.findByRole("alert")).textContent).toContain(
+      "Could not load earlier messages",
+    );
+    act(() => observer.intersect(true));
+    expect(fixture.client.getMessages).toHaveBeenCalledTimes(2);
+    expect(getMessageBody(message.body)).toBeDefined();
+    fireEvent.click(sentinel);
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Load earlier messages" }),
+      ).toBeNull(),
+    );
+    expect(fixture.client.getMessages).toHaveBeenCalledTimes(3);
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("disconnects history observers on channel changes and unmount", async () => {
+    const fixture = createClient();
+    const getObserver = mockIntersectionObserver();
+    const channel = { ...room, id: "design", name: "Design" };
+    vi.mocked(fixture.client.getChannels).mockResolvedValue([channel]);
+    vi.mocked(fixture.client.getRoom).mockImplementation(async (id) =>
+      id === channel.id ? channel : room,
+    );
+    vi.mocked(fixture.client.getMessages).mockResolvedValue({
+      items: [message],
+      nextCursor: "1",
+    });
+    const view = render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    const sentinel = await screen.findByRole("button", {
+      name: "Load earlier messages",
+    });
+    const previousObserver = getObserver(sentinel);
+    fireEvent.click(await screen.findByRole("button", { name: channel.name }));
+    await screen.findByRole("heading", { name: channel.name });
+    await screen.findByRole("button", { name: "Load earlier messages" });
+    expect(previousObserver.disconnect).toHaveBeenCalled();
+    act(() => previousObserver.intersect(true));
+    expect(fixture.client.getMessages).toHaveBeenCalledTimes(2);
+    const observer = getObserver(
+      screen.getByRole("button", { name: "Load earlier messages" }),
+    );
+    view.unmount();
+    expect(observer.disconnect).toHaveBeenCalled();
+    act(() => observer.intersect(true));
+    expect(fixture.client.getMessages).toHaveBeenCalledTimes(2);
+  });
+
+  it("supports manual pagination when IntersectionObserver is unavailable", async () => {
+    const fixture = createClient();
+    vi.stubGlobal("IntersectionObserver", undefined);
+    vi.mocked(fixture.client.getMessages)
+      .mockResolvedValueOnce({ items: [message], nextCursor: "1" })
+      .mockResolvedValueOnce({ items: [], nextCursor: null });
+    render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Load earlier messages" }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Load earlier messages" }),
+      ).toBeNull(),
+    );
+    expect(fixture.client.getMessages).toHaveBeenCalledTimes(2);
   });
 
   it("shows a channel selection only after its URL is committed", async () => {
