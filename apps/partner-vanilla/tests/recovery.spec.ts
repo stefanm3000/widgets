@@ -43,20 +43,26 @@ test("recovers idle subscriptions and preserves the reader while loading earlier
   ).toBeVisible();
   const viewport = widget.locator('[data-slot="message-scroller-viewport"]');
   await expect(widget.locator('[data-slot="bubble-content"]')).toHaveCount(50);
-  await viewport.hover();
-  await page.mouse.wheel(0, -100_000);
-  await expect
-    .poll(() => viewport.evaluate((element) => element.scrollTop))
-    .toBe(0);
-  const anchor = widget
-    .locator("[data-message-id]")
-    .filter({ has: page.getByText("History row 1", { exact: true }) });
-  const previousTop = (await anchor.boundingBox())!.y;
-  await widget.getByRole("button", { name: "Load earlier messages" }).click();
-  await expect(widget.locator('[data-slot="bubble-content"]')).toHaveCount(51);
-  await expect
-    .poll(async () => Math.abs((await anchor.boundingBox())!.y - previousTop))
-    .toBeLessThan(3);
+  for (const count of [100, 101]) {
+    await viewport.hover();
+    await page.mouse.wheel(0, -100_000);
+    await expect
+      .poll(() => viewport.evaluate((element) => element.scrollTop))
+      .toBe(0);
+    const anchorId = await widget
+      .locator("[data-message-id]")
+      .first()
+      .getAttribute("data-message-id");
+    const anchor = widget.locator(`[data-message-id="${anchorId}"]`);
+    const previousTop = (await anchor.boundingBox())!.y;
+    await widget.getByRole("button", { name: "Load earlier messages" }).click();
+    await expect(widget.locator('[data-slot="bubble-content"]')).toHaveCount(
+      count,
+    );
+    await expect
+      .poll(async () => Math.abs((await anchor.boundingBox())!.y - previousTop))
+      .toBeLessThan(3);
+  }
   await expect(
     widget.getByRole("button", { name: "Load earlier messages" }),
   ).toHaveCount(0);

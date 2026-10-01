@@ -268,6 +268,11 @@ test("creates a shared channel, switches history, and collapses the sidebar", as
   await expect
     .poll(async () => (await sidebar.boundingBox())!.width)
     .toBeGreaterThan(100);
+  await sidebar.evaluate(async (element) => {
+    await Promise.all(
+      element.getAnimations().map((animation) => animation.finished),
+    );
+  });
   await expectAlignedHeaders(first);
   const sidebarBounds = (await sidebar.boundingBox())!;
   const chatBounds = (await conversation.boundingBox())!;

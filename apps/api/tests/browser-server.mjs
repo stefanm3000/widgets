@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { setTimeout } from "node:timers/promises";
 
 import { buildApp } from "../dist/app.js";
 import { readConfig } from "../dist/config.js";
@@ -15,11 +16,14 @@ const sender = {
   displayName: "History Tester",
   source: "system",
 };
-for (let index = 0; index < 51; index += 1) {
-  await store.addMessage(historyRoom.id, sender, {
+for (let index = 0; index < 101; index += 1) {
+  const added = await store.addMessage(historyRoom.id, sender, {
     clientMessageId: randomUUID(),
     body: `History row ${index}`,
   });
+  // Distinct timestamps keep the fixture chronological under the DTO's ID tie-breaker.
+  if (!added) throw new Error("History fixture room missing");
+  while (Date.now() <= Date.parse(added.message.createdAt)) await setTimeout(1);
 }
 const app = await buildApp({
   allowedOrigins: config.allowedOrigins,

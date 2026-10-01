@@ -61,37 +61,6 @@ function TranscriptContent({
   outlineClassName,
 }: ChatTranscriptProps) {
   const scrollRef = useMessageScroll(messages.at(-1)?.id);
-  const anchorRef = useRef<{ element: HTMLElement; top: number } | null>(null);
-  useLayoutEffect(() => {
-    const anchor = anchorRef.current;
-    if (!anchor || loadingEarlierMessages) return;
-    const viewport = anchor.element.closest<HTMLElement>(
-      '[data-slot="message-scroller-viewport"]',
-    );
-    if (viewport && anchor.element.isConnected) {
-      viewport.scrollTop +=
-        anchor.element.getBoundingClientRect().top - anchor.top;
-    }
-    anchorRef.current = null;
-  }, [messages, loadingEarlierMessages]);
-
-  function loadEarlier(button: HTMLButtonElement) {
-    const viewport = button.closest<HTMLElement>(
-      '[data-slot="message-scroller-viewport"]',
-    );
-    if (viewport) {
-      const top = viewport.getBoundingClientRect().top;
-      const element = [
-        ...viewport.querySelectorAll<HTMLElement>("[data-message-id]"),
-      ].find((row) => row.getBoundingClientRect().bottom > top);
-      if (element)
-        anchorRef.current = {
-          element,
-          top: element.getBoundingClientRect().top,
-        };
-    }
-    void onLoadEarlier();
-  }
   return (
     <MessageScroller
       className={cn("row-start-2 bg-background", className)}
@@ -103,7 +72,7 @@ function TranscriptContent({
             className="mx-auto my-2 shrink-0"
             variant="outline"
             disabled={loadingEarlierMessages}
-            onClick={(event) => loadEarlier(event.currentTarget)}
+            onClick={() => void onLoadEarlier()}
           >
             {loadingEarlierMessages
               ? "Loading earlier messages…"
@@ -189,4 +158,3 @@ function TranscriptStatus({ children }: { children: string }) {
     </Marker>
   );
 }
-import { useLayoutEffect, useRef } from "react";

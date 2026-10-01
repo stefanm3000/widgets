@@ -204,6 +204,12 @@ TanStack infinite queries load earlier history pages on demand. Keep the first
 visible message anchored while prepending pages, and merge history with live
 messages using sender-scoped client IDs so one participant cannot replace
 another participant's message by reusing its client ID.
+Use the scroller primitive's prepend restoration together with browser scroll
+anchoring. Render loaded rows at their actual height instead of using
+content-visibility with estimated heights, which can shift the reading position
+after restoration. This trades layout work for stable history navigation;
+large loaded transcripts will need virtualization that preserves measured row
+heights. Verify the final page where the history button disappears as well.
 
 ## Run browser checks fresh and test real PostgreSQL transactions
 
