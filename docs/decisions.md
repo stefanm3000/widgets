@@ -1,5 +1,36 @@
 # Decisions
 
+## Expose Pulse actions through a local MCP adapter
+
+Add a separate `apps/mcp` Node.js application with the official MCP TypeScript
+SDK. Reuse the public browser-safe Pulse SDK for HTTP operations and the protocol
+schemas for tool inputs and outputs. This keeps authorization, persistence,
+rate limiting, and broadcasts in the API without duplicating them in tool handlers.
+The MCP runtime does not enter browser packages, and the adapter does not import
+API internals, database models, or token-signing secrets.
+
+Start with stdio for local clients and an explicitly supplied bearer token.
+The adapter never falls back to an anonymous demo token, so an expired or invalid
+token produces a tool error. Current demo credentials require manual refresh and
+connection restart. Use a separate `dev:stdio` script so the root development
+servers can run without MCP credentials. Remote Streamable HTTP and production user authentication
+are separate future work; no hosted MCP service is claimed.
+
+Require a client-generated UUID for message sends and preserve it through retries
+to reuse the API's sender-scoped idempotency. Channel creation remains non-idempotent
+because duplicate names are allowed. Expose read/write annotations and return
+validated DTOs with safe errors, while relying on the API for actual authorization.
+Use a 10-second HTTP timeout and reject redirects to avoid credential forwarding.
+Only loopback HTTP or HTTPS API URLs are accepted.
+
+Verify both directions through the real stdio transport in Playwright: read a
+widget message through MCP, then deliver an MCP message live to the Vanilla and
+Vue widgets, retry it without duplication, and read it after reload.
+The isolated API browser fixture signs separate test identities for this check;
+the browser test reuses their tokens across reloads to avoid consuming the shared
+demo token endpoint's rate budget. The test credential route exists only in the
+browser fixture, not in the API application.
+
 ## Start with the workspace foundation
 
 Initialize with `pnpm dlx create-turbo@latest` and pnpm workspaces. Keep the shared

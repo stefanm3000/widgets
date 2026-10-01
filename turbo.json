@@ -11,7 +11,9 @@
     "PULSE_TOKEN_SECRET",
     "PULSE_ALLOWED_ORIGINS",
     "VITE_PULSE_API_URL",
-    "VITE_PULSE_PROXY_TARGET"
+    "VITE_PULSE_PROXY_TARGET",
+    "PULSE_API_URL",
+    "PULSE_ACCESS_TOKEN"
   ],
   "tasks": {
     "build": {
@@ -34,8 +36,11 @@
       "dependsOn": ["^build"]
     },
     "@pulse/partner-vanilla#test": {
-      "dependsOn": ["^build", "@pulse/api#build"],
+      "dependsOn": ["^build", "@pulse/api#build", "@pulse/mcp#build"],
       "cache": false
+    },
+    "@pulse/mcp#test": {
+      "dependsOn": ["build"]
     }
   }
 }

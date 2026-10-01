@@ -6,6 +6,8 @@ This describes the intended Pulse project and the boundaries implemented so far.
 
 - pnpm workspaces, Turborepo, and TypeScript.
 - `apps/api`: Node.js, Fastify, raw WebSockets via `ws`, PostgreSQL, and Drizzle.
+- `apps/mcp`: Node.js stdio MCP adapter using the public SDK to call authenticated
+  Pulse HTTP endpoints; no database access or token signing.
 - `apps/playground`: React Router, Tailwind CSS, and selected shadcn/ui components.
 - `packages/protocol`: runtime-validated, versioned wire schemas and public DTOs.
 - `packages/sdk`: framework-independent REST and realtime client.
