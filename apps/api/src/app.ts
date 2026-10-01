@@ -2,6 +2,7 @@ import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import Fastify from "fastify";
 
+import { sendApiError } from "./helpers/http.js";
 import { registerRealtime } from "./realtime.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerRoomRoutes } from "./routes/rooms.js";
@@ -18,6 +19,33 @@ export async function buildApp(options: BuildAppOptions) {
   });
   const store: ChatStore = options.store ?? new MemoryChatStore();
   const tokenService = new TokenService(options.tokenSecret);
+
+  app.setErrorHandler((error, request, reply) => {
+    const status =
+      error instanceof Error &&
+      "statusCode" in error &&
+      typeof error.statusCode === "number" &&
+      error.statusCode >= 400 &&
+      error.statusCode <= 599
+        ? error.statusCode
+        : 500;
+    if (status >= 500) request.log.error(error);
+    return sendApiError(
+      reply,
+      status,
+      status === 429
+        ? "rate_limited"
+        : status >= 500
+          ? "internal_error"
+          : "invalid_request",
+      status >= 500 || !(error instanceof Error)
+        ? "Unable to process the request"
+        : error.message,
+    );
+  });
+  app.setNotFoundHandler((_request, reply) =>
+    sendApiError(reply, 404, "not_found", "Route not found"),
+  );
 
   await app.register(cors, {
     origin: options.allowedOrigins ?? false,

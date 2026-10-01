@@ -4,13 +4,14 @@ import { PROTOCOL_VERSION } from "../constants.js";
 import { messageSchema, roomIdSchema } from "./shared.js";
 
 const versionSchema = z.literal(PROTOCOL_VERSION);
+const eventCursorSchema = z.string().regex(/^\d{1,19}$/);
 
 export const clientFrameSchema = z.discriminatedUnion("type", [
   z.object({
     version: versionSchema,
     type: z.literal("subscribe"),
     roomId: roomIdSchema,
-    cursor: z.string().min(1).optional(),
+    cursor: eventCursorSchema.optional(),
   }),
   z.object({
     version: versionSchema,
@@ -25,7 +26,7 @@ export const clientFrameSchema = z.discriminatedUnion("type", [
 ]);
 
 export const realtimeEventSchema = z.object({
-  eventId: z.string().regex(/^\d+$/),
+  eventId: eventCursorSchema,
   roomId: roomIdSchema,
   type: z.literal("message.created"),
   payload: messageSchema,
@@ -41,7 +42,7 @@ export const serverFrameSchema = z.discriminatedUnion("type", [
     version: versionSchema,
     type: z.literal("subscribed"),
     roomId: roomIdSchema,
-    cursor: z.string().nullable(),
+    cursor: eventCursorSchema.nullable(),
   }),
   z.object({
     version: versionSchema,
@@ -52,7 +53,7 @@ export const serverFrameSchema = z.discriminatedUnion("type", [
     version: versionSchema,
     type: z.literal("refetch_required"),
     roomId: roomIdSchema,
-    reason: z.literal("cursor_expired"),
+    reason: z.enum(["cursor_expired", "replay_limit"]),
   }),
   z.object({
     version: versionSchema,
@@ -63,6 +64,9 @@ export const serverFrameSchema = z.discriminatedUnion("type", [
       "unauthorized",
       "forbidden",
       "room_not_found",
+      "token_expired",
+      "rate_limited",
+      "subscription_limit",
     ]),
     message: z.string(),
     fatal: z.boolean(),

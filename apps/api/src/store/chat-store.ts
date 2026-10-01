@@ -11,7 +11,10 @@ import type {
 export interface EventReplay {
   events: RealtimeEvent[];
   expired: boolean;
+  reason?: "cursor_expired" | "replay_limit";
 }
+
+export const MAX_REPLAY_EVENTS = 500;
 
 export interface AddMessageResult {
   created: boolean;

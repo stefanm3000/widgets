@@ -58,7 +58,7 @@ export function registerRealtime(
   };
 
   app.server.on("upgrade", onUpgrade);
-  app.addHook("onClose", async () => {
+  app.addHook("preClose", async () => {
     app.server.off("upgrade", onUpgrade);
     for (const client of wss.clients) client.terminate();
     await new Promise<void>((resolve) => wss.close(() => resolve()));

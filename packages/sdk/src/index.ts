@@ -1,5 +1,6 @@
 export type {
   Message,
+  MessagePage,
   MessageSource,
   Participant,
   RealtimeEvent,

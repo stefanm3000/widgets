@@ -50,6 +50,7 @@ export class PulseRealtimeClient {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private connecting = false;
   private disposed = false;
+  private halted = false;
   private hasConnected = false;
   private reconnectAttempts = 0;
   private state: ConnectionState = "offline";
@@ -134,7 +135,12 @@ export class PulseRealtimeClient {
   }
 
   private readonly handleOnline = () => {
-    if (!this.disposed && this.subscriptions.size > 0 && !this.socket) {
+    if (
+      !this.disposed &&
+      !this.halted &&
+      this.subscriptions.size > 0 &&
+      !this.socket
+    ) {
       this.reconnectAttempts = 0;
       void this.connect();
     }
@@ -147,6 +153,7 @@ export class PulseRealtimeClient {
   private async connect() {
     if (
       this.disposed ||
+      this.halted ||
       this.connecting ||
       this.socket ||
       this.subscriptions.size === 0
@@ -218,7 +225,7 @@ export class PulseRealtimeClient {
       return;
     }
     if (frame.type === "event") {
-      this.cursors.set(frame.event.roomId, frame.event.eventId);
+      this.advanceCursor(frame.event.roomId, frame.event.eventId);
       const messageId = frame.event.payload.id;
       if (this.seenMessageIds.has(messageId)) return;
       this.seenMessageIds.add(messageId);
@@ -231,18 +238,30 @@ export class PulseRealtimeClient {
       }
       return;
     }
+    if (frame.type === "subscribed") {
+      this.advanceCursor(frame.roomId, frame.cursor ?? "0");
+      return;
+    }
     if (frame.type === "refetch_required") {
       this.cursors.delete(frame.roomId);
       for (const listener of this.refetchListeners) listener(frame.roomId);
       return;
     }
     if (frame.type === "error") {
+      if (frame.code === "token_expired") return;
       this.emitError(new Error(frame.message));
       if (frame.fatal) {
+        this.halted = true;
         this.reconnectAttempts = this.maxAttempts;
         socket.close(1008, frame.message.slice(0, 123));
       }
     }
+  }
+
+  private advanceCursor(roomId: string, cursor: string) {
+    const current = this.cursors.get(roomId);
+    if (!current || BigInt(cursor) > BigInt(current))
+      this.cursors.set(roomId, cursor);
   }
 
   private sendSubscribe(roomId: string) {
@@ -258,7 +277,7 @@ export class PulseRealtimeClient {
   }
 
   private scheduleReconnect() {
-    if (this.disposed || this.subscriptions.size === 0) {
+    if (this.disposed || this.halted || this.subscriptions.size === 0) {
       this.setState("offline");
       return;
     }

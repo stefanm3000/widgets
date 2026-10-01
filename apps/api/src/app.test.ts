@@ -173,6 +173,54 @@ describe("HTTP chat API", () => {
     expect(response.json()).toEqual({ status: "ok" });
   });
 
+  it("returns protocol errors for malformed JSON, missing routes, and rate limits", async () => {
+    const malformed = await app.inject({
+      method: "POST",
+      url: "/auth/demo-token",
+      headers: { "content-type": "application/json" },
+      payload: "{invalid",
+    });
+    expect(malformed.statusCode).toBe(400);
+    expect(apiErrorSchema.parse(malformed.json()).error.code).toBe(
+      "invalid_request",
+    );
+    const missing = await app.inject({ method: "GET", url: "/missing" });
+    expect(missing.statusCode).toBe(404);
+    expect(apiErrorSchema.parse(missing.json()).error.code).toBe("not_found");
+    let limited = malformed;
+    for (let index = 0; index < 11; index += 1) {
+      limited = await app.inject({
+        method: "POST",
+        url: "/auth/demo-token",
+        payload: { source: "vue", sessionId: randomUUID() },
+      });
+    }
+    expect(limited.statusCode).toBe(429);
+    expect(apiErrorSchema.parse(limited.json()).error.code).toBe(
+      "rate_limited",
+    );
+    expect(limited.headers["retry-after"]).toBeDefined();
+  });
+
+  it("closes the API while a WebSocket is still connected", async () => {
+    const token = await issueToken();
+    await app.listen({ host: "127.0.0.1", port: 0 });
+    const address = app.server.address();
+    if (!address || typeof address === "string")
+      throw new Error("Expected TCP address");
+    const socket = new WebSocket(`ws://127.0.0.1:${address.port}/realtime`, [
+      "pulse.v1",
+      `pulse-auth.${token}`,
+    ]);
+    const ready = nextFrame(socket);
+    await once(socket, "open");
+    await ready;
+    const closed = once(socket, "close");
+    await app.close();
+    await closed;
+    expect(socket.readyState).toBe(WebSocket.CLOSED);
+  });
+
   it("assigns a stable anonymous identity for a client session", async () => {
     const sessionId = randomUUID();
     const firstResponse = await app.inject({

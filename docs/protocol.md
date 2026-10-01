@@ -41,6 +41,13 @@ last event cursor while subscribing. The server replays retained events after
 that cursor. If the cursor has expired, the server sends `refetch_required` and
 the client reloads room history before continuing.
 
+Subscription acknowledgement follows replay and any live events buffered during
+that replay. Its cursor checkpoints idle rooms too; clients treat a null cursor
+as zero for an empty room and never move an existing cursor backwards. Cursors
+contain at most 19 decimal digits. Replay is limited to 500 events; larger gaps
+use `refetch_required` with reason `replay_limit`, followed by a new subscription
+checkpoint. History can be paginated independently to read older messages.
+
 Browser clients authenticate the `/realtime` upgrade with two WebSocket
 subprotocol values: `pulse.v1` and `pulse-auth.<short-lived-jwt>`. This keeps the
 credential out of the URL and its logs while working with the browser WebSocket
@@ -48,5 +55,8 @@ API, which cannot set an Authorization header. The server negotiates only
 `pulse.v1`; it validates the JWT and allowed Origin before accepting the upgrade.
 
 Malformed JSON and schema-invalid frames produce `malformed_frame`. Permission
-and authentication failures are explicit and may be fatal. The transport will
-bound frame size and use ping/pong timeouts when the realtime server is added.
+and authentication failures are explicit and may be fatal. Active sockets expire
+with their JWT: `token_expired` and close code 4001 allow the SDK to refresh its
+credentials and reconnect. Fatal errors stop recovery until a new client is
+created. The transport bounds frame size, rate, subscriptions, queued frames,
+replay, and outgoing buffering, and uses ping/pong timeouts.

@@ -37,6 +37,10 @@ export function parseProtocols(
 
 export function sendFrame(socket: WebSocket, frame: ServerFrame): void {
   if (socket.readyState === WebSocket.OPEN) {
+    if (socket.bufferedAmount > 1024 * 1024) {
+      socket.terminate();
+      return;
+    }
     socket.send(JSON.stringify(serverFrameSchema.parse(frame)));
   }
 }

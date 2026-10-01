@@ -13,6 +13,7 @@ import type {
 import { demoRoom, seededMessages } from "../data/demo-chat.js";
 import { parseCursor } from "../helpers/cursor.js";
 import type { AddMessageResult, ChatStore, EventReplay } from "./chat-store.js";
+import { MAX_REPLAY_EVENTS } from "./chat-store.js";
 import { RoomEventListeners } from "./listeners.js";
 
 export class MemoryChatStore implements ChatStore {
@@ -85,7 +86,7 @@ export class MemoryChatStore implements ChatStore {
   }
 
   async getEventsAfter(roomId: string, cursor: string): Promise<EventReplay> {
-    if (!/^\d+$/.test(cursor)) return { events: [], expired: true };
+    if (!/^\d{1,19}$/.test(cursor)) return { events: [], expired: true };
 
     const requested = BigInt(cursor);
     const roomEvents = this.events.filter((event) => event.roomId === roomId);
@@ -95,14 +96,22 @@ export class MemoryChatStore implements ChatStore {
 
     const oldestId = BigInt(oldest.eventId);
     const latestId = BigInt(latest.eventId);
-    if (requested < oldestId - 1n || requested > latestId) {
+    if (
+      (requested !== 0n && requested < oldestId - 1n) ||
+      requested > latestId
+    ) {
       return { events: [], expired: true };
     }
 
-    return {
-      events: roomEvents.filter((event) => BigInt(event.eventId) > requested),
-      expired: false,
-    };
+    const events: RealtimeEvent[] = [];
+    for (const event of roomEvents) {
+      if (BigInt(event.eventId) <= requested) continue;
+      if (events.length === MAX_REPLAY_EVENTS) {
+        return { events: [], expired: true, reason: "replay_limit" };
+      }
+      events.push(event);
+    }
+    return { events, expired: false };
   }
 
   subscribe(

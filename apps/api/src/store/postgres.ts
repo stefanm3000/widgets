@@ -22,6 +22,7 @@ import {
 } from "../database/schema.js";
 import { parseCursor } from "../helpers/cursor.js";
 import type { AddMessageResult, ChatStore, EventReplay } from "./chat-store.js";
+import { MAX_REPLAY_EVENTS } from "./chat-store.js";
 import { RoomEventListeners } from "./listeners.js";
 
 type MessageRecord = typeof messages.$inferSelect;
@@ -171,7 +172,7 @@ export class PostgresChatStore implements ChatStore {
   }
 
   async getEventsAfter(roomId: string, cursor: string): Promise<EventReplay> {
-    if (!/^\d+$/.test(cursor)) return { events: [], expired: true };
+    if (!/^\d{1,19}$/.test(cursor)) return { events: [], expired: true };
     const requested = BigInt(cursor);
 
     const [oldestResult, latestResult] = await Promise.all([
@@ -194,7 +195,7 @@ export class PostgresChatStore implements ChatStore {
     if (oldest === undefined || latest === undefined) {
       return { events: [], expired: requested !== 0n };
     }
-    if (requested < oldest - 1n || requested > latest) {
+    if ((requested !== 0n && requested < oldest - 1n) || requested > latest) {
       return { events: [], expired: true };
     }
 
@@ -208,7 +209,12 @@ export class PostgresChatStore implements ChatStore {
           gt(realtimeEvents.id, requested),
         ),
       )
-      .orderBy(asc(realtimeEvents.id));
+      .orderBy(asc(realtimeEvents.id))
+      .limit(MAX_REPLAY_EVENTS + 1);
+
+    if (records.length > MAX_REPLAY_EVENTS) {
+      return { events: [], expired: true, reason: "replay_limit" };
+    }
 
     return { events: records.map(toEvent), expired: false };
   }
@@ -230,7 +236,8 @@ export class PostgresChatStore implements ChatStore {
         .select({ id: rooms.id })
         .from(rooms)
         .where(eq(rooms.id, roomId))
-        .limit(1);
+        .limit(1)
+        .for("update");
       if (!room) return null;
 
       await transaction

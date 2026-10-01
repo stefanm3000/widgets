@@ -172,6 +172,120 @@ describe("PulseClient HTTP", () => {
 });
 
 describe("PulseClient realtime", () => {
+  it("resumes idle and empty rooms and never moves a cursor backwards", async () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    const sockets: FakeWebSocket[] = [];
+    const listener = vi.fn();
+    const client = createPulseClient({
+      baseUrl: "https://api.example.com",
+      getToken: () => "token",
+      reconnect: { baseDelayMs: 10, maxDelayMs: 10 },
+      webSocketFactory: () => {
+        const socket = new FakeWebSocket();
+        sockets.push(socket);
+        return socket;
+      },
+    });
+    client.subscribe("demo-room", listener);
+    client.subscribe("empty-room", listener);
+    const ready = {
+      version: PROTOCOL_VERSION,
+      type: "ready" as const,
+      connectionId: "dcb9cf80-5523-4593-bb7c-8f349e327b46",
+    };
+    await vi.advanceTimersByTimeAsync(0);
+    sockets[0]!.open();
+    sockets[0]!.receive(ready);
+    sockets[0]!.receive({
+      version: PROTOCOL_VERSION,
+      type: "subscribed",
+      roomId: "demo-room",
+      cursor: "12",
+    });
+    sockets[0]!.receive({
+      version: PROTOCOL_VERSION,
+      type: "subscribed",
+      roomId: "empty-room",
+      cursor: null,
+    });
+    sockets[0]!.disconnect();
+    await vi.advanceTimersByTimeAsync(10);
+    sockets[1]!.open();
+    sockets[1]!.receive(ready);
+    expect(sockets[1]!.sent.map((value) => JSON.parse(value))).toMatchObject([
+      { roomId: "demo-room", cursor: "12" },
+      { roomId: "empty-room", cursor: "0" },
+    ]);
+    for (const eventId of ["14", "13"])
+      sockets[1]!.receive({
+        version: PROTOCOL_VERSION,
+        type: "event",
+        event: {
+          eventId,
+          roomId: "demo-room",
+          type: "message.created",
+          payload: { ...demoMessage, id: crypto.randomUUID() },
+        },
+      });
+    sockets[1]!.disconnect();
+    await vi.advanceTimersByTimeAsync(10);
+    sockets[2]!.open();
+    sockets[2]!.receive(ready);
+    expect(JSON.parse(sockets[2]!.sent[0]!)).toMatchObject({ cursor: "14" });
+    expect(listener).toHaveBeenCalledTimes(2);
+    client.dispose();
+  });
+
+  it("refreshes credentials after token expiry but stops after fatal authorization errors", async () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    const getToken = vi
+      .fn()
+      .mockReturnValueOnce("old-token")
+      .mockReturnValue("fresh-token");
+    const sockets: FakeWebSocket[] = [];
+    const protocols: string[][] = [];
+    const client = createPulseClient({
+      baseUrl: "https://api.example.com",
+      getToken,
+      reconnect: { baseDelayMs: 10, maxDelayMs: 10 },
+      webSocketFactory: (_url, values) => {
+        protocols.push(values);
+        const socket = new FakeWebSocket();
+        sockets.push(socket);
+        return socket;
+      },
+    });
+    const error = vi.fn();
+    client.onError(error);
+    client.subscribe("demo-room", () => {});
+    await vi.advanceTimersByTimeAsync(0);
+    sockets[0]!.open();
+    sockets[0]!.receive({
+      version: PROTOCOL_VERSION,
+      type: "error",
+      code: "token_expired",
+      message: "Expired",
+      fatal: false,
+    });
+    sockets[0]!.disconnect(4001);
+    await vi.advanceTimersByTimeAsync(10);
+    expect(protocols[1]).toContain("pulse-auth.fresh-token");
+    expect(error).not.toHaveBeenCalled();
+    sockets[1]!.open();
+    sockets[1]!.receive({
+      version: PROTOCOL_VERSION,
+      type: "error",
+      code: "forbidden",
+      message: "Forbidden",
+      fatal: true,
+    });
+    client.subscribe("another-room", () => {});
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(sockets).toHaveLength(2);
+    client.dispose();
+  });
   it("deduplicates events and resumes from the latest cursor", async () => {
     vi.useFakeTimers();
     vi.spyOn(Math, "random").mockReturnValue(0.5);

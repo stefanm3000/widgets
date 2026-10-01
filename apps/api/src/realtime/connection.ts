@@ -1,11 +1,16 @@
 import { randomUUID } from "node:crypto";
 
-import { clientFrameSchema, PROTOCOL_VERSION } from "@pulse/protocol";
+import {
+  clientFrameSchema,
+  PROTOCOL_VERSION,
+  type RealtimeEvent,
+} from "@pulse/protocol";
 import { WebSocket, type RawData } from "ws";
 
 import { canAccessRoom } from "../helpers/http.js";
 import type { ChatStore } from "../store.js";
 import type { DemoIdentity } from "../types.js";
+import { MAX_REPLAY_EVENTS } from "../store/chat-store.js";
 import { sendFrame, sendRealtimeError } from "./helpers.js";
 
 export function handleConnection(
@@ -15,6 +20,17 @@ export function handleConnection(
 ): void {
   const subscriptions = new Map<string, () => void>();
   let alive = true;
+  const expire = () => {
+    sendRealtimeError(socket, "token_expired", "The token has expired", false);
+    socket.close(4001, "Token expired");
+  };
+  const expiresIn = Date.parse(identity.expiresAt) - Date.now();
+  if (expiresIn <= 0) {
+    expire();
+    return;
+  }
+  const expiry = setTimeout(expire, expiresIn);
+  expiry.unref();
 
   sendFrame(socket, {
     version: PROTOCOL_VERSION,
@@ -27,6 +43,10 @@ export function handleConnection(
   });
 
   const handleMessage = async (data: RawData, isBinary: boolean) => {
+    if (Date.now() >= Date.parse(identity.expiresAt)) {
+      expire();
+      return;
+    }
     if (isBinary) {
       sendRealtimeError(
         socket,
@@ -93,18 +113,30 @@ export function handleConnection(
     }
 
     if (socket.readyState !== WebSocket.OPEN) return;
+    if (!subscriptions.has(frame.roomId) && subscriptions.size >= 20) {
+      sendRealtimeError(
+        socket,
+        "subscription_limit",
+        "At most 20 room subscriptions are allowed",
+        false,
+      );
+      return;
+    }
     subscriptions.get(frame.roomId)?.();
+    let replaying = true;
+    const buffered: RealtimeEvent[] = [];
     const stop = store.subscribe(frame.roomId, (event) => {
+      if (replaying) {
+        if (buffered.length >= MAX_REPLAY_EVENTS) {
+          socket.close(1013, "Subscription buffer exceeded");
+        } else buffered.push(event);
+        return;
+      }
       sendFrame(socket, { version: PROTOCOL_VERSION, type: "event", event });
     });
     subscriptions.set(frame.roomId, stop);
-
-    sendFrame(socket, {
-      version: PROTOCOL_VERSION,
-      type: "subscribed",
-      roomId: frame.roomId,
-      cursor: await store.getCurrentCursor(frame.roomId),
-    });
+    const cursor = await store.getCurrentCursor(frame.roomId);
+    const delivered = new Set<string>();
 
     if (frame.cursor) {
       const replay = await store.getEventsAfter(frame.roomId, frame.cursor);
@@ -113,22 +145,56 @@ export function handleConnection(
           version: PROTOCOL_VERSION,
           type: "refetch_required",
           roomId: frame.roomId,
-          reason: "cursor_expired",
+          reason: replay.reason ?? "cursor_expired",
         });
-        return;
-      }
-      for (const event of replay.events) {
-        sendFrame(socket, {
-          version: PROTOCOL_VERSION,
-          type: "event",
-          event,
-        });
+      } else
+        for (const event of replay.events) {
+          delivered.add(event.eventId);
+          sendFrame(socket, {
+            version: PROTOCOL_VERSION,
+            type: "event",
+            event,
+          });
+        }
+    }
+    buffered.sort((left, right) =>
+      BigInt(left.eventId) < BigInt(right.eventId) ? -1 : 1,
+    );
+    for (const event of buffered) {
+      if (!delivered.has(event.eventId)) {
+        sendFrame(socket, { version: PROTOCOL_VERSION, type: "event", event });
       }
     }
+    replaying = false;
+    sendFrame(socket, {
+      version: PROTOCOL_VERSION,
+      type: "subscribed",
+      roomId: frame.roomId,
+      cursor,
+    });
   };
 
   let pending = Promise.resolve();
+  let pendingCount = 0;
+  let windowStart = Date.now();
+  let frameCount = 0;
   socket.on("message", (data, isBinary) => {
+    if (socket.readyState !== WebSocket.OPEN) return;
+    if (Date.now() - windowStart >= 60_000) {
+      windowStart = Date.now();
+      frameCount = 0;
+    }
+    frameCount += 1;
+    if (frameCount > 120 || pendingCount >= 32) {
+      sendRealtimeError(
+        socket,
+        "rate_limited",
+        "Too many realtime frames",
+        true,
+      );
+      return;
+    }
+    pendingCount += 1;
     pending = pending
       .then(() => {
         if (socket.readyState === WebSocket.OPEN)
@@ -136,6 +202,9 @@ export function handleConnection(
       })
       .catch(() => {
         socket.close(1011, "Unable to process frame");
+      })
+      .finally(() => {
+        pendingCount -= 1;
       });
   });
 
@@ -155,6 +224,7 @@ export function handleConnection(
   heartbeat.unref();
 
   socket.once("close", () => {
+    clearTimeout(expiry);
     clearInterval(heartbeat);
     for (const stop of subscriptions.values()) stop();
     subscriptions.clear();
