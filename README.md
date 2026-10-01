@@ -36,7 +36,7 @@ Svelte, and plain JavaScript. More partner demos are still in progress.
 Use Node.js 24 and pnpm 10.30.3 (pinned in package.json).
 
 ```sh
-pnpm install
+pnpm install --frozen-lockfile
 pnpm check
 ```
 
@@ -88,6 +88,9 @@ both `DATABASE_URL` and `PULSE_TOKEN_SECRET`.
 
 ### Channels
 
+Use **Load earlier messages** to read history beyond the initial 50 messages.
+Earlier pages preserve the first visible message and merge with live updates.
+
 The widget includes an expanded left sidebar with a manual collapse toggle and
 a popover for creating channels. Channels are shared by everyone who has access to the configured
 `roomId`; the original room remains selectable. Names can contain up to 120
@@ -101,3 +104,15 @@ against an existing PostgreSQL database. Memory-mode channels last only until
 the API restarts. Switching channels clears the unsent draft. The selected channel is stored in
 the `pulse-channel:<roomId>` URL parameter, preserving other partner parameters
 and supporting reloads and browser navigation.
+
+### CI and database regression tests
+
+GitHub Actions runs `pnpm check` with Node.js 24, Playwright Chromium, and
+PostgreSQL 17. Browser tests always run fresh and include cross-partner delivery,
+channel navigation, reconnect replay, and history pagination.
+
+To include real PostgreSQL transaction tests locally, set `TEST_DATABASE_URL` to
+a test server connection string and run `pnpm --filter @pulse/api test`.
+The test role must have `CREATEDB`; tests create and drop a uniquely named
+temporary database without modifying the database named in the URL. Without
+this variable, real PostgreSQL tests are skipped and pg-mem tests still run.

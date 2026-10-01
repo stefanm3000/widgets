@@ -144,8 +144,11 @@ may override semantic CSS tokens. The widget does not follow the system theme.
 
 TanStack Query owns channel lists, room details, identity, history, and mutations.
 Each widget has its own cache, and replacing its SDK client advances a cache
-scope so credentials and conversation data stay separate. Realtime events merge
-into the same message query used by history. React 19 callback refs attach SDK
+scope so credentials and conversation data stay separate. Realtime messages and
+confirmed sends use a separate query from paginated history; the transcript
+merges both by room, sender, and client message ID. This prevents history requests
+from replacing live messages received while those requests were pending.
+React 19 callback refs attach SDK
 subscriptions and return their cleanup when the room changes or the widget
 unmounts. React Compiler memoizes components and hooks in both the widget library
 and playground builds, including the subscription refs.
@@ -163,3 +166,52 @@ The channel form uses a shadcn-style Radix popover portalled into the widget roo
 to inherit partner tokens and remain inside the embed's Shadow DOM. React
 `useId` supplies accessible DOM IDs; message and session IDs remain UUIDs because
 the API validates them and uses message IDs for idempotency.
+
+## Make realtime recovery and lifecycle explicit
+
+Buffer live events during subscription replay, send retained events before the
+buffer, and acknowledge the subscription after that handoff. The SDK advances
+cursors monotonically, including the subscription checkpoint for idle and empty
+rooms. PostgreSQL message writes lock their room row before allocating an event
+ID, so concurrent writes in a room commit in replay order. This serializes writes
+within a room in exchange for a reliable checkpoint; different rooms remain
+independent.
+
+Close sockets when their token expires with code 4001, allowing the SDK to call
+its token provider and reconnect with refreshed credentials. Explicit fatal
+authorization errors stop recovery until the integration creates a new client.
+Terminate sockets in Fastify's preClose hook before HTTP shutdown waits for open
+connections. Framework HTTP errors use the protocol envelope, including 429
+responses and their Retry-After headers.
+
+Bound each connection to 20 room subscriptions, 120 incoming frames per minute,
+32 queued frames, 500 buffered live events, and a 1 MiB outgoing backlog. Replay
+queries return at most 500 events; larger gaps request a history refetch rather
+than loading the full log. These limits protect individual connections and do
+not replace deployment-level connection limits or the shared fanout needed for
+multiple API instances. The private API and SDK must be deployed together for
+the added token-expiry errors and replay-limit refetch reason.
+
+## Wait for committed channel URLs and paginate the transcript
+
+Continue using nuqs for URL writes, but select the visible conversation from the
+committed URL rather than its optimistic state. Notify all widget instances once
+the queued write completes; native popstate handles browser navigation. A visible
+channel selection therefore has a corresponding history entry before reload or
+back navigation can discard it.
+
+TanStack infinite queries load earlier history pages on demand. Keep the first
+visible message anchored while prepending pages, and merge history with live
+messages using sender-scoped client IDs so one participant cannot replace
+another participant's message by reusing its client ID.
+
+## Run browser checks fresh and test real PostgreSQL transactions
+
+Browser tests depend explicitly on the API build and do not use Turbo's test
+cache. Their API fixture seeds an isolated history channel directly in the memory
+store, so pagination setup does not consume the normal HTTP rate limits.
+CI uses Node.js 24, the frozen lockfile, Playwright Chromium, and PostgreSQL
+17, then runs pnpm check. TEST_DATABASE_URL enables real PostgreSQL migration,
+concurrent idempotency, ordered replay, and rollback tests. Each run creates and
+drops its own temporary database; the supplied test role needs CREATEDB. Keep
+pg-mem tests for fast local feedback when PostgreSQL is unavailable.

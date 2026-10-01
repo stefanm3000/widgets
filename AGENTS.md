@@ -1,8 +1,8 @@
 # Widgets development
 
 Read `README.md` and `docs/architecture.md` before changing package boundaries.
-The repository currently contains tooling only; implement features in small,
-working increments.
+The repository contains the API, browser SDK, React widget, Shadow DOM embed,
+and partner demos; implement features in small, working increments.
 
 ## Package boundaries
 
