@@ -2,7 +2,8 @@ import { useMessageScroll } from "../hooks/use-message-scroll";
 
 import type { OptimisticMessage } from "../types";
 import { cn } from "../utils/cn";
-import { formatTime, initials } from "../utils/messages";
+import { formatTime, initials, messageKey } from "../utils/messages";
+import { Button } from "./ui/button";
 import { Bubble, BubbleContent } from "./ui/bubble";
 import { Marker, MarkerContent } from "./ui/marker";
 import {
@@ -25,6 +26,9 @@ interface ChatTranscriptProps {
   className?: string;
   currentUserId: string | null;
   loading: boolean;
+  hasEarlierMessages: boolean;
+  loadingEarlierMessages: boolean;
+  onLoadEarlier: () => Promise<void>;
   messageClassName?: string;
   messages: OptimisticMessage[];
   outlineClassName?: string;
@@ -49,17 +53,63 @@ function TranscriptContent({
   className,
   currentUserId,
   loading,
+  hasEarlierMessages,
+  loadingEarlierMessages,
+  onLoadEarlier,
   messageClassName,
   messages,
   outlineClassName,
 }: ChatTranscriptProps) {
   const scrollRef = useMessageScroll(messages.at(-1)?.id);
+  const anchorRef = useRef<{ element: HTMLElement; top: number } | null>(null);
+  useLayoutEffect(() => {
+    const anchor = anchorRef.current;
+    if (!anchor || loadingEarlierMessages) return;
+    const viewport = anchor.element.closest<HTMLElement>(
+      '[data-slot="message-scroller-viewport"]',
+    );
+    if (viewport && anchor.element.isConnected) {
+      viewport.scrollTop +=
+        anchor.element.getBoundingClientRect().top - anchor.top;
+    }
+    anchorRef.current = null;
+  }, [messages, loadingEarlierMessages]);
+
+  function loadEarlier(button: HTMLButtonElement) {
+    const viewport = button.closest<HTMLElement>(
+      '[data-slot="message-scroller-viewport"]',
+    );
+    if (viewport) {
+      const top = viewport.getBoundingClientRect().top;
+      const element = [
+        ...viewport.querySelectorAll<HTMLElement>("[data-message-id]"),
+      ].find((row) => row.getBoundingClientRect().bottom > top);
+      if (element)
+        anchorRef.current = {
+          element,
+          top: element.getBoundingClientRect().top,
+        };
+    }
+    void onLoadEarlier();
+  }
   return (
     <MessageScroller
       className={cn("row-start-2 bg-background", className)}
       part="message-list"
     >
       <MessageScrollerViewport aria-label="Chat messages">
+        {hasEarlierMessages && (
+          <Button
+            className="mx-auto my-2 shrink-0"
+            variant="outline"
+            disabled={loadingEarlierMessages}
+            onClick={(event) => loadEarlier(event.currentTarget)}
+          >
+            {loadingEarlierMessages
+              ? "Loading earlier messages…"
+              : "Load earlier messages"}
+          </Button>
+        )}
         <MessageScrollerContent
           ref={scrollRef}
           aria-busy={loading}
@@ -79,7 +129,7 @@ function TranscriptContent({
 
               return (
                 <MessageScrollerItem
-                  key={message.clientMessageId}
+                  key={messageKey(message)}
                   messageId={message.id}
                 >
                   <Message
@@ -139,3 +189,4 @@ function TranscriptStatus({ children }: { children: string }) {
     </Marker>
   );
 }
+import { useLayoutEffect, useRef } from "react";

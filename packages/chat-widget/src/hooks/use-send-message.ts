@@ -1,4 +1,3 @@
-import type { Message } from "@pulse/sdk";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { ChatWidgetClient, OptimisticMessage } from "../types";
@@ -31,3 +30,4 @@ export function useSendMessage(roomId: string) {
     },
   });
 }
+import type { Message } from "@pulse/sdk";

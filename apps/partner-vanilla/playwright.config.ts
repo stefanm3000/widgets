@@ -15,32 +15,32 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"], channel: "chrome" },
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
   webServer: [
     {
       command:
-        "pnpm --filter @pulse/api build && exec node ../api/dist/server.js",
-      reuseExistingServer: true,
+        "pnpm --filter @pulse/api build && exec node ../api/tests/browser-server.mjs",
+      reuseExistingServer: !process.env.CI,
       timeout: 30_000,
       url: "http://127.0.0.1:4000/health",
     },
     {
       command: "pnpm exec vite --host 127.0.0.1",
-      reuseExistingServer: true,
+      reuseExistingServer: !process.env.CI,
       timeout: 30_000,
       url: "http://127.0.0.1:5174",
     },
     {
       command: "pnpm --dir ../partner-vue exec vite --host 127.0.0.1",
-      reuseExistingServer: true,
+      reuseExistingServer: !process.env.CI,
       timeout: 30_000,
       url: "http://127.0.0.1:5175",
     },
     {
       command: "pnpm --dir ../playground exec vite --host 127.0.0.1",
-      reuseExistingServer: true,
+      reuseExistingServer: !process.env.CI,
       timeout: 30_000,
       url: "http://127.0.0.1:5173",
     },

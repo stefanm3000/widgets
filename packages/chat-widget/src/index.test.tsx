@@ -118,6 +118,113 @@ beforeEach(() => {
 });
 
 describe("ChatWidget", () => {
+  it("keeps different senders' messages when their client message IDs match", async () => {
+    const fixture = createClient();
+    const other = { ...sentMessage, clientMessageId: message.clientMessageId };
+    vi.mocked(fixture.client.getMessages).mockResolvedValueOnce({
+      items: [message, other],
+      nextCursor: null,
+    });
+    render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    await screen.findAllByText(other.body);
+    expect(getMessageBody(message.body)).toBeDefined();
+    expect(getMessageBody(other.body)).toBeDefined();
+    act(() =>
+      fixture.emitEvent({
+        eventId: "3",
+        roomId: room.id,
+        type: "message.created",
+        payload: other,
+      }),
+    );
+    expect(
+      document.querySelectorAll('[data-slot="bubble-content"]'),
+    ).toHaveLength(2);
+  });
+
+  it("loads earlier pages and keeps messages received during pagination", async () => {
+    const fixture = createClient();
+    const earlier = {
+      ...message,
+      id: "earlier",
+      clientMessageId: "earlier-client",
+      body: "An earlier message",
+      createdAt: "2025-12-31T23:59:59.000Z",
+    };
+    let finish:
+      ((value: { items: Message[]; nextCursor: null }) => void) | undefined;
+    vi.mocked(fixture.client.getMessages)
+      .mockResolvedValueOnce({ items: [message], nextCursor: "1" })
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve;
+          }),
+      );
+    render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    await screen.findByText(message.body);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Load earlier messages" }),
+    );
+    await waitFor(() =>
+      expect(fixture.client.getMessages).toHaveBeenCalledWith(room.id, {
+        limit: 50,
+        cursor: "1",
+      }),
+    );
+    act(() =>
+      fixture.emitEvent({
+        eventId: "3",
+        roomId: room.id,
+        type: "message.created",
+        payload: sentMessage,
+      }),
+    );
+    await act(async () =>
+      finish?.({ items: [earlier, message], nextCursor: null }),
+    );
+    await screen.findAllByText(earlier.body);
+    expect(getMessageBody(sentMessage.body)).toBeDefined();
+    expect(
+      [...document.querySelectorAll('[data-slot="bubble-content"]')].map(
+        (element) => element.textContent,
+      ),
+    ).toEqual([earlier.body, message.body, sentMessage.body]);
+    expect(
+      screen.queryByRole("button", { name: "Load earlier messages" }),
+    ).toBeNull();
+  });
+
+  it("shows a channel selection only after its URL is committed", async () => {
+    const fixture = createClient();
+    const channel = { ...room, id: "design", name: "Design" };
+    vi.mocked(fixture.client.getChannels).mockResolvedValue([channel]);
+    vi.mocked(fixture.client.getRoom).mockImplementation(async (id) =>
+      id === channel.id ? channel : room,
+    );
+    render(
+      createElement(ChatWidget, { client: fixture.client, roomId: room.id }),
+    );
+    await screen.findByRole("button", { name: channel.name });
+    fireEvent.click(screen.getByRole("button", { name: channel.name }));
+    await screen.findByRole("heading", { name: channel.name });
+    expect(
+      new URLSearchParams(window.location.search).get(
+        "pulse-channel:demo-room",
+      ),
+    ).toBe(channel.id);
+    fireEvent.click(screen.getByRole("button", { name: room.name }));
+    await screen.findByRole("heading", { name: room.name });
+    expect(
+      new URLSearchParams(window.location.search).has(
+        "pulse-channel:demo-room",
+      ),
+    ).toBe(false);
+  });
   it("creates and switches channels, collapses the sidebar, and isolates late history", async () => {
     const fixture = createClient();
     const channel = { ...room, id: "design", name: "Design" };

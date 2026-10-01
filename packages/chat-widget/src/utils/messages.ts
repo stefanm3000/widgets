@@ -1,14 +1,17 @@
 import type { Message } from "@pulse/sdk";
 
+export function messageKey(message: Message): string {
+  return `${message.roomId}:${message.sender.id}:${message.clientMessageId}`;
+}
+
 export function mergeMessages<T extends Message>(
   current: T[],
   incoming: T[],
 ): T[] {
   const messages = new Map(
-    current.map((message) => [message.clientMessageId, message]),
+    current.map((message) => [messageKey(message), message]),
   );
-  for (const message of incoming)
-    messages.set(message.clientMessageId, message);
+  for (const message of incoming) messages.set(messageKey(message), message);
 
   return [...messages.values()].sort(
     (left, right) =>

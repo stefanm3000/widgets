@@ -28,6 +28,9 @@ export function ChatConversation({
         className={classNames.messageList}
         currentUserId={conversation.currentUserId}
         loading={conversation.loading}
+        hasEarlierMessages={conversation.hasEarlierMessages}
+        loadingEarlierMessages={conversation.loadingEarlierMessages}
+        onLoadEarlier={conversation.loadEarlierMessages}
         messageClassName={classNames.message}
         messages={conversation.messages}
         outlineClassName={classNames.messageOutline}

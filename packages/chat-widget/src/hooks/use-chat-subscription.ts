@@ -14,6 +14,7 @@ export function useChatSubscription(client: ChatWidgetClient, roomId: string) {
   const queryClient = useQueryClient();
   const queryKey = useWidgetQueryKey("live", roomId);
   const messagesKey = useWidgetQueryKey("messages", roomId);
+  const eventsKey = useWidgetQueryKey("message-events", roomId);
   const live = useQuery<LiveState>({
     queryKey,
     queryFn: skipToken,
@@ -34,7 +35,10 @@ export function useChatSubscription(client: ChatWidgetClient, roomId: string) {
     }
     const stops = [
       client.onConnectionState((connectionState) =>
-        update({ connectionState }),
+        update({
+          connectionState,
+          ...(connectionState === "connected" ? { error: null } : {}),
+        }),
       ),
       client.onError((error) => update({ error: error.message })),
       client.onRefetchRequired((id) => {
@@ -44,7 +48,7 @@ export function useChatSubscription(client: ChatWidgetClient, roomId: string) {
       }),
       client.subscribe(roomId, (event) => {
         if (active) {
-          queryClient.setQueryData<Message[]>(messagesKey, (messages = []) =>
+          queryClient.setQueryData<Message[]>(eventsKey, (messages = []) =>
             mergeMessages(messages, [event.payload]),
           );
         }

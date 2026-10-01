@@ -1,17 +1,41 @@
 import type { Room } from "@pulse/sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseAsString, useQueryState } from "nuqs";
+import { useSyncExternalStore } from "react";
 
 import type { ChatWidgetClient } from "../types";
 import { useWidgetQueryKey } from "./use-widget-query-client";
 
+const channelUrlEvent = "pulse:channel-url";
+function subscribeToUrl(listener: () => void) {
+  window.addEventListener("popstate", listener);
+  window.addEventListener(channelUrlEvent, listener);
+  return () => {
+    window.removeEventListener("popstate", listener);
+    window.removeEventListener(channelUrlEvent, listener);
+  };
+}
+const readSearch = () => window.location.search;
+const readServerSearch = () => "";
+
 export function useChannels(client: ChatWidgetClient, roomId: string) {
   const queryClient = useQueryClient();
   const queryKey = useWidgetQueryKey("channels", roomId);
-  const [selectedRoomId, setSelectedRoomId] = useQueryState(
+  const [, setSelectedRoomId] = useQueryState(
     `pulse-channel:${roomId}`,
     parseAsString.withDefault(roomId).withOptions({ history: "push" }),
   );
+  const search = useSyncExternalStore(
+    subscribeToUrl,
+    readSearch,
+    readServerSearch,
+  );
+  const selectedRoomId =
+    new URLSearchParams(search).get(`pulse-channel:${roomId}`) ?? roomId;
+  async function commitSelection(id: string) {
+    await setSelectedRoomId(id);
+    window.dispatchEvent(new Event(channelUrlEvent));
+  }
   const channels = useQuery({
     queryKey,
     queryFn: async ({ signal }) => {
@@ -33,7 +57,7 @@ export function useChannels(client: ChatWidgetClient, roomId: string) {
         ...rooms.filter((room) => room.id !== channel.id),
         channel,
       ]);
-      await setSelectedRoomId(channel.id);
+      await commitSelection(channel.id);
     },
   });
 
@@ -45,7 +69,7 @@ export function useChannels(client: ChatWidgetClient, roomId: string) {
     createChannel,
     selectChannel: (id: string) => {
       if (channels.data?.some((room) => room.id === id)) {
-        void setSelectedRoomId(id);
+        void commitSelection(id);
       }
     },
   };

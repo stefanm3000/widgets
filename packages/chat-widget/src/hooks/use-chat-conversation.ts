@@ -1,16 +1,21 @@
-import type { Message } from "@pulse/sdk";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Message, MessagePage } from "@pulse/sdk";
+import { useInfiniteQuery, skipToken, useQuery } from "@tanstack/react-query";
 import { startTransition, useOptimistic } from "react";
 
 import type { ChatWidgetClient, OptimisticMessage } from "../types";
-import { mergeMessages } from "../utils/messages";
+import { mergeMessages, messageKey } from "../utils/messages";
 import { useWidgetQueryKey } from "./use-widget-query-client";
 import { useChatSubscription } from "./use-chat-subscription";
 import { useSendMessage, type PendingSend } from "./use-send-message";
 
 export function useChatConversation(client: ChatWidgetClient, roomId: string) {
-  const queryClient = useQueryClient();
   const queryKey = useWidgetQueryKey("messages", roomId);
+  const eventsKey = useWidgetQueryKey("message-events", roomId);
+  const events = useQuery<Message[]>({
+    queryKey: eventsKey,
+    queryFn: skipToken,
+    initialData: [],
+  });
   const live = useChatSubscription(client, roomId);
   const roomKey = useWidgetQueryKey("room", roomId);
   const userKey = useWidgetQueryKey("current-user");
@@ -23,31 +28,44 @@ export function useChatConversation(client: ChatWidgetClient, roomId: string) {
     queryFn: () => client.getCurrentUser(),
     staleTime: Infinity,
   });
-  const history = useQuery({
+  const history = useInfiniteQuery({
     queryKey,
-    queryFn: async ({ signal }) => {
-      const history = await client.getMessages(roomId, { limit: 50 });
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page: MessagePage) => page.nextCursor ?? undefined,
+    queryFn: async ({ signal, pageParam }): Promise<MessagePage> => {
+      const history = await client.getMessages(roomId, {
+        limit: 50,
+        cursor: pageParam,
+      });
       signal.throwIfAborted();
-      return mergeMessages(
-        queryClient.getQueryData<Message[]>(queryKey) ?? [],
-        history.items,
-      );
+      return history;
     },
   });
   const [messages, addPendingMessage] = useOptimistic<
     OptimisticMessage[],
     PendingSend
-  >(history.data ?? [], (messages, pending) => {
-    const message = pending.message;
-    if (
-      pending.queryKey[0] !== queryKey[0] ||
-      message.roomId !== roomId ||
-      messages.some((item) => item.clientMessageId === message.clientMessageId)
-    ) {
-      return messages;
-    }
-    return mergeMessages(messages, [message]);
-  });
+  >(
+    mergeMessages<Message>(
+      events.data ?? [],
+      history.data?.pages.flatMap((page) => page.items) ?? [],
+    ),
+    (messages, pending) => {
+      const message = pending.message;
+      if (
+        pending.queryKey[0] !== queryKey[0] ||
+        message.roomId !== roomId ||
+        messages.some(
+          (item) =>
+            messageKey(item) === messageKey(message) ||
+            (message.sender.id.startsWith("optimistic:") &&
+              item.clientMessageId === message.clientMessageId),
+        )
+      ) {
+        return messages;
+      }
+      return mergeMessages(messages, [message]);
+    },
+  );
   const sendMessage = useSendMessage(roomId);
 
   function send(body: string): Promise<boolean> {
@@ -66,7 +84,7 @@ export function useChatConversation(client: ChatWidgetClient, roomId: string) {
         source: "system",
       },
     };
-    const pending = { message, client, queryKey, userKey };
+    const pending = { message, client, queryKey: eventsKey, userKey };
     return new Promise((resolve) => {
       startTransition(async () => {
         addPendingMessage(pending);
@@ -94,6 +112,11 @@ export function useChatConversation(client: ChatWidgetClient, roomId: string) {
       currentUser.error?.message ??
       live.error,
     loading: history.isPending,
+    hasEarlierMessages: history.hasNextPage,
+    loadingEarlierMessages: history.isFetchingNextPage,
+    loadEarlierMessages: async () => {
+      await history.fetchNextPage();
+    },
     messages,
     roomName: room.data?.name,
     send,
