@@ -25,10 +25,12 @@ export function ChatConversation({
         statusClassName={classNames.connectionStatus}
       />
       <ChatTranscript
+        key={roomId}
         className={classNames.messageList}
         currentUserId={conversation.currentUserId}
         loading={conversation.loading}
         hasEarlierMessages={conversation.hasEarlierMessages}
+        autoLoadEarlierMessages={conversation.autoLoadEarlierMessages}
         loadingEarlierMessages={conversation.loadingEarlierMessages}
         onLoadEarlier={conversation.loadEarlierMessages}
         messageClassName={classNames.message}

@@ -1,4 +1,5 @@
 import { useMessageScroll } from "../hooks/use-message-scroll";
+import { useInfiniteScroll } from "../hooks/use-infinite-scroll";
 
 import type { OptimisticMessage } from "../types";
 import { cn } from "../utils/cn";
@@ -27,6 +28,7 @@ interface ChatTranscriptProps {
   currentUserId: string | null;
   loading: boolean;
   hasEarlierMessages: boolean;
+  autoLoadEarlierMessages: boolean;
   loadingEarlierMessages: boolean;
   onLoadEarlier: () => Promise<void>;
   messageClassName?: string;
@@ -54,6 +56,7 @@ function TranscriptContent({
   currentUserId,
   loading,
   hasEarlierMessages,
+  autoLoadEarlierMessages,
   loadingEarlierMessages,
   onLoadEarlier,
   messageClassName,
@@ -61,14 +64,19 @@ function TranscriptContent({
   outlineClassName,
 }: ChatTranscriptProps) {
   const scrollRef = useMessageScroll(messages.at(-1)?.id);
+  const { rootRef, sentinelRef } = useInfiniteScroll({
+    enabled: autoLoadEarlierMessages,
+    onLoadMore: onLoadEarlier,
+  });
   return (
     <MessageScroller
       className={cn("row-start-2 bg-background", className)}
       part="message-list"
     >
-      <MessageScrollerViewport aria-label="Chat messages">
+      <MessageScrollerViewport ref={rootRef} aria-label="Chat messages">
         {hasEarlierMessages && (
           <Button
+            ref={sentinelRef}
             className="mx-auto my-2 shrink-0"
             variant="outline"
             disabled={loadingEarlierMessages}

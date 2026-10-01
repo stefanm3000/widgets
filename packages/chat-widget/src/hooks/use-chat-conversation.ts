@@ -113,9 +113,14 @@ export function useChatConversation(client: ChatWidgetClient, roomId: string) {
       live.error,
     loading: history.isPending,
     hasEarlierMessages: history.hasNextPage,
+    autoLoadEarlierMessages:
+      history.hasNextPage &&
+      !history.isFetching &&
+      !history.isFetchNextPageError,
     loadingEarlierMessages: history.isFetchingNextPage,
     loadEarlierMessages: async () => {
-      await history.fetchNextPage();
+      if (!history.hasNextPage || history.isFetching) return;
+      await history.fetchNextPage({ cancelRefetch: false });
     },
     messages,
     roomName: room.data?.name,

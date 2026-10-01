@@ -90,8 +90,10 @@ both `DATABASE_URL` and `PULSE_TOKEN_SECRET`.
 
 ### Channels
 
-Use **Load earlier messages** to read history beyond the initial 50 messages.
-Earlier pages preserve the first visible message and merge with live updates.
+Scroll to the top of the conversation to load history beyond the initial 50
+messages automatically. Earlier pages preserve the first visible message and
+merge with live updates. **Load earlier messages** remains available for manual
+loading and retries after a failed request.
 
 The widget includes an expanded left sidebar with a manual collapse toggle and
 a popover for creating channels. Channels are shared by everyone who has access to the configured
