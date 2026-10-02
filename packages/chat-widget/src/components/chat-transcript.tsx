@@ -38,6 +38,7 @@ interface ChatTranscriptProps {
 
 const sourceLabels = {
   playground: "Playground",
+  svelte: "Svelte",
   system: "Pulse",
   vanilla: "Vanilla",
   vue: "Vue",

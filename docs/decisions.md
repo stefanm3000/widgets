@@ -1,5 +1,40 @@
 # Decisions
 
+## Add SvelteKit 3 as a static partner
+
+Use the stable SvelteKit 3.0.0 release and Svelte 5.57.1 for the Svelte partner.
+Keep the framework configuration in `vite.config.ts` and extend `$app/tsconfig`,
+following the SvelteKit 3 conventions. Use TypeScript 6 for this app because the
+framework, Svelte checker, and ESLint parser currently declare compatible ranges
+for it, while the rest of the workspace retains its existing TypeScript versions.
+Add the Svelte Prettier plugin at the root so the normal format checks include
+components; ignore generated `.svelte-kit` output in Git, formatting, and lint.
+
+The static adapter prerenders the page without API credentials or network reads.
+Use a typed Svelte attachment in a partner-local helper to import the
+DOM-dependent embed, then create and assign the SDK client. The component
+declares the attachment on `<pulse-chat>` so initialization and cleanup belong
+to that element without a bound reference or `onMount`. A synchronous cleanup
+guards late imports and disposes the owned client.
+This preserves one shared chat UI and keeps browser state out of prerendering.
+The tradeoff is the embed's bundled React runtime in the Svelte browser output.
+
+Use port 5176 with the same HTTP/WebSocket development proxy as the other demos.
+Static deployments must supply a public API URL at build time and allow their
+origin on the API; the development proxy does not become a production backend.
+Add `svelte` to the protocol's demo sources and render an orange border with a
+Svelte label. Existing API source validation and identity derivation remain the
+authority; no database migration is needed for the varchar source columns.
+Deploy the updated API and browser packages together so all clients recognize
+the new source. Cross-partner Playwright checks cover both message directions,
+channel reloads, identity continuity, and recovery/history behavior.
+
+Keep the embed's existing framework-independent channel URL handling on this
+single-page partner. SvelteKit's development router warns about the bundled
+embed calling native history APIs. Verify back/forward navigation and reloads
+in Playwright; a future multi-route SvelteKit integration should bridge those
+URL writes through SvelteKit's navigation API.
+
 ## Expose Pulse actions through a local MCP adapter
 
 Add a separate `apps/mcp` Node.js application with the official MCP TypeScript

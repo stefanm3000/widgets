@@ -9,6 +9,8 @@ This describes the intended Pulse project and the boundaries implemented so far.
 - `apps/mcp`: Node.js stdio MCP adapter using the public SDK to call authenticated
   Pulse HTTP endpoints; no database access or token signing.
 - `apps/playground`: React Router, Tailwind CSS, and selected shadcn/ui components.
+- `apps/partner-svelte`: SvelteKit 3 and Svelte 5, with static prerendering and
+  browser-only SDK/embed initialization.
 - `packages/protocol`: runtime-validated, versioned wire schemas and public DTOs.
 - `packages/sdk`: framework-independent REST and realtime client.
 - `packages/chat-widget`: accessible React UI using the public SDK.

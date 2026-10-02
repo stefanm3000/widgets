@@ -4,6 +4,7 @@ let browserClient = 0;
 for (const [partner, url] of [
   ["Vanilla", "http://localhost:5174"],
   ["Vue", "http://localhost:5175"],
+  ["Svelte", "http://localhost:5176"],
   ["React", "http://localhost:5173"],
 ] as const) {
   const clientIp = `192.0.2.${++browserClient}`;

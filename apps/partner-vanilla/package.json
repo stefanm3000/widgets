@@ -20,6 +20,7 @@
     "@playwright/test": "1.63.0",
     "@pulse/eslint-config": "workspace:*",
     "@pulse/partner-vue": "workspace:*",
+    "@pulse/partner-svelte": "workspace:*",
     "@pulse/playground": "workspace:*",
     "@pulse/protocol": "workspace:*",
     "@pulse/typescript-config": "workspace:*",

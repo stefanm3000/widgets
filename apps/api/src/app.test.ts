@@ -9,6 +9,7 @@ import {
   sendMessageResponseSchema,
   serverFrameSchema,
   type ServerFrame,
+  type DemoClientSource,
 } from "@pulse/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
@@ -43,7 +44,7 @@ describe("HTTP chat API", () => {
   });
 
   async function issueToken(
-    source: "playground" | "vue" | "vanilla" = "playground",
+    source: DemoClientSource = "playground",
     sessionId = randomUUID(),
   ) {
     const response = await app.inject({
@@ -221,25 +222,28 @@ describe("HTTP chat API", () => {
     expect(socket.readyState).toBe(WebSocket.CLOSED);
   });
 
-  it("assigns a stable anonymous identity for a client session", async () => {
-    const sessionId = randomUUID();
-    const firstResponse = await app.inject({
-      method: "POST",
-      url: "/auth/demo-token",
-      payload: { sessionId, source: "vue" },
-    });
-    const secondResponse = await app.inject({
-      method: "POST",
-      url: "/auth/demo-token",
-      payload: { sessionId, source: "vue" },
-    });
-    const first = demoTokenResponseSchema.parse(firstResponse.json());
-    const second = demoTokenResponseSchema.parse(secondResponse.json());
+  it.each(["vue", "svelte"] as const)(
+    "assigns a stable anonymous identity for a %s session",
+    async (source) => {
+      const sessionId = randomUUID();
+      const firstResponse = await app.inject({
+        method: "POST",
+        url: "/auth/demo-token",
+        payload: { sessionId, source },
+      });
+      const secondResponse = await app.inject({
+        method: "POST",
+        url: "/auth/demo-token",
+        payload: { sessionId, source },
+      });
+      const first = demoTokenResponseSchema.parse(firstResponse.json());
+      const second = demoTokenResponseSchema.parse(secondResponse.json());
 
-    expect(first.user).toEqual(second.user);
-    expect(first.user.source).toBe("vue");
-    expect(first.user.displayName).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);
-  });
+      expect(first.user).toEqual(second.user);
+      expect(first.user.source).toBe(source);
+      expect(first.user.displayName).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);
+    },
+  );
 
   it("requires a valid token for room data", async () => {
     const response = await app.inject({

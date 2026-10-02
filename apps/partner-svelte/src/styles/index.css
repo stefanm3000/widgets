@@ -1,0 +1,66 @@
+:root {
+  color: #38261b;
+  background: #f3e6da;
+  font-family: "Trebuchet MS", ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  display: grid;
+  height: 100dvh;
+  margin: 0;
+  min-width: 320px;
+  overflow: hidden;
+  place-items: center;
+  background:
+    radial-gradient(circle at 15% 10%, #ffe0cb, transparent 40%),
+    linear-gradient(145deg, #f9f0e7, #ead6c5);
+}
+
+.chat-stage,
+pulse-chat {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.chat-stage {
+  width: min(780px, calc(100vw - 56px));
+  height: min(760px, 86dvh);
+}
+
+pulse-chat::part(root) {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  max-width: none;
+  border: 1px solid #e7d5c5;
+  box-shadow: 0 24px 70px rgb(85 45 20 / 14%);
+}
+
+pulse-chat::part(header) {
+  background: #f7eee5;
+  padding: 20px;
+}
+
+pulse-chat::part(composer) {
+  background: #f7eee5;
+  padding: 16px;
+}
+
+pulse-chat::part(input),
+pulse-chat::part(send-button) {
+  height: 46px;
+}
+
+@media (max-width: 640px) {
+  .chat-stage {
+    width: calc(100vw - 28px);
+    height: calc(100dvh - 28px);
+  }
+}
