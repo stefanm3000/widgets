@@ -79,12 +79,9 @@ onUnmounted(() => client.dispose())
   "svelte/App.svelte": {
     language: "svelte",
     code: `<script>
-  import { onMount } from "svelte"
   import { createPulseClient } from "@pulse/sdk"
 
-  let chat = $state()
-
-  onMount(() => {
+  function attachChat(chat) {
     let disposed = false
     let client
     import("@pulse/embed").then(() => {
@@ -97,12 +94,13 @@ onUnmounted(() => client.dispose())
     })
     return () => {
       disposed = true
+      if (client) chat.client = null
       client?.dispose()
     }
-  })
+  }
 </script>
 
-<pulse-chat bind:this={chat} room-id="support-room" />`,
+<pulse-chat {@attach attachChat} room-id="support-room" />`,
   },
   "vanilla/main.js": {
     language: "javascript",

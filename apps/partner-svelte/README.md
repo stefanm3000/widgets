@@ -15,9 +15,12 @@ Open `http://localhost:5176`. Development uses `/api/` with HTTP and WebSocket
 proxying to port 4000. `.env.example` documents an explicit public API URL and
 an optional development proxy target.
 
-The page prerenders without contacting the API. The embed is imported in
-`onMount` because it needs browser globals. Client creation follows that import,
-and unmount disposes the SDK client, including when the import finishes late.
+The page prerenders without contacting the API. A typed Svelte attachment in
+`src/lib/helpers/chat-attachment.ts` owns the embed's browser-only import,
+client creation, theme assignment, and cleanup. The component declares
+`<pulse-chat {@attach attachChat}>` without a bound DOM reference. Removing the
+element disposes its SDK client; an import that finishes after removal creates
+no client.
 Tokens refresh through the demo endpoint using a session UUID saved under
 `pulse-svelte-session-id`; this is the repository's anonymous demo flow.
 

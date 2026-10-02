@@ -11,8 +11,11 @@ Add the Svelte Prettier plugin at the root so the normal format checks include
 components; ignore generated `.svelte-kit` output in Git, formatting, and lint.
 
 The static adapter prerenders the page without API credentials or network reads.
-Import the DOM-dependent embed inside `onMount`, then create and assign the SDK
-client. A synchronous cleanup guards late imports and disposes the owned client.
+Use a typed Svelte attachment in a partner-local helper to import the
+DOM-dependent embed, then create and assign the SDK client. The component
+declares the attachment on `<pulse-chat>` so initialization and cleanup belong
+to that element without a bound reference or `onMount`. A synchronous cleanup
+guards late imports and disposes the owned client.
 This preserves one shared chat UI and keeps browser state out of prerendering.
 The tradeoff is the embed's bundled React runtime in the Svelte browser output.
 

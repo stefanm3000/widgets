@@ -1,12 +1,10 @@
 <script lang="ts">
-  import type { ChatWidgetTheme, PulseChatElement } from "@pulse/embed";
-  import type { PulseClient } from "@pulse/sdk";
-  import { onMount } from "svelte";
+  import type { ChatWidgetTheme } from "@pulse/embed";
 
+  import { createChatAttachment } from "../helpers/chat-attachment";
   import { getApiUrl } from "../helpers/config";
   import { createPartnerClient } from "../helpers/demo-client";
 
-  let chat: PulseChatElement | undefined = $state();
   let error: string | null = $state(null);
   const theme = {
     colors: {
@@ -22,31 +20,16 @@
     radius: "16px",
   } as const satisfies ChatWidgetTheme;
 
-  onMount(() => {
-    let disposed = false;
-    let client: PulseClient | undefined;
-
-    // The embed extends HTMLElement, so load it only after browser hydration.
-    void import("@pulse/embed")
-      .then(() => {
-        if (disposed || !chat) return;
-        client = createPartnerClient(getApiUrl());
-        chat.theme = theme;
-        chat.client = client;
-      })
-      .catch(() => {
-        if (!disposed) error = "Could not load the chat. Reload to try again.";
-      });
-
-    return () => {
-      disposed = true;
-      if (chat) chat.client = null;
-      client?.dispose();
-    };
+  const attachChat = createChatAttachment({
+    createClient: () => createPartnerClient(getApiUrl()),
+    theme,
+    onError: () => {
+      error = "Could not load the chat. Reload to try again.";
+    },
   });
 </script>
 
 {#if error}
   <p role="alert">{error}</p>
 {/if}
-<pulse-chat bind:this={chat} room-id="demo-room"></pulse-chat>
+<pulse-chat {@attach attachChat} room-id="demo-room"></pulse-chat>
