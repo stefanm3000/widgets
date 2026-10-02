@@ -25,6 +25,7 @@
   --color-ring: var(--pulse-primary);
   --color-connected: var(--pulse-connected);
   --color-partner-vue: var(--pulse-partner-vue);
+  --color-partner-svelte: var(--pulse-partner-svelte);
   --color-partner-vanilla: var(--pulse-partner-vanilla);
   --color-partner-playground: var(--pulse-partner-playground);
   --animate-popover-in: pulse-popover-in 160ms ease-out;
@@ -156,6 +157,7 @@
     --pulse-text: oklch(0.25 0.038 260);
     --pulse-connected: oklch(0.55 0.15 155);
     --pulse-partner-vue: rgb(22 132 71);
+    --pulse-partner-svelte: rgb(255 62 0);
     --pulse-partner-vanilla: rgb(17 17 17);
     --pulse-partner-playground: rgb(194 65 12);
     --pulse-radius: 18px;

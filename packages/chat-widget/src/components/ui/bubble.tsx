@@ -24,6 +24,8 @@ const bubbleVariants = cva(
         playground:
           "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-partner-playground",
         system: "*:data-[slot=bubble-content]:border-border",
+        svelte:
+          "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-partner-svelte",
         vanilla:
           "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-partner-vanilla",
         vue: "*:data-[slot=bubble-content]:border-2 *:data-[slot=bubble-content]:border-partner-vue",

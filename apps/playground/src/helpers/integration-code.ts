@@ -25,8 +25,8 @@ Pulse is a framework-agnostic live chat
 toolkit for modern web apps.
 
 One backend and versioned protocol power
-the same conversation across React, Vue 
-and vanilla JavaScript.
+the same conversation across React, Vue,
+Svelte and vanilla JavaScript.
 
 ## Included
 
@@ -79,18 +79,27 @@ onUnmounted(() => client.dispose())
   "svelte/App.svelte": {
     language: "svelte",
     code: `<script>
-  import { onDestroy } from "svelte"
-  import "@pulse/embed"
+  import { onMount } from "svelte"
   import { createPulseClient } from "@pulse/sdk"
 
-  const client = createPulseClient({
-    baseUrl: "https://chat.example.com/",
-    getToken: () => fetchChatCredentials(),
-  })
-  let chat
+  let chat = $state()
 
-  $: if (chat) chat.client = client
-  onDestroy(() => client.dispose())
+  onMount(() => {
+    let disposed = false
+    let client
+    import("@pulse/embed").then(() => {
+      if (disposed) return
+      client = createPulseClient({
+        baseUrl: "https://chat.example.com/",
+        getToken: () => fetchChatCredentials(),
+      })
+      chat.client = client
+    })
+    return () => {
+      disposed = true
+      client?.dispose()
+    }
+  })
 </script>
 
 <pulse-chat bind:this={chat} room-id="support-room" />`,

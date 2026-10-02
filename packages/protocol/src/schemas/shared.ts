@@ -11,6 +11,7 @@ export const roomIdSchema = z
 export const messageSourceSchema = z.enum([
   "playground",
   "vue",
+  "svelte",
   "vanilla",
   "system",
 ]);

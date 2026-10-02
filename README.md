@@ -7,7 +7,7 @@ This repository demonstrates one backend and protocol across unrelated partner w
 
 `@pulse/embed` wraps the React chat widget in a Shadow DOM web component and
 bundles its runtime and styles. Vue and vanilla JavaScript partners import this
-bundle; React apps can import `@pulse/chat-widget` directly.
+bundle, as does the SvelteKit partner; React apps can import `@pulse/chat-widget` directly.
 
 The SDK and API share versioned schemas from `@pulse/protocol`. A message sent
 from one partner site is persisted before being broadcast to other browsers
@@ -79,6 +79,7 @@ both `DATABASE_URL` and `PULSE_TOKEN_SECRET`.
   see [MCP setup](docs/mcp.md).
 - `apps/partner-vanilla`: independently runnable plain TypeScript integration using the embed.
 - `apps/partner-vue`: independently runnable Vue integration using the same custom element.
+- `apps/partner-svelte`: SvelteKit 3 and Svelte 5 integration, prerendered for static hosting.
 - `packages/eslint-config`: shared base and React lint configurations.
 - `packages/chat-widget`: accessible, themeable React chat UI.
 - `packages/embed`: framework-neutral `<pulse-chat>` custom element and mount API.
@@ -87,6 +88,26 @@ both `DATABASE_URL` and `PULSE_TOKEN_SECRET`.
 - `packages/typescript-config`: shared strict TypeScript configurations.
 - `docs/architecture.md`: planned boundaries and delivery phases.
 - `docs/decisions.md`: implementation decisions and tradeoffs.
+
+### Run the Svelte partner
+
+With the API running, build the browser packages and start SvelteKit:
+
+```sh
+pnpm --filter @pulse/partner-svelte... build
+pnpm --filter @pulse/partner-svelte dev
+```
+
+Open `http://localhost:5176`. The development server proxies `/api/` HTTP and
+WebSocket traffic to `http://127.0.0.1:4000`. The Svelte partner joins the same
+demo room as Vue, Vanilla, and the playground, with its own stable anonymous
+session and orange message borders.
+
+The static adapter writes `apps/partner-svelte/build`. For static hosting, set
+`VITE_PULSE_API_URL` to the actual Pulse API URL, including its trailing slash,
+before building, and add the partner origin to the API's `PULSE_ALLOWED_ORIGINS`.
+The development proxy is not part of the static output. See
+[the app README](apps/partner-svelte/README.md) for isolated browser checks.
 
 ### Channels
 
