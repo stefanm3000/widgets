@@ -23,13 +23,47 @@ subscriptions. The framework-independent browser SDK adds typed REST calls,
 deduplication, cursor resume, and reconnect handling. The accessible React widget
 adds connection states, history, live messages, sending, and scoped theme tokens.
 The browser embed exposes the same UI as a Shadow DOM custom element for Vue,
-Svelte, and plain JavaScript. More partner demos are still in progress.
+Svelte, and plain JavaScript. A local stdio MCP adapter lets assistants read
+and send messages through the same authenticated API.
 
-## Partner app deployments
+## Deployments
 
-- [Playground](https://widgets-playground-two.vercel.app)
+- [React playground](https://widgets-playground-two.vercel.app)
 - [Vue partner app](https://widgets-partner-vue.vercel.app)
 - [Vanilla JavaScript partner app](https://widgets-partner-vanilla.vercel.app)
+- [API health](https://widgets-omega-mauve.vercel.app/health)
+
+The API runs on Vercel with PostgreSQL hosted on Neon. The Svelte partner is
+also implemented and can be [run locally](#run-the-svelte-partner).
+
+### Frontend environment
+
+Set this variable in each deployed frontend project:
+
+```dotenv
+VITE_PULSE_API_URL=https://widgets-omega-mauve.vercel.app/
+```
+
+Use the full HTTPS URL, including the trailing slash. A bare hostname is
+treated as a path on the frontend site. Redeploy the frontend after changing
+this variable because Vite includes it at build time.
+
+### API environment
+
+| Variable                | Value                                                 |
+| ----------------------- | ----------------------------------------------------- |
+| `DATABASE_URL`          | Neon's pooled PostgreSQL connection string            |
+| `PULSE_TOKEN_SECRET`    | A random secret of at least 32 characters             |
+| `PULSE_ALLOWED_ORIGINS` | Comma-separated frontend origins without trailing `/` |
+
+Keep these variables in the API project. Use the direct
+`DATABASE_URL_UNPOOLED` connection for migrations. Local Neon env files do not
+update Vercel's project settings. See [Neon and Vercel setup](docs/neon.md) for
+build settings, database initialization, and verification.
+
+Messages and replay history persist in PostgreSQL. Live broadcasts currently
+stay within one API instance; deployments with multiple API instances require
+shared event distribution.
 
 ## Development
 
@@ -57,9 +91,13 @@ Initialized with `pnpm dlx create-turbo@latest`. The default Next.js apps and ge
 ```sh
 docker compose up -d postgres
 cp apps/api/.env.example apps/api/.env
+pnpm --filter @pulse/protocol build
 pnpm --filter @pulse/api db:setup
 pnpm --filter @pulse/api dev
 ```
+
+If root Neon env files are present, also set `DATABASE_URL_UNPOOLED` in
+`apps/api/.env` to the local PostgreSQL URL so migrations use the local database.
 
 The local API listens on `http://127.0.0.1:4000`. Start with
 `POST /auth/demo-token`, passing a stable anonymous session such as
@@ -93,7 +131,8 @@ See [Neon setup](docs/neon.md) for Vercel settings and verification.
 
 ## Workspace
 
-- `apps/`: reserved for the API, playground, and partner demos.
+- `apps/api`: Fastify REST and WebSocket API with PostgreSQL persistence.
+- `apps/playground`: React playground consuming the chat widget directly.
 - `apps/mcp`: local stdio MCP tools for authenticated Pulse reads and writes;
   see [MCP setup](docs/mcp.md).
 - `apps/partner-vanilla`: independently runnable plain TypeScript integration using the embed.
@@ -155,8 +194,10 @@ GitHub Actions runs `pnpm check` with Node.js 24, Playwright Chromium, and
 PostgreSQL 17. Browser tests always run fresh and include cross-partner delivery,
 channel navigation, reconnect replay, and history pagination.
 
-To include real PostgreSQL transaction tests locally, set `TEST_DATABASE_URL` to
-a test server connection string and run `pnpm --filter @pulse/api test`.
+To run real PostgreSQL transaction tests locally, set `TEST_DATABASE_URL` to
+a direct test-server connection string and run
+`pnpm --filter @pulse/api test:postgres`.
 The test role must have `CREATEDB`; tests create and drop a uniquely named
-temporary database without modifying the database named in the URL. Without
-this variable, real PostgreSQL tests are skipped and pg-mem tests still run.
+temporary database without modifying the database named in the URL. In the
+standard test suite, omitting this variable skips the real PostgreSQL tests
+while pg-mem store tests still run.
