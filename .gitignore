@@ -37,3 +37,4 @@ yarn-error.log*
 *.tsbuildinfo
 playwright-report/
 test-results/
+.neon

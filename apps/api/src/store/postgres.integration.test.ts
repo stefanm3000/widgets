@@ -81,13 +81,16 @@ describe.skipIf(!databaseUrl)("real PostgreSQL transactions", () => {
           ),
         ),
       );
-      await vi.waitFor(async () => {
-        const waiting = await pool.query(
-          "SELECT count(*)::int AS count FROM pg_stat_activity WHERE datname = $1 AND wait_event_type = 'Lock'",
-          [databaseName],
-        );
-        expect(waiting.rows[0].count).toBeGreaterThan(0);
-      });
+      await vi.waitFor(
+        async () => {
+          const waiting = await pool.query(
+            "SELECT count(*)::int AS count FROM pg_stat_activity WHERE datname = $1 AND wait_event_type = 'Lock'",
+            [databaseName],
+          );
+          expect(waiting.rows[0].count).toBeGreaterThan(0);
+        },
+        { timeout: 15_000 },
+      );
       expect(
         (await store.getMessages(room.id, { limit: 50 }))?.items,
       ).toHaveLength(0);
