@@ -3,7 +3,7 @@
 Pulse is a framework-agnostic TypeScript SDK and embeddable live chat widget.
 This repository demonstrates one backend and protocol across unrelated partner websites.
 
-![Architecture: the React chat widget is bundled with its runtime and styles into the pulse-chat web component, imported by Vue and vanilla JavaScript partner apps. React imports the widget directly. Each browser uses the SDK to connect to the shared API through REST and WebSockets, with PostgreSQL persistence.](docs/images/pulse-architecture.png)
+![Architecture: React imports the chat widget directly, while Vue and vanilla JavaScript use its web component bundle. Browser SDKs connect to the shared API through REST and WebSockets, with PostgreSQL persistence. Assistants connect over local stdio to apps/mcp, which uses the public SDK to call the same API through authenticated REST.](docs/images/pulse-architecture-mcp.png)
 
 `@pulse/embed` wraps the React chat widget in a Shadow DOM web component and
 bundles its runtime and styles. Vue and vanilla JavaScript partners import this
