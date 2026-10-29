@@ -32,4 +32,9 @@ const close = async () => {
 process.once("SIGINT", close);
 process.once("SIGTERM", close);
 
-await app.listen({ host: config.host, port: config.port });
+// Vercel captures listen() while importing this module and opens the port later.
+// Awaiting it here would block that import from completing.
+void app.listen({ host: config.host, port: config.port }).catch((error) => {
+  app.log.error(error);
+  process.exit(1);
+});

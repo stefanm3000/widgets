@@ -57,6 +57,8 @@ types still resolve when Vercel transpiles through a temporary TypeScript 7
 configuration outside the workspace.
 The API attaches its module-level PostgreSQL pool to Vercel's lifecycle helper
 and releases idle connections after five seconds.
+The entrypoint starts `listen()` without awaiting it at module scope, allowing
+Vercel's server-capture import to complete before the runtime opens the port.
 
 Set Vercel's `DATABASE_URL` to Neon's pooled connection string,
 `PULSE_TOKEN_SECRET` to a random secret of at least 32 characters, and

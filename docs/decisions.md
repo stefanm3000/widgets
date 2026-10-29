@@ -1,5 +1,15 @@
 # Decisions
 
+## Let Vercel finish loading the API before listening
+
+Start Fastify without a top-level await on `listen()`. Vercel replaces Node's
+listen method while importing the server module, then opens the captured server
+after the import completes. Awaiting Fastify's listening promise during import
+deadlocks that sequence and produces an invocation failure despite a successful
+build. Keep explicit startup error logging and a nonzero exit for local failures.
+A regression test reproduces the capture/import/listen sequence in a child
+process and requests both health and a demo token through the captured server.
+
 ## Resolve API types from the package during Vercel transpilation
 
 Set the API's `typeRoots` to its local `node_modules/@types`. Vercel's native
