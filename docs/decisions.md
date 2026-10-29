@@ -1,5 +1,15 @@
 # Decisions
 
+## Resolve API types from the package during Vercel transpilation
+
+Set the API's `typeRoots` to its local `node_modules/@types`. Vercel's native
+TypeScript 7 path creates a temporary config outside the workspace that extends
+the API config. Implicit Node type lookup then starts outside the package and
+fails with TS2688 even though the normal package build succeeds. An explicit
+path stays relative to the API config and works with pnpm's existing dependency
+links. Keep this setting in the API rather than changing the browser packages
+or disabling Vercel's type checks.
+
 ## Connect Neon PostgreSQL without replacing the existing API
 
 Keep `pg` and Drizzle for the Node.js Fastify API. Use Neon's pooled

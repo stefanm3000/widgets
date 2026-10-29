@@ -4,6 +4,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "types": ["node"],
+    "typeRoots": ["./node_modules/@types"],
     "tsBuildInfoFile": "node_modules/.cache/api.tsbuildinfo"
   },
   "include": ["src/**/*.ts"]

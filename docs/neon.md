@@ -52,6 +52,9 @@ files outside the root directory. Set the build command to
 
 The server entrypoint is `src/server.ts`. The app factory lives in
 `src/build-app.ts`, so Vercel does not detect the factory as a runnable server.
+The API explicitly sets `typeRoots` to its own `node_modules/@types` so Node
+types still resolve when Vercel transpiles through a temporary TypeScript 7
+configuration outside the workspace.
 The API attaches its module-level PostgreSQL pool to Vercel's lifecycle helper
 and releases idle connections after five seconds.
 
