@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { isIP } from "node:net";
 import { setTimeout } from "node:timers/promises";
 
-import { buildApp } from "../dist/app.js";
+import { buildApp } from "../dist/build-app.js";
 import { readConfig } from "../dist/config.js";
 import { MemoryChatStore } from "../dist/store.js";
 import { TokenService } from "../dist/token.js";

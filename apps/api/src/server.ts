@@ -1,19 +1,23 @@
+import { attachDatabasePool } from "@vercel/functions";
+import type { FastifyInstance } from "fastify";
 import { Pool } from "pg";
 
-import { buildApp } from "./app.js";
+import { buildApp } from "./build-app.js";
 import { readConfig } from "./config.js";
 import { PostgresChatStore } from "./store.js";
 
 const config = readConfig(process.env);
-const store = config.databaseUrl
-  ? new PostgresChatStore(
-      new Pool({
-        connectionString: config.databaseUrl,
-        max: 10,
-      }),
-    )
+const pool = config.databaseUrl
+  ? new Pool({
+      connectionString: config.databaseUrl,
+      max: 10,
+      idleTimeoutMillis: 5_000,
+      connectionTimeoutMillis: 10_000,
+    })
   : undefined;
-const app = await buildApp({
+if (pool) attachDatabasePool(pool);
+const store = pool ? new PostgresChatStore(pool) : undefined;
+const app: FastifyInstance = await buildApp({
   allowedOrigins: config.allowedOrigins,
   logger: true,
   store,

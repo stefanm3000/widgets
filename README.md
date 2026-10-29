@@ -72,6 +72,25 @@ The API uses the in-memory store when `DATABASE_URL` is absent, which keeps unit
 tests and quick local experiments self-contained. Production startup requires
 both `DATABASE_URL` and `PULSE_TOKEN_SECRET`.
 
+### Use Neon PostgreSQL
+
+The root `neon.ts` declares PostgreSQL-only infrastructure. The API keeps its
+existing `pg` driver and Drizzle schema. With the Neon CLI signed in, run
+`neon deploy` to reconcile the linked project and pull `DATABASE_URL`,
+`DATABASE_URL_UNPOOLED`, and `NEON_BRANCH` into the root `.env.local`.
+
+The API's development, start, migration, and seed commands load root `.env` and
+`.env.local`, followed by their app-local equivalents. App-local files override
+root files; variables already supplied by the shell or hosting provider take
+precedence over all files. The API uses the pooled `DATABASE_URL`; migrations
+prefer the direct `DATABASE_URL_UNPOOLED`, falling back to `DATABASE_URL` for
+local PostgreSQL.
+
+For a fresh linked database, initialize it with
+`pnpm --filter @pulse/api db:setup`, then run `pnpm dev`. This creates the
+application tables and demo data; it does not import an old Railway database.
+See [Neon setup](docs/neon.md) for Vercel settings and verification.
+
 ## Workspace
 
 - `apps/`: reserved for the API, playground, and partner demos.

@@ -15,7 +15,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 
 import { TokenService } from "./token.js";
-import { buildApp } from "./app.js";
+import { buildApp } from "./build-app.js";
 
 const tokenSecret = "test-token-secret-with-at-least-32-characters";
 

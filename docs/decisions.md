@@ -1,5 +1,24 @@
 # Decisions
 
+## Connect Neon PostgreSQL without replacing the existing API
+
+Keep `pg` and Drizzle for the Node.js Fastify API. Use Neon's pooled
+`DATABASE_URL` for request traffic and its direct `DATABASE_URL_UNPOOLED` for
+migrations, with a fallback for existing local PostgreSQL setups. Attach the
+module-level pool to Vercel's lifecycle helper and use a short idle timeout.
+No Neon runtime driver or service enters the browser packages.
+
+Keep Neon's config and env tools as root development dependencies. The CLI
+writes its branch context and secrets to ignored files; API launch and database
+scripts read root env files while preserving app-local and process-env overrides.
+Separate the app factory from Vercel's recognized entrypoint filenames so
+Fastify detection selects the server that actually starts listening.
+
+Validate migrations and persistence on a disposable Neon branch before setting
+up the empty production database. Neon PostgreSQL does not supply cross-instance
+broadcasts for the existing process-local listeners. Shared message distribution
+and hosted WebSocket verification remain required for a complete Vercel migration.
+
 ## Add SvelteKit 3 as a static partner
 
 Use the stable SvelteKit 3.0.0 release and Svelte 5.57.1 for the Svelte partner.
